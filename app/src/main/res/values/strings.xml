@@ -1,0 +1,7 @@
+<resources>
+    <string name="app_name">Just10Minutes2</string>
+    <string name="title_task_list">TaskList</string>
+    <string name="title_timer">Timer</string>
+    <string name="select_task">Select task</string>
+    <string name="start_timer">Start timer</string>
+</resources>
