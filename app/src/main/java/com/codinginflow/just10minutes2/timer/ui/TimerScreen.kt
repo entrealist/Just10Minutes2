@@ -1,4 +1,4 @@
-package com.codinginflow.just10minutes2.ui.timer
+package com.codinginflow.just10minutes2.timer.ui
 
 import android.content.res.Configuration
 import androidx.compose.foundation.clickable
@@ -16,7 +16,7 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.codinginflow.just10minutes2.R
-import com.codinginflow.just10minutes2.ui.theme.Just10Minutes2Theme
+import com.codinginflow.just10minutes2.common.ui.theme.Just10Minutes2Theme
 
 @Composable
 fun TimerScreen(

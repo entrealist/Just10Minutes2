@@ -1,4 +1,4 @@
-package com.codinginflow.just10minutes2.ui.tasklist
+package com.codinginflow.just10minutes2.tasklist.ui
 
 import android.content.res.Configuration
 import androidx.compose.foundation.clickable
@@ -11,6 +11,7 @@ import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.ui.Modifier
@@ -19,14 +20,14 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.codinginflow.just10minutes2.R
-import com.codinginflow.just10minutes2.ui.data.Task
-import com.codinginflow.just10minutes2.ui.theme.Just10Minutes2Theme
+import com.codinginflow.just10minutes2.common.data.entities.Task
+import com.codinginflow.just10minutes2.common.ui.theme.Just10Minutes2Theme
 
 @Composable
 fun TaskListScreen(
     viewModel: TaskListViewModel = hiltViewModel()
 ) {
-    val tasks by viewModel.tasks.observeAsState(emptyList())
+    val tasks by viewModel.tasks.collectAsState(emptyList())
 
     TaskListBody(tasks = tasks)
 }

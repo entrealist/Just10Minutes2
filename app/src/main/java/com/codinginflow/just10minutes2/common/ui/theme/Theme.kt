@@ -1,4 +1,4 @@
-package com.codinginflow.just10minutes2.ui.theme
+package com.codinginflow.just10minutes2.common.ui.theme
 
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.material.MaterialTheme

@@ -18,9 +18,9 @@ import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
-import com.codinginflow.just10minutes2.ui.timer.TimerScreen
-import com.codinginflow.just10minutes2.ui.tasklist.TaskListScreen
-import com.codinginflow.just10minutes2.ui.theme.Just10Minutes2Theme
+import com.codinginflow.just10minutes2.timer.ui.TimerScreen
+import com.codinginflow.just10minutes2.tasklist.ui.TaskListScreen
+import com.codinginflow.just10minutes2.common.ui.theme.Just10Minutes2Theme
 import dagger.hilt.android.AndroidEntryPoint
 
 @AndroidEntryPoint
