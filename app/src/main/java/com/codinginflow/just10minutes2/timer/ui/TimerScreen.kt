@@ -34,7 +34,7 @@ fun TimerScreen(
         selectedTask = selectedTask,
         allTasks = allTasks,
         timerRunning = timerRunning,
-        onTaskSelected = viewModel::onTaskSelected,
+        onNewTaskSelected = viewModel::onNewTaskSelected,
         onStartTimerClicked = viewModel::onStartTimerClicked,
         onStopTimerClicked = viewModel::onStopTimerClicked,
     )
@@ -45,7 +45,7 @@ private fun TimerBody(
     selectedTask: Task?,
     allTasks: List<Task>,
     timerRunning: Boolean,
-    onTaskSelected: (Task) -> Unit,
+    onNewTaskSelected: (Task) -> Unit,
     onStartTimerClicked: () -> Unit,
     onStopTimerClicked: () -> Unit,
     modifier: Modifier = Modifier,
@@ -64,7 +64,7 @@ private fun TimerBody(
             selectedTask = selectedTask,
             allTasks = allTasks,
             timerRunning = timerRunning,
-            onTaskSelected = onTaskSelected,
+            onNewTaskSelected = onNewTaskSelected,
             onStartTimerClicked = onStartTimerClicked,
             onStopTimerClicked = onStopTimerClicked
         )
@@ -76,7 +76,7 @@ private fun BodyContent(
     selectedTask: Task?,
     allTasks: List<Task>,
     timerRunning: Boolean,
-    onTaskSelected: (Task) -> Unit,
+    onNewTaskSelected: (Task) -> Unit,
     onStartTimerClicked: () -> Unit,
     onStopTimerClicked: () -> Unit,
 ) {
@@ -85,10 +85,11 @@ private fun BodyContent(
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center
     ) {
+        Text(stringResource(R.string.active_task_colon), color = Color.Gray)
         DropdownSelector(
             selectedTask = selectedTask,
             allTasks = allTasks,
-            onTaskSelected = onTaskSelected
+            onNewTaskSelected = onNewTaskSelected
         )
         CircularTextTimer(
             timeLeftInMillis = selectedTask?.millisLeftToday ?: 0,
@@ -116,7 +117,7 @@ private fun BodyContent(
 private fun DropdownSelector(
     selectedTask: Task?,
     allTasks: List<Task>,
-    onTaskSelected: (Task) -> Unit,
+    onNewTaskSelected: (Task) -> Unit,
 ) {
     var expanded by remember { mutableStateOf(false) }
 
@@ -128,7 +129,7 @@ private fun DropdownSelector(
                 .clickable { expanded = !expanded }
                 .padding(16.dp)
         ) {
-            Text(selectedText)
+            Text(selectedText, style = LocalTextStyle.current.copy(fontWeight = FontWeight.Bold))
             Spacer(Modifier.width(2.dp))
             Icon(
                 Icons.Filled.ArrowDropDown,
@@ -143,7 +144,7 @@ private fun DropdownSelector(
             allTasks.forEach { task ->
                 if (task != selectedTask) {
                     DropdownMenuItem(onClick = {
-                        onTaskSelected(task)
+                        onNewTaskSelected(task)
                         expanded = false
                     }) {
                         Text(text = task.name)
@@ -158,7 +159,7 @@ private fun DropdownSelector(
 private fun CircularTextTimer(
     timeLeftInMillis: Long,
     timeGoalInMinutes: Int,
-    progressBarSize: Dp = 200.dp,
+    progressBarSize: Dp = 230.dp,
     strokeWidth: Dp = 10.dp
 ) {
     val timeGoalInMillis = timeGoalInMinutes * 60 * 1000L
@@ -185,7 +186,7 @@ private fun CircularTextTimer(
         )
         Column {
             Text(
-                stringResource(id = R.string.minutes_goal, timeGoalInMinutes),
+                stringResource(id = R.string.minutes_goal_placeholder, timeGoalInMinutes),
                 style = MaterialTheme.typography.body2,
                 color = Color.Gray
             )
@@ -225,7 +226,7 @@ private fun PreviewTimerScreen() {
             selectedTask = null,
             allTasks = emptyList(),
             timerRunning = false,
-            onTaskSelected = {},
+            onNewTaskSelected = {},
             onStartTimerClicked = {},
             onStopTimerClicked = {}
         )

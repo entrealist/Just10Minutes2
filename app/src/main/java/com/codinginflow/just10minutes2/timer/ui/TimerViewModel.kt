@@ -40,7 +40,8 @@ class TimerViewModel @Inject constructor(
 
     val timerRunning = taskTimerManager.running
 
-    fun onTaskSelected(task: Task) {
+    fun onNewTaskSelected(task: Task) {
+        stopTimer()
         viewModelScope.launch {
             timerPreferencesManager.updateActiveTaskId(task.id)
         }

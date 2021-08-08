@@ -1,12 +1,16 @@
 <resources>
     <string name="app_name">Just10Minutes2</string>
-    <string name="title_task_list">Tasks</string>
-    <string name="title_timer">Timer</string>
-    <string name="select_task">Select task</string>
     <string name="start_timer">Start timer</string>
-    <string name="no_task_selected">No task selected</string>
-    <string name="minutes_goal">Goal: %d min</string>
-    <string name="title_statistics">Statistics</string>
     <string name="stop_timer">Stop timer</string>
+    <string name="daily_minutes_goal_placeholder">Daily goal: %d min</string>
+    <string name="minutes_goal_placeholder">Goal: %d min</string>
+    <string name="title_task_list">Tasks</string>
+    <string name="select_task">Select task</string>
+    <string name="no_task_selected">No task selected</string>
+    <string name="title_timer">Timer</string>
+    <string name="title_statistics">Statistics</string>
     <string name="completed">Completed</string>
+    <string name="add_new_task">Add new task</string>
+    <string name="active_task_colon">Active task:</string>
+    <string name="edit_task">Edit task</string>
 </resources>
