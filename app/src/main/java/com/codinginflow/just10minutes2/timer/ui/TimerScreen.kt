@@ -16,18 +16,37 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.codinginflow.just10minutes2.R
+import com.codinginflow.just10minutes2.common.data.entities.Task
 import com.codinginflow.just10minutes2.common.ui.theme.Just10Minutes2Theme
+import java.util.*
 
 @Composable
 fun TimerScreen(
     viewModel: TimerViewModel = hiltViewModel()
 ) {
+    val selectedTask by viewModel.selectedTask.collectAsState(null)
+    val allTasks by viewModel.allTasks.collectAsState(emptyList())
 
-    TimerBody()
+    val timerRunning by viewModel.timerRunning.collectAsState(false)
+
+    TimerBody(
+        selectedTask = selectedTask,
+        allTasks = allTasks,
+        timerRunning = timerRunning,
+        onTaskSelected = viewModel::onTaskSelected,
+        onStartTimerClicked = viewModel::onStartTimerClicked,
+        onStopTimerClicked = viewModel::onStopTimerClicked,
+    )
 }
 
 @Composable
 private fun TimerBody(
+    selectedTask: Task?,
+    allTasks: List<Task>,
+    timerRunning: Boolean,
+    onTaskSelected: (Task) -> Unit,
+    onStartTimerClicked: () -> Unit,
+    onStopTimerClicked: () -> Unit,
     modifier: Modifier = Modifier,
     scaffoldState: ScaffoldState = rememberScaffoldState(),
 ) {
@@ -40,33 +59,68 @@ private fun TimerBody(
             )
         },
     ) {
-        BodyContent()
+        BodyContent(
+            selectedTask = selectedTask,
+            allTasks = allTasks,
+            timerRunning = timerRunning,
+            onTaskSelected = onTaskSelected,
+            onStartTimerClicked = onStartTimerClicked,
+            onStopTimerClicked = onStopTimerClicked
+        )
     }
 }
 
 @Composable
-private fun BodyContent() {
+private fun BodyContent(
+    selectedTask: Task?,
+    allTasks: List<Task>,
+    timerRunning: Boolean,
+    onTaskSelected: (Task) -> Unit,
+    onStartTimerClicked: () -> Unit,
+    onStopTimerClicked: () -> Unit,
+) {
     Column(
         modifier = Modifier.fillMaxSize(),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center
     ) {
-        DropdownSelector()
-        CircularTextTimer(progress = 0.8f, text = "02:00")
+        DropdownSelector(
+            selectedTask = selectedTask,
+            allTasks = allTasks,
+            onTaskSelected = onTaskSelected
+        )
+        CircularTextTimer(
+            timeLeftInMillis = selectedTask?.millisLeftToday ?: 0,
+            timeGoalInMinutes = selectedTask?.dailyGoalInMinutes ?: 0
+        )
         Spacer(Modifier.height(16.dp))
-        Button(onClick = { /*TODO*/ }) {
-            Text(stringResource(R.string.start_timer))
+        if (!timerRunning) {
+            Button(
+                onClick = onStartTimerClicked,
+                enabled = selectedTask != null
+            ) {
+                Text(stringResource(R.string.start_timer))
+            }
+        } else {
+            Button(
+                onClick = onStopTimerClicked,
+                enabled = selectedTask != null
+            ) {
+                Text(stringResource(R.string.stop_timer))
+            }
         }
     }
 }
 
 @Composable
 private fun DropdownSelector(
-
+    selectedTask: Task?,
+    allTasks: List<Task>,
+    onTaskSelected: (Task) -> Unit,
 ) {
-    val width: Dp = 250.dp
-
     var expanded by remember { mutableStateOf(false) }
+
+    val selectedText = selectedTask?.name ?: stringResource(id = R.string.no_task_selected)
 
     Box {
         Row(
@@ -74,7 +128,7 @@ private fun DropdownSelector(
                 .clickable { expanded = !expanded }
                 .padding(16.dp)
         ) {
-            Text("Selected Task")
+            Text(selectedText)
             Spacer(Modifier.width(2.dp))
             Icon(
                 Icons.Filled.ArrowDropDown,
@@ -84,13 +138,17 @@ private fun DropdownSelector(
         DropdownMenu(
             expanded = expanded,
             onDismissRequest = { expanded = false },
-            modifier = Modifier.width(width)
+            modifier = Modifier.width(250.dp)
         ) {
-            DropdownMenuItem(onClick = { expanded = false }) {
-                Text(text = "Other task")
-            }
-            DropdownMenuItem(onClick = { expanded = false }) {
-                Text(text = "Yet another task")
+            allTasks.forEach { task ->
+                if (task != selectedTask) {
+                    DropdownMenuItem(onClick = {
+                        onTaskSelected(task)
+                        expanded = false
+                    }) {
+                        Text(text = task.name)
+                    }
+                }
             }
         }
     }
@@ -98,11 +156,19 @@ private fun DropdownSelector(
 
 @Composable
 private fun CircularTextTimer(
-    progress: Float,
-    text: String,
+    timeLeftInMillis: Long,
+    timeGoalInMinutes: Int,
     size: Dp = 200.dp,
     strokeWidth: Dp = 10.dp
 ) {
+    val millisAdjusted = timeLeftInMillis + 999
+    val minutes = ((millisAdjusted / 1000) / 60).toInt()
+    val seconds = ((millisAdjusted / 1000) % 60).toInt()
+    val timeText = String.format(Locale.getDefault(), "%02d:%02d", minutes, seconds)
+
+    val timeGoalInMillis = timeGoalInMinutes * 60 * 1000L
+    val progress = 1 - (timeLeftInMillis.toFloat() / timeGoalInMillis.toFloat())
+
     Box(contentAlignment = Alignment.Center) {
         CircularProgressIndicator( // background
             progress = 1f,
@@ -115,7 +181,15 @@ private fun CircularTextTimer(
             strokeWidth = strokeWidth,
             modifier = Modifier.size(size)
         )
-        Text(text, style = MaterialTheme.typography.h3)
+        Column {
+            Text(
+                stringResource(id = R.string.minutes_goal, timeGoalInMinutes),
+                style = MaterialTheme.typography.body2,
+                color = Color.Gray
+            )
+            Text(timeText, style = MaterialTheme.typography.h3)
+            Text("", style = MaterialTheme.typography.body2) // placeholder for symmetry
+        }
     }
 }
 
@@ -131,6 +205,13 @@ private fun CircularTextTimer(
 @Composable
 private fun PreviewTimerScreen() {
     Just10Minutes2Theme {
-        TimerBody()
+        TimerBody(
+            selectedTask = null,
+            allTasks = emptyList(),
+            timerRunning = false,
+            onTaskSelected = {},
+            onStartTimerClicked = {},
+            onStopTimerClicked = {}
+        )
     }
 }

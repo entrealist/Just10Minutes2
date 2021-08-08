@@ -19,6 +19,9 @@ interface TaskDao {
     @Update
     suspend fun update(task: Task)
 
+    @Query("UPDATE tasks SET millisCompletedToday = millisCompletedToday + :amount WHERE id = :taskId")
+    suspend fun increaseMillisCompletedToday(taskId: Long, amount: Long)
+
     @Delete
     suspend fun delete(task: Task)
 }

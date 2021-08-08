@@ -16,7 +16,7 @@ import java.io.IOException
 import javax.inject.Inject
 import javax.inject.Singleton
 
-data class TimerPreferences(val activeTaskId: Long)
+data class TimerPreferences(val activeTaskId: Long?)
 
 @Singleton
 class TimerPreferencesManager @Inject constructor(@ApplicationContext context: Context) {
@@ -24,7 +24,7 @@ class TimerPreferencesManager @Inject constructor(@ApplicationContext context: C
     private val Context.dataStore: DataStore<Preferences> by preferencesDataStore(name = "preferences")
     private val dataStore = context.dataStore
 
-    val timerPreferencesFlow = dataStore.data
+    val timerPreferencesFlow = context.dataStore.data
         .catch { exception ->
             if (exception is IOException) {
                 Timber.e(exception, "Error reading preferences")
@@ -34,7 +34,7 @@ class TimerPreferencesManager @Inject constructor(@ApplicationContext context: C
             }
         }
         .map { preferences ->
-            val activeTaskId = preferences[PreferencesKeys.ACTIVE_TASK_ID] ?: Task.ID_NONE
+            val activeTaskId = preferences[PreferencesKeys.ACTIVE_TASK_ID]
             TimerPreferences(activeTaskId)
         }
 

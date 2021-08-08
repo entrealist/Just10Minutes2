@@ -7,6 +7,7 @@ import androidx.annotation.StringRes
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Assessment
 import androidx.compose.material.icons.filled.List
 import androidx.compose.material.icons.filled.Timer
 import androidx.compose.runtime.*
@@ -88,12 +89,16 @@ private fun JTMNavHost(
         composable(BottomNavDestination.TaskList.route) {
             TaskListScreen()
         }
+        composable(BottomNavDestination.Statistics.route) {
+            Text("Statistics")
+        }
     }
 }
 
 private val bottomNavDestinations = listOf(
     BottomNavDestination.Timer,
-    BottomNavDestination.TaskList
+    BottomNavDestination.TaskList,
+    BottomNavDestination.Statistics
 )
 
 sealed class BottomNavDestination(
@@ -103,4 +108,5 @@ sealed class BottomNavDestination(
 ) {
     object TaskList : BottomNavDestination("TaskList", R.string.title_task_list, Icons.Filled.List)
     object Timer : BottomNavDestination("Timer", R.string.title_timer, Icons.Filled.Timer)
+    object Statistics : BottomNavDestination("Statistics", R.string.title_statistics, Icons.Filled.Assessment)
 }
