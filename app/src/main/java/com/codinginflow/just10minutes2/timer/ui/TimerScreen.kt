@@ -11,6 +11,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
@@ -94,20 +95,19 @@ private fun BodyContent(
             timeGoalInMinutes = selectedTask?.dailyGoalInMinutes ?: 0
         )
         Spacer(Modifier.height(16.dp))
-        if (!timerRunning) {
-            Button(
-                onClick = onStartTimerClicked,
-                enabled = selectedTask != null
-            ) {
-                Text(stringResource(R.string.start_timer))
-            }
-        } else {
-            Button(
-                onClick = onStopTimerClicked,
-                enabled = selectedTask != null
-            ) {
-                Text(stringResource(R.string.stop_timer))
-            }
+
+        val buttonEnabled = selectedTask != null && !selectedTask.isCompletedToday
+        val buttonOnClick = if (timerRunning) onStopTimerClicked else onStartTimerClicked
+        val buttonTextRes = when {
+            selectedTask != null && selectedTask.isCompletedToday -> R.string.completed
+            timerRunning -> R.string.stop_timer
+            else -> R.string.start_timer
+        }
+        Button(
+            onClick = buttonOnClick,
+            enabled = buttonEnabled
+        ) {
+            Text(stringResource(buttonTextRes))
         }
     }
 }
@@ -158,28 +158,30 @@ private fun DropdownSelector(
 private fun CircularTextTimer(
     timeLeftInMillis: Long,
     timeGoalInMinutes: Int,
-    size: Dp = 200.dp,
+    progressBarSize: Dp = 200.dp,
     strokeWidth: Dp = 10.dp
 ) {
+    val timeGoalInMillis = timeGoalInMinutes * 60 * 1000L
+    val progress = 1 - (timeLeftInMillis.toFloat() / timeGoalInMillis.toFloat())
+    val completed = timeLeftInMillis <= 0
+
     val millisAdjusted = timeLeftInMillis + 999
     val minutes = ((millisAdjusted / 1000) / 60).toInt()
     val seconds = ((millisAdjusted / 1000) % 60).toInt()
     val timeText = String.format(Locale.getDefault(), "%02d:%02d", minutes, seconds)
-
-    val timeGoalInMillis = timeGoalInMinutes * 60 * 1000L
-    val progress = 1 - (timeLeftInMillis.toFloat() / timeGoalInMillis.toFloat())
+    val timeTextColor = if (!completed) LocalContentColor.current else Color.LightGray
 
     Box(contentAlignment = Alignment.Center) {
         CircularProgressIndicator( // background
             progress = 1f,
             strokeWidth = strokeWidth,
-            modifier = Modifier.size(size),
+            modifier = Modifier.size(progressBarSize),
             color = Color.LightGray
         )
         CircularProgressIndicator(
             progress = progress,
             strokeWidth = strokeWidth,
-            modifier = Modifier.size(size)
+            modifier = Modifier.size(progressBarSize)
         )
         Column {
             Text(
@@ -187,8 +189,22 @@ private fun CircularTextTimer(
                 style = MaterialTheme.typography.body2,
                 color = Color.Gray
             )
-            Text(timeText, style = MaterialTheme.typography.h3)
-            Text("", style = MaterialTheme.typography.body2) // placeholder for symmetry
+            Text(
+                text = timeText, style = MaterialTheme.typography.h3,
+                color = timeTextColor
+            )
+            if (completed) {
+                Text(
+                    text = stringResource(id = R.string.completed),
+                    style = MaterialTheme.typography.body2.copy(fontWeight = FontWeight.Bold),
+                    color = MaterialTheme.colors.primary,
+                    modifier = Modifier.align(
+                        Alignment.CenterHorizontally
+                    )
+                )
+            } else {
+                Text("", style = MaterialTheme.typography.body2) // placeholder for symmetry
+            }
         }
     }
 }

@@ -26,7 +26,7 @@ abstract class JTMDatabase : RoomDatabase() {
             val dao = database.get().taskDao()
 
             applicationScope.launch {
-                dao.insert(Task("Read from a book"))
+                dao.insert(Task("Read from a book", 1))
                 dao.insert(Task("Stretch"))
                 dao.insert(Task("Practice guitar", 20))
             }

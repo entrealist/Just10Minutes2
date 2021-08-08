@@ -8,9 +8,7 @@ import com.codinginflow.just10minutes2.common.data.daos.TaskDao
 import com.codinginflow.just10minutes2.common.data.entities.Task
 import com.codinginflow.just10minutes2.timer.TaskTimerManager
 import dagger.hilt.android.lifecycle.HiltViewModel
-import kotlinx.coroutines.flow.emptyFlow
-import kotlinx.coroutines.flow.first
-import kotlinx.coroutines.flow.flatMapLatest
+import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
@@ -24,13 +22,21 @@ class TimerViewModel @Inject constructor(
 
     private val timerPreferencesFlow = timerPreferencesManager.timerPreferencesFlow
 
+    val allTasks = taskDao.getAllTasks()
+
     val selectedTask = timerPreferencesFlow.flatMapLatest { timerPreferences ->
         timerPreferences.activeTaskId?.let { taskId ->
             taskDao.getTaskById(taskId)
         } ?: emptyFlow()
     }
 
-    val allTasks = taskDao.getAllTasks()
+    init {
+        viewModelScope.launch {
+            selectedTask.collect { task ->
+                if (task != null && task.millisLeftToday <= 0) stopTimer()
+            }
+        }
+    }
 
     val timerRunning = taskTimerManager.running
 
@@ -50,6 +56,10 @@ class TimerViewModel @Inject constructor(
     }
 
     fun onStopTimerClicked() {
+        stopTimer()
+    }
+
+    private fun stopTimer() {
         taskTimerManager.stopTimer()
     }
 }

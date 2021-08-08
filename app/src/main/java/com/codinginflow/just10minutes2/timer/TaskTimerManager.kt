@@ -29,7 +29,7 @@ class TaskTimerManager @Inject constructor(
         timerJob = applicationScope.launch {
             while (true) {
                 delay(TICK_DELAY)
-                increaseMillisCompletedTodayForTask(taskId, TICK_DELAY)
+                taskDao.increaseMillisCompletedToday(taskId, TICK_DELAY)
             }
         }
     }
@@ -37,9 +37,5 @@ class TaskTimerManager @Inject constructor(
     fun stopTimer() {
         timerJob?.cancel()
         runningFlow.value = false
-    }
-
-    private suspend fun increaseMillisCompletedTodayForTask(taskId: Long, amount: Long) {
-        taskDao.increaseMillisCompletedToday(taskId, amount)
     }
 }

@@ -16,4 +16,7 @@ data class Task(
 
     val millisLeftToday: Long
         get() = dailyGoalInMilliseconds - millisCompletedToday
+
+    val isCompletedToday: Boolean
+        get() = millisLeftToday <= 0
 }
