@@ -26,19 +26,35 @@ import com.codinginflow.just10minutes2.R
 import com.codinginflow.just10minutes2.common.data.entities.Task
 import com.codinginflow.just10minutes2.common.ui.CircularProgressIndicatorWithBackground
 import com.codinginflow.just10minutes2.common.ui.theme.Just10Minutes2Theme
+import kotlinx.coroutines.flow.collect
+import kotlinx.coroutines.flow.collectLatest
 
 @Composable
 fun TaskListScreen(
-    viewModel: TaskListViewModel = hiltViewModel()
+    viewModel: TaskListViewModel = hiltViewModel(),
+    navigateToAddNewTask: () -> Unit
 ) {
     val tasks by viewModel.tasks.collectAsState(emptyList())
 
-    TaskListBody(tasks = tasks)
+    LaunchedEffect(Unit) {
+        viewModel.events.collectLatest { event ->
+            when (event) {
+                is TaskListViewModel.Event.AddNewTask ->
+                    navigateToAddNewTask()
+            }
+        }
+    }
+
+    TaskListBody(
+        tasks = tasks,
+        onAddNewTaskClicked = viewModel::onAddNewTaskClicked
+    )
 }
 
 @Composable
 private fun TaskListBody(
     tasks: List<Task>,
+    onAddNewTaskClicked: () -> Unit,
     modifier: Modifier = Modifier,
     scaffoldState: ScaffoldState = rememberScaffoldState(),
 ) {
@@ -48,15 +64,15 @@ private fun TaskListBody(
         topBar = {
             TopAppBar(
                 title = { Text(stringResource(R.string.title_task_list)) },
+                actions = {
+                    IconButton(onClick = onAddNewTaskClicked) {
+                        Icon(
+                            Icons.Default.Add,
+                            contentDescription = stringResource(R.string.add_new_task)
+                        )
+                    }
+                }
             )
-        },
-        floatingActionButton = {
-            FloatingActionButton(
-                onClick = { /*TODO*/ },
-                Modifier.padding(bottom = 8.dp, end = 8.dp)
-            ) {
-                Icon(Icons.Filled.Add, contentDescription = stringResource(R.string.add_new_task))
-            }
         }
     ) { innerPadding ->
         TaskList(tasks = tasks, modifier = Modifier.padding(innerPadding))
@@ -71,7 +87,10 @@ private fun TaskList(
 ) {
     var expandedItemId by rememberSaveable { mutableStateOf(-1L) }
 
-    LazyColumn(modifier) {
+    LazyColumn(
+        modifier,
+        contentPadding = PaddingValues(bottom = 50.dp)
+    ) {
         items(tasks) { task ->
             TaskItem(
                 task = task,
@@ -164,7 +183,7 @@ private fun TaskItem(
                     }
                     Spacer(Modifier.width(8.dp))
                     val timerButtonTextRes =
-                        if (!task.isCompletedToday) R.string.start_timer else R.string.task_completed
+                        if (!task.isCompletedToday) R.string.open_timer else R.string.task_completed
                     OutlinedButton(
                         onClick = { /*TODO*/ },
                         enabled = !task.isCompletedToday,
@@ -200,7 +219,8 @@ private fun PreviewTaskListScreen() {
                 Task("Example Task 1"),
                 Task("Example Task 2"),
                 Task("Example Task 3"),
-            )
+            ),
+            onAddNewTaskClicked = {}
         )
     }
 }

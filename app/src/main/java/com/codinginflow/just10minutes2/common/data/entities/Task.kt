@@ -21,4 +21,8 @@ data class Task(
 
     val isCompletedToday: Boolean
         get() = millisLeftToday <= 0
+
+    companion object {
+        const val NO_ID = -1L
+    }
 }

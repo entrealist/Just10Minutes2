@@ -15,14 +15,18 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.stringResource
+import androidx.navigation.NavDestination.Companion.hierarchy
+import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.NavHostController
-import androidx.navigation.compose.NavHost
-import androidx.navigation.compose.composable
-import androidx.navigation.compose.rememberNavController
+import androidx.navigation.NavType
+import androidx.navigation.compose.*
+import com.codinginflow.just10minutes2.addedittask.AddEditTaskScreen
+import com.codinginflow.just10minutes2.common.data.entities.Task
 import com.codinginflow.just10minutes2.timer.ui.TimerScreen
 import com.codinginflow.just10minutes2.tasklist.ui.TaskListScreen
 import com.codinginflow.just10minutes2.common.ui.theme.Just10Minutes2Theme
 import dagger.hilt.android.AndroidEntryPoint
+import timber.log.Timber
 
 @AndroidEntryPoint
 class MainActivity : ComponentActivity() {
@@ -42,26 +46,28 @@ class MainActivity : ComponentActivity() {
 @Composable
 private fun JTMActivityBody() {
     val navController = rememberNavController()
-    var selectedBottomNavIndex by rememberSaveable { mutableStateOf(0) }
-
     Scaffold(
         bottomBar = {
             BottomNavigation {
-                bottomNavDestinations.forEachIndexed { index, item ->
-                    BottomNavigationItem(
+                val navBackStackEntry by navController.currentBackStackEntryAsState()
+                val currentDestination = navBackStackEntry?.destination
+                bottomNavDestinations.forEach { destination ->
+                    BottomNavigationItem( // Followed: https://developer.android.com/jetpack/compose/navigation#bottom-nav
                         icon = {
                             Icon(
-                                item.icon,
-                                contentDescription = stringResource(item.titleRes)
+                                destination.icon,
+                                contentDescription = stringResource(destination.labelRes)
                             )
                         },
-                        label = { Text(stringResource(item.titleRes)) },
-                        selected = selectedBottomNavIndex == index,
-                        alwaysShowLabel = false,
+                        label = { Text(stringResource(destination.labelRes)) },
+                        selected = currentDestination?.hierarchy?.any { it.route == destination.route } == true,
                         onClick = {
-                            if (selectedBottomNavIndex != index) {
-                                selectedBottomNavIndex = index
-                                navController.navigate(item.route)
+                            navController.navigate(destination.route) {
+                                popUpTo(navController.graph.findStartDestination().id) {
+                                    saveState = true
+                                }
+                                launchSingleTop = true
+                                restoreState = true
                             }
                         }
                     )
@@ -75,11 +81,11 @@ private fun JTMActivityBody() {
 
 @Composable
 private fun JTMNavHost(
-    navHostController: NavHostController,
+    navController: NavHostController,
     modifier: Modifier = Modifier
 ) {
     NavHost(
-        navController = navHostController,
+        navController = navController,
         startDestination = bottomNavDestinations[0].route,
         modifier = modifier
     ) {
@@ -87,10 +93,31 @@ private fun JTMNavHost(
             TimerScreen()
         }
         composable(BottomNavDestination.TaskList.route) {
-            TaskListScreen()
+            TaskListScreen(
+                navigateToAddNewTask = {
+                    navController.navigate(AppDestinations.AddEditTask.route)
+                }
+            )
         }
         composable(BottomNavDestination.Statistics.route) {
             Text("Statistics")
+        }
+        composable(
+            AppDestinations.AddEditTask.route,
+            arguments = listOf(
+                navArgument(ARG_TASK_ID) {
+                    type = NavType.LongType
+                    defaultValue = Task.NO_ID
+                }
+            )
+        ) {
+            AddEditTaskScreen(
+                onNavigateUp = {
+                    navController.popBackStack()
+                },
+                onNavigateBackWithResult = { result ->
+
+                })
         }
     }
 }
@@ -103,10 +130,19 @@ private val bottomNavDestinations = listOf(
 
 sealed class BottomNavDestination(
     val route: String,
-    @StringRes val titleRes: Int,
+    @StringRes val labelRes: Int,
     val icon: ImageVector
 ) {
     object TaskList : BottomNavDestination("TaskList", R.string.title_task_list, Icons.Filled.List)
     object Timer : BottomNavDestination("Timer", R.string.title_timer, Icons.Filled.Timer)
-    object Statistics : BottomNavDestination("Statistics", R.string.title_statistics, Icons.Filled.Assessment)
+    object Statistics :
+        BottomNavDestination("Statistics", R.string.title_statistics, Icons.Filled.Assessment)
 }
+
+sealed class AppDestinations(
+    val route: String
+) {
+    object AddEditTask : AppDestinations("AddEditTask?$ARG_TASK_ID={$ARG_TASK_ID}")
+}
+
+const val ARG_TASK_ID = "taskId"

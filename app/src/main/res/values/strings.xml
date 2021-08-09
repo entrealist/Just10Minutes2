@@ -1,5 +1,6 @@
 <resources>
     <string name="app_name">Just10Minutes2</string>
+    <string name="open_timer">Open timer</string>
     <string name="start_timer">Start timer</string>
     <string name="stop_timer">Stop timer</string>
     <string name="daily_minutes_goal_placeholder">Daily goal: %d min</string>
@@ -16,4 +17,5 @@
     <string name="minutes_completed_today_placeholder">Completed: %d min</string>
     <string name="task_completed">Task completed</string>
     <string name="task_name_with_minutes_goal">%s (%d min)</string>
+    <string name="name_cant_be_empty">Name can\'t be empty</string>
 </resources>
