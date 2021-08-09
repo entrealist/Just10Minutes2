@@ -18,6 +18,7 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.codinginflow.just10minutes2.R
 import com.codinginflow.just10minutes2.common.data.entities.Task
+import com.codinginflow.just10minutes2.common.ui.CircularProgressIndicatorWithBackground
 import com.codinginflow.just10minutes2.common.ui.theme.Just10Minutes2Theme
 import java.util.*
 
@@ -99,11 +100,7 @@ private fun BodyContent(
 
         val buttonEnabled = selectedTask != null && !selectedTask.isCompletedToday
         val buttonOnClick = if (timerRunning) onStopTimerClicked else onStartTimerClicked
-        val buttonTextRes = when {
-            selectedTask != null && selectedTask.isCompletedToday -> R.string.completed
-            timerRunning -> R.string.stop_timer
-            else -> R.string.start_timer
-        }
+        val buttonTextRes = if (timerRunning) R.string.stop_timer else R.string.start_timer
         Button(
             onClick = buttonOnClick,
             enabled = buttonEnabled
@@ -173,16 +170,10 @@ private fun CircularTextTimer(
     val timeTextColor = if (!completed) LocalContentColor.current else Color.LightGray
 
     Box(contentAlignment = Alignment.Center) {
-        CircularProgressIndicator( // background
-            progress = 1f,
-            strokeWidth = strokeWidth,
-            modifier = Modifier.size(progressBarSize),
-            color = Color.LightGray
-        )
-        CircularProgressIndicator(
+        CircularProgressIndicatorWithBackground(
             progress = progress,
             strokeWidth = strokeWidth,
-            modifier = Modifier.size(progressBarSize)
+            modifier = Modifier.size(progressBarSize),
         )
         Column {
             Text(

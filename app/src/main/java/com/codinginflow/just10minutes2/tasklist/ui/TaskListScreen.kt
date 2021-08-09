@@ -2,7 +2,6 @@ package com.codinginflow.just10minutes2.tasklist.ui
 
 import android.content.res.Configuration
 import androidx.compose.animation.animateContentSize
-import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -10,14 +9,12 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.Timer
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateListOf
-import androidx.compose.runtime.saveable.listSaver
+import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
@@ -27,6 +24,7 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.codinginflow.just10minutes2.R
 import com.codinginflow.just10minutes2.common.data.entities.Task
+import com.codinginflow.just10minutes2.common.ui.CircularProgressIndicatorWithBackground
 import com.codinginflow.just10minutes2.common.ui.theme.Just10Minutes2Theme
 
 @Composable
@@ -71,26 +69,18 @@ private fun TaskList(
     tasks: List<Task>,
     modifier: Modifier = Modifier
 ) {
-    val expandedItemIds = rememberSaveable(
-        key = "expandedItemIds", // explicit key necessary because of bug in navigation compose
-        saver = listSaver(
-            save = { it },
-            restore = {
-                mutableStateListOf<Long>().apply { addAll(it) }
-            }
-        )
-    ) { mutableStateListOf<Long>() }
+    var expandedItemId by rememberSaveable { mutableStateOf(-1L) }
 
     LazyColumn(modifier) {
         items(tasks) { task ->
             TaskItem(
                 task = task,
-                expanded = expandedItemIds.contains(task.id),
+                expanded = expandedItemId == task.id,
                 onTaskClicked = { clickedTask ->
-                    if (expandedItemIds.contains(clickedTask.id)) {
-                        expandedItemIds.remove(clickedTask.id)
+                    expandedItemId = if (expandedItemId == clickedTask.id) {
+                        -1L
                     } else {
-                        expandedItemIds.add(clickedTask.id)
+                        clickedTask.id
                     }
                 }
             )
@@ -114,19 +104,49 @@ private fun TaskItem(
             .padding(8.dp)
     ) {
         Column {
-            Text(
-                text = task.name,
-                style = MaterialTheme.typography.h6,
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis
-            )
-            Text(
-                text = stringResource(
-                    R.string.daily_minutes_goal_placeholder,
-                    task.dailyGoalInMinutes
-                ),
-                color = Color.Gray
-            )
+            Row {
+                Column(Modifier.weight(0.8f)) {
+                    Text(
+                        text = task.name,
+                        style = MaterialTheme.typography.h6,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis
+                    )
+                    Text(
+                        text = stringResource(
+                            R.string.daily_minutes_goal_placeholder,
+                            task.dailyGoalInMinutes
+                        ),
+                        color = Color.Gray
+                    )
+                    Text(
+                        text = stringResource(
+                            R.string.minutes_completed_today_placeholder,
+                            task.minutesCompletedToday
+                        ),
+                        color = Color.Gray
+                    )
+                }
+                Box(
+                    contentAlignment = Alignment.Center,
+                    modifier = Modifier
+                        .weight(0.2f)
+                        .padding(16.dp)
+                ) {
+                    val progress =
+                        1 - (task.millisLeftToday.toFloat() / task.dailyGoalInMillis.toFloat())
+                    CircularProgressIndicatorWithBackground(
+                        progress = progress,
+                    )
+                    if (task.isCompletedToday) {
+                        Icon(
+                            Icons.Default.Check,
+                            contentDescription = stringResource(R.string.task_completed),
+                            tint = MaterialTheme.colors.primary
+                        )
+                    }
+                }
+            }
             if (expanded) {
                 Spacer(Modifier.height(8.dp))
                 Row {
@@ -143,8 +163,11 @@ private fun TaskItem(
                         Text(stringResource(R.string.edit_task))
                     }
                     Spacer(Modifier.width(8.dp))
+                    val timerButtonTextRes =
+                        if (!task.isCompletedToday) R.string.start_timer else R.string.task_completed
                     OutlinedButton(
                         onClick = { /*TODO*/ },
+                        enabled = !task.isCompletedToday,
                         modifier = Modifier.weight(1f)
                     ) {
                         Icon(
@@ -152,7 +175,7 @@ private fun TaskItem(
                             contentDescription = stringResource(R.string.start_timer),
                         )
                         Spacer(Modifier.size(ButtonDefaults.IconSpacing))
-                        Text(stringResource(R.string.start_timer))
+                        Text(stringResource(timerButtonTextRes))
                     }
                 }
             }

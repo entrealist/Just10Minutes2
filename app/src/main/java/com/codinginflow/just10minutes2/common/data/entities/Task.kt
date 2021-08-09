@@ -2,7 +2,6 @@ package com.codinginflow.just10minutes2.common.data.entities
 
 import androidx.room.Entity
 import androidx.room.PrimaryKey
-import java.util.*
 
 @Entity(tableName = "tasks")
 data class Task(
@@ -11,11 +10,14 @@ data class Task(
     val millisCompletedToday: Long = 0,
     @PrimaryKey(autoGenerate = true) val id: Long = 0
 ) {
-    val dailyGoalInMilliseconds: Long
+    val dailyGoalInMillis: Long
         get() = dailyGoalInMinutes * 60 * 1000L
 
+    val minutesCompletedToday: Int
+        get() = (millisCompletedToday / (60 * 1000)).toInt()
+
     val millisLeftToday: Long
-        get() = dailyGoalInMilliseconds - millisCompletedToday
+        get() = dailyGoalInMillis - millisCompletedToday
 
     val isCompletedToday: Boolean
         get() = millisLeftToday <= 0

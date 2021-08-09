@@ -13,4 +13,6 @@
     <string name="add_new_task">Add new task</string>
     <string name="active_task_colon">Active task:</string>
     <string name="edit_task">Edit task</string>
+    <string name="minutes_completed_today_placeholder">Completed: %d min</string>
+    <string name="task_completed">Task completed</string>
 </resources>
