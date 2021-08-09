@@ -124,7 +124,7 @@ private fun TaskItem(
                             R.string.minutes_completed_today_placeholder,
                             task.minutesCompletedToday
                         ),
-                        color = Color.Gray
+                        color = MaterialTheme.colors.primary
                     )
                 }
                 Box(

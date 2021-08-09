@@ -15,4 +15,5 @@
     <string name="edit_task">Edit task</string>
     <string name="minutes_completed_today_placeholder">Completed: %d min</string>
     <string name="task_completed">Task completed</string>
+    <string name="task_name_with_minutes_goal">%s (%d min)</string>
 </resources>

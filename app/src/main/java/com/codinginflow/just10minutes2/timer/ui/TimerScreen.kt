@@ -94,7 +94,7 @@ private fun BodyContent(
         )
         CircularTextTimer(
             timeLeftInMillis = selectedTask?.millisLeftToday ?: 0,
-            timeGoalInMinutes = selectedTask?.dailyGoalInMinutes ?: 0
+            timeGoalInMillis = selectedTask?.dailyGoalInMillis ?: 0
         )
         Spacer(Modifier.height(16.dp))
 
@@ -118,7 +118,13 @@ private fun DropdownSelector(
 ) {
     var expanded by remember { mutableStateOf(false) }
 
-    val selectedText = selectedTask?.name ?: stringResource(id = R.string.no_task_selected)
+    val selectedText = if (selectedTask != null) {
+        stringResource(
+            R.string.task_name_with_minutes_goal,
+            selectedTask.name,
+            selectedTask.dailyGoalInMinutes
+        )
+    } else stringResource(id = R.string.no_task_selected)
 
     Box {
         Row(
@@ -126,11 +132,16 @@ private fun DropdownSelector(
                 .clickable { expanded = !expanded }
                 .padding(16.dp)
         ) {
-            Text(selectedText, style = LocalTextStyle.current.copy(fontWeight = FontWeight.Bold))
+            Text(
+                selectedText,
+                style = LocalTextStyle.current.copy(fontWeight = FontWeight.Bold),
+                color = MaterialTheme.colors.primary
+            )
             Spacer(Modifier.width(2.dp))
             Icon(
                 Icons.Filled.ArrowDropDown,
                 contentDescription = stringResource(id = R.string.select_task),
+                tint = MaterialTheme.colors.primary
             )
         }
         DropdownMenu(
@@ -144,7 +155,13 @@ private fun DropdownSelector(
                         onNewTaskSelected(task)
                         expanded = false
                     }) {
-                        Text(text = task.name)
+                        Text(
+                            stringResource(
+                                R.string.task_name_with_minutes_goal,
+                                task.name,
+                                task.dailyGoalInMinutes
+                            )
+                        )
                     }
                 }
             }
@@ -155,11 +172,11 @@ private fun DropdownSelector(
 @Composable
 private fun CircularTextTimer(
     timeLeftInMillis: Long,
-    timeGoalInMinutes: Int,
+    timeGoalInMillis: Long,
     progressBarSize: Dp = 230.dp,
     strokeWidth: Dp = 10.dp
 ) {
-    val timeGoalInMillis = timeGoalInMinutes * 60 * 1000L
+    val active = timeGoalInMillis > 0
     val progress = 1 - (timeLeftInMillis.toFloat() / timeGoalInMillis.toFloat())
     val completed = timeLeftInMillis <= 0
 
@@ -171,32 +188,18 @@ private fun CircularTextTimer(
 
     Box(contentAlignment = Alignment.Center) {
         CircularProgressIndicatorWithBackground(
-            progress = progress,
+            progress = if (active) progress else 0f,
             strokeWidth = strokeWidth,
             modifier = Modifier.size(progressBarSize),
         )
-        Column {
+        if (active && completed) {
             Text(
-                stringResource(id = R.string.minutes_goal_placeholder, timeGoalInMinutes),
-                style = MaterialTheme.typography.body2,
-                color = Color.Gray
+                text = stringResource(R.string.completed),
+                style = MaterialTheme.typography.h5.copy(fontWeight = FontWeight.Bold),
+                color = MaterialTheme.colors.primary
             )
-            Text(
-                text = timeText, style = MaterialTheme.typography.h3,
-                color = timeTextColor
-            )
-            if (completed) {
-                Text(
-                    text = stringResource(id = R.string.completed),
-                    style = MaterialTheme.typography.body2.copy(fontWeight = FontWeight.Bold),
-                    color = MaterialTheme.colors.primary,
-                    modifier = Modifier.align(
-                        Alignment.CenterHorizontally
-                    )
-                )
-            } else {
-                Text("", style = MaterialTheme.typography.body2) // placeholder for symmetry
-            }
+        } else {
+            Text(text = timeText, style = MaterialTheme.typography.h3, color = timeTextColor)
         }
     }
 }
