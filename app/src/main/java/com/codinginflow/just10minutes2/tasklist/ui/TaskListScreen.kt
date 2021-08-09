@@ -5,7 +5,9 @@ import androidx.compose.animation.animateContentSize
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
@@ -35,6 +37,7 @@ fun TaskListScreen(
     navigateToAddNewTask: () -> Unit
 ) {
     val tasks by viewModel.tasks.collectAsState(emptyList())
+    val lazyListState = rememberLazyListState()
 
     LaunchedEffect(Unit) {
         viewModel.events.collectLatest { event ->
@@ -47,7 +50,8 @@ fun TaskListScreen(
 
     TaskListBody(
         tasks = tasks,
-        onAddNewTaskClicked = viewModel::onAddNewTaskClicked
+        onAddNewTaskClicked = viewModel::onAddNewTaskClicked,
+        lazyListState = lazyListState
     )
 }
 
@@ -55,6 +59,7 @@ fun TaskListScreen(
 private fun TaskListBody(
     tasks: List<Task>,
     onAddNewTaskClicked: () -> Unit,
+    lazyListState: LazyListState,
     modifier: Modifier = Modifier,
     scaffoldState: ScaffoldState = rememberScaffoldState(),
 ) {
@@ -75,7 +80,11 @@ private fun TaskListBody(
             )
         }
     ) { innerPadding ->
-        TaskList(tasks = tasks, modifier = Modifier.padding(innerPadding))
+        TaskList(
+            tasks = tasks,
+            modifier = Modifier.padding(innerPadding),
+            lazyListState = lazyListState,
+        )
     }
 
 }
@@ -83,12 +92,14 @@ private fun TaskListBody(
 @Composable
 private fun TaskList(
     tasks: List<Task>,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    lazyListState: LazyListState
 ) {
     var expandedItemId by rememberSaveable { mutableStateOf(-1L) }
 
     LazyColumn(
-        modifier,
+        state = lazyListState,
+        modifier = modifier,
         contentPadding = PaddingValues(bottom = 50.dp)
     ) {
         items(tasks) { task ->
@@ -220,7 +231,8 @@ private fun PreviewTaskListScreen() {
                 Task("Example Task 2"),
                 Task("Example Task 3"),
             ),
-            onAddNewTaskClicked = {}
+            onAddNewTaskClicked = {},
+            lazyListState = rememberLazyListState()
         )
     }
 }

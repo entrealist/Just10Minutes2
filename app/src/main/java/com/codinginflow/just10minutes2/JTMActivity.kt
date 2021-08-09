@@ -4,6 +4,9 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.annotation.StringRes
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.slideInVertically
+import androidx.compose.animation.slideOutVertically
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
@@ -48,31 +51,41 @@ private fun JTMActivityBody() {
     val navController = rememberNavController()
     Scaffold(
         bottomBar = {
-            BottomNavigation {
-                val navBackStackEntry by navController.currentBackStackEntryAsState()
-                val currentDestination = navBackStackEntry?.destination
-                bottomNavDestinations.forEach { destination ->
-                    BottomNavigationItem( // Followed: https://developer.android.com/jetpack/compose/navigation#bottom-nav
-                        icon = {
-                            Icon(
-                                destination.icon,
-                                contentDescription = stringResource(destination.labelRes)
-                            )
-                        },
-                        label = { Text(stringResource(destination.labelRes)) },
-                        selected = currentDestination?.hierarchy?.any { it.route == destination.route } == true,
-                        onClick = {
-                            navController.navigate(destination.route) {
-                                popUpTo(navController.graph.findStartDestination().id) {
-                                    saveState = true
+            val navBackStackEntry by navController.currentBackStackEntryAsState()
+            val currentDestination = navBackStackEntry?.destination
+            val hideBottomNav = fullScreenDestinations.any { destination ->
+                destination.route == currentDestination?.route
+            }
+            AnimatedVisibility(
+                visible = !hideBottomNav,
+                enter = slideInVertically(initialOffsetY = { it * 2 }),
+                exit = slideOutVertically(targetOffsetY = { it * 2 })
+            ) {
+                BottomNavigation {
+                    bottomNavDestinations.forEach { destination ->
+                        BottomNavigationItem( // Followed: https://developer.android.com/jetpack/compose/navigation#bottom-nav
+                            icon = {
+                                Icon(
+                                    destination.icon,
+                                    contentDescription = stringResource(destination.labelRes)
+                                )
+                            },
+                            label = { Text(stringResource(destination.labelRes)) },
+                            selected = currentDestination?.hierarchy?.any { it.route == destination.route } == true,
+                            onClick = {
+                                navController.navigate(destination.route) {
+                                    popUpTo(navController.graph.findStartDestination().id) {
+                                        saveState = true
+                                    }
+                                    launchSingleTop = true
+                                    restoreState = true
                                 }
-                                launchSingleTop = true
-                                restoreState = true
                             }
-                        }
-                    )
+                        )
+                    }
                 }
             }
+
         }
     ) { innerPadding ->
         JTMNavHost(navController, Modifier.padding(innerPadding))
@@ -126,6 +139,10 @@ private val bottomNavDestinations = listOf(
     BottomNavDestination.Timer,
     BottomNavDestination.TaskList,
     BottomNavDestination.Statistics
+)
+
+private val fullScreenDestinations = listOf(
+    AppDestinations.AddEditTask
 )
 
 sealed class BottomNavDestination(
