@@ -51,11 +51,10 @@ private fun JTMActivityBody() {
         bottomBar = {
             val navBackStackEntry by navController.currentBackStackEntryAsState()
             val currentDestination = navBackStackEntry?.destination
-            val hideBottomNav = fullScreenDestinations.any { destination ->
-                destination.route == currentDestination?.route
-            }
+            val showBottomNav = navBackStackEntry?.arguments?.get(ARG_SHOW_BOTTOM_NAV) == true
+
             AnimatedVisibility(
-                visible = !hideBottomNav,
+                visible = showBottomNav,
                 enter = slideInVertically(initialOffsetY = { it * 2 }),
                 exit = slideOutVertically(targetOffsetY = { it * 2 })
             ) {
@@ -99,10 +98,25 @@ private fun JTMNavHost(
         startDestination = bottomNavDestinations[0].route,
         modifier = modifier
     ) {
-        composable(BottomNavDestination.Timer.route) {
+        composable(
+            route = BottomNavDestination.Timer.route,
+            arguments = listOf(
+                navArgument(ARG_SHOW_BOTTOM_NAV) {
+                    type = NavType.BoolType
+                    defaultValue = true
+                }
+            )
+        ) {
             TimerScreen()
         }
-        composable(BottomNavDestination.TaskList.route) {
+        composable(
+            route = BottomNavDestination.TaskList.route,
+            arguments = listOf(
+                navArgument(ARG_SHOW_BOTTOM_NAV) {
+                    type = NavType.BoolType
+                    defaultValue = true
+                }
+            )) {
             TaskListScreen(
                 addNewTask = {
                     navController.navigate(AppDestinations.AddEditTask.route)
@@ -112,7 +126,14 @@ private fun JTMNavHost(
                 }
             )
         }
-        composable(BottomNavDestination.Statistics.route) {
+        composable(
+            route = BottomNavDestination.Statistics.route,
+            arguments = listOf(
+                navArgument(ARG_SHOW_BOTTOM_NAV) {
+                    type = NavType.BoolType
+                    defaultValue = true
+                }
+            )) {
             Text("Statistics")
         }
         composable(
@@ -163,3 +184,4 @@ sealed class AppDestinations(
 }
 
 const val ARG_TASK_ID = "taskId"
+const val ARG_SHOW_BOTTOM_NAV = "showBottomNav"
