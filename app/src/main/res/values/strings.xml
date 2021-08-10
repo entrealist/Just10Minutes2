@@ -25,4 +25,9 @@
     <string name="save_changes">Save changes</string>
     <string name="please_set_minutes_goal">Please set a minutes goal</string>
     <string name="minutes_goal_cant_be_zero">Daily minutes goal can\'t be zero!</string>
+    <string name="more">More</string>
+    <string name="show_more">Show more</string>
+    <string name="delete_task">Delete task</string>
+    <string name="task_created">Task created</string>
+    <string name="task_updated">Task updated</string>
 </resources>

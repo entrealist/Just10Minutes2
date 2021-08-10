@@ -113,9 +113,11 @@ class AddEditTaskViewModel @Inject constructor(
         }
     }
 
-    fun onDeleteClicked(task: Task) {
+    fun onDeleteClicked() {
         viewModelScope.launch {
-            eventChannel.send(Event.NavigateBackWithResult(AddEditTaskResult.TaskDeleted(task.id)))
+            task?.let { task ->
+                eventChannel.send(Event.NavigateBackWithResult(AddEditTaskResult.TaskDeleted(task.id)))
+            }
         }
     }
 

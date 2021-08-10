@@ -30,6 +30,8 @@ class TimerViewModel @Inject constructor(
         } ?: emptyFlow()
     }
 
+    val timerRunning = taskTimerManager.running
+
     init {
         viewModelScope.launch {
             selectedTask.collect { task ->
@@ -37,8 +39,6 @@ class TimerViewModel @Inject constructor(
             }
         }
     }
-
-    val timerRunning = taskTimerManager.running
 
     fun onNewTaskSelected(task: Task) {
         stopTimer()

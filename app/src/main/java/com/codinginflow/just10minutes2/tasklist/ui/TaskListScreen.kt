@@ -25,6 +25,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.codinginflow.just10minutes2.R
+import com.codinginflow.just10minutes2.addedittask.AddEditTaskViewModel
 import com.codinginflow.just10minutes2.common.data.entities.Task
 import com.codinginflow.just10minutes2.common.ui.CircularProgressIndicatorWithBackground
 import com.codinginflow.just10minutes2.common.ui.theme.Just10Minutes2Theme
@@ -35,9 +36,20 @@ fun TaskListScreen(
     viewModel: TaskListViewModel = hiltViewModel(),
     addNewTask: () -> Unit,
     editTask: (taskId: Long) -> Unit,
+    addEditResult: AddEditTaskViewModel.AddEditTaskResult?,
+    onAddEditResultProcessed: () -> Unit,
 ) {
     val tasks by viewModel.tasks.collectAsState(emptyList())
+
     val lazyListState = rememberLazyListState()
+    val scaffoldState = rememberScaffoldState()
+
+    LaunchedEffect(addEditResult) {
+        if (addEditResult != null) {
+            viewModel.onAddEditResult(addEditResult)
+            onAddEditResultProcessed()
+        }
+    }
 
     LaunchedEffect(Unit) {
         viewModel.events.collectLatest { event ->
@@ -46,6 +58,18 @@ fun TaskListScreen(
                     addNewTask()
                 is TaskListViewModel.Event.EditTask ->
                     editTask(event.taskId)
+                is TaskListViewModel.Event.ShowTaskSavedConfirmationMessage ->
+                    scaffoldState.snackbarHostState.showSnackbar("not yet implemented")
+                is TaskListViewModel.Event.ShowUndoDeleteTaskMessage -> {
+                    val snackbarResult = scaffoldState.snackbarHostState.showSnackbar(
+                        message = "Task deleted", // TODO: 10.08.2021 Replace for string resource ,
+                        actionLabel = "Undo",
+                        SnackbarDuration.Long
+                    )
+                    if (snackbarResult == SnackbarResult.ActionPerformed) {
+                        viewModel.onUndoDeleteTaskClicked(event.task)
+                    }
+                }
             }
         }
     }
@@ -54,7 +78,8 @@ fun TaskListScreen(
         tasks = tasks,
         onAddNewTaskClicked = viewModel::onAddNewTaskClicked,
         onEditTaskClicked = viewModel::onEditTaskClicked,
-        lazyListState = lazyListState
+        lazyListState = lazyListState,
+        scaffoldState = scaffoldState,
     )
 }
 

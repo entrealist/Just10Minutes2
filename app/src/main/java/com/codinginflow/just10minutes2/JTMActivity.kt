@@ -23,6 +23,7 @@ import androidx.navigation.NavHostController
 import androidx.navigation.NavType
 import androidx.navigation.compose.*
 import com.codinginflow.just10minutes2.addedittask.AddEditTaskScreen
+import com.codinginflow.just10minutes2.addedittask.AddEditTaskViewModel
 import com.codinginflow.just10minutes2.common.data.entities.Task
 import com.codinginflow.just10minutes2.timer.ui.TimerScreen
 import com.codinginflow.just10minutes2.tasklist.ui.TaskListScreen
@@ -116,13 +117,21 @@ private fun JTMNavHost(
                     type = NavType.BoolType
                     defaultValue = true
                 }
-            )) {
+            )) { navBackStackEntry ->
             TaskListScreen(
                 addNewTask = {
                     navController.navigate(AppDestinations.AddEditTask.route)
                 },
                 editTask = { taskId ->
                     navController.navigate(AppDestinations.AddEditTask.route + "?$ARG_TASK_ID=$taskId")
+                },
+                addEditResult = navBackStackEntry.savedStateHandle.get<AddEditTaskViewModel.AddEditTaskResult>(
+                    KEY_ADD_EDIT_RESULT
+                ),
+                onAddEditResultProcessed = {
+                    navBackStackEntry.savedStateHandle.remove<AddEditTaskViewModel.AddEditTaskResult>(
+                        KEY_ADD_EDIT_RESULT
+                    )
                 }
             )
         }
@@ -150,7 +159,11 @@ private fun JTMNavHost(
                     navController.popBackStack()
                 },
                 navigateBackWithResult = { result ->
-
+                    navController.previousBackStackEntry?.savedStateHandle?.set(
+                        KEY_ADD_EDIT_RESULT,
+                        result
+                    )
+                    navController.popBackStack()
                 })
         }
     }
@@ -185,3 +198,5 @@ sealed class AppDestinations(
 
 const val ARG_TASK_ID = "taskId"
 const val ARG_SHOW_BOTTOM_NAV = "showBottomNav"
+
+const val KEY_ADD_EDIT_RESULT = "KEY_ADD_EDIT_RESULT"
