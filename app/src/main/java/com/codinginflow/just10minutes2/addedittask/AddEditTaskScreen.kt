@@ -1,18 +1,19 @@
 package com.codinginflow.just10minutes2.addedittask
 
 import android.content.res.Configuration
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material.icons.filled.Save
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
@@ -28,8 +29,7 @@ fun AddEditTaskScreen(
     navigateBackWithResult: (AddEditTaskViewModel.AddEditTaskResult) -> Unit,
 ) {
     val taskNameInput by viewModel.taskNameInput.observeAsState()
-
-    val title = stringResource(if (viewModel.taskId == Task.NO_ID) R.string.add_task else R.string.edit_task)
+    val minutesGoalInput by viewModel.minutesGoalInput.observeAsState()
 
     LaunchedEffect(Unit) {
         viewModel.events.collectLatest { event ->
@@ -42,29 +42,45 @@ fun AddEditTaskScreen(
     }
 
     AddEditTaskBody(
-        title = title,
+        isEditMode = viewModel.taskId != Task.NO_ID,
         taskNameInput = taskNameInput,
-        onTaskNameInputChanged = viewModel::setTaskName,
+        onTaskNameInputChanged = viewModel::onTaskNameInputChanged,
+        minutesGoalInput = minutesGoalInput,
+        onMinutesGoalInputChanged = viewModel::onMinutesGoalInputChanged,
+        onSaveClicked = viewModel::onSaveClicked,
         onNavigateUpClick = viewModel::onNavigateUpClicked
     )
 }
 
 @Composable
 private fun AddEditTaskBody(
-    title: String,
+    isEditMode: Boolean,
     taskNameInput: String?,
     onTaskNameInputChanged: (String) -> Unit,
+    minutesGoalInput: String?,
+    onMinutesGoalInputChanged: (String) -> Unit,
+    onSaveClicked: () -> Unit,
     onNavigateUpClick: () -> Unit,
     modifier: Modifier = Modifier,
     scaffoldState: ScaffoldState = rememberScaffoldState(),
 ) {
+    val title =
+        stringResource(if (isEditMode) R.string.edit_task else R.string.add_task)
+
     Scaffold(
         modifier = modifier,
         scaffoldState = scaffoldState,
         topBar = {
             TopAppBar(
                 title = { Text(title) },
-                actions = {},
+                actions = {
+                    IconButton(onClick = onSaveClicked) {
+                        Icon(
+                            Icons.Default.Save,
+                            contentDescription = stringResource(R.string.save_changes)
+                        )
+                    }
+                },
                 navigationIcon = {
                     IconButton(onClick = onNavigateUpClick) {
                         Icon(
@@ -79,6 +95,8 @@ private fun AddEditTaskBody(
         BodyContent(
             taskNameInput = taskNameInput,
             onTaskNameInputChanged = onTaskNameInputChanged,
+            minutesGoalInput = minutesGoalInput,
+            onMinutesGoalInputChanged = onMinutesGoalInputChanged,
             modifier = Modifier.padding(innerPadding)
         )
     }
@@ -88,6 +106,8 @@ private fun AddEditTaskBody(
 private fun BodyContent(
     taskNameInput: String?,
     onTaskNameInputChanged: (String) -> Unit,
+    minutesGoalInput: String?,
+    onMinutesGoalInputChanged: (String) -> Unit,
     modifier: Modifier = Modifier
 ) {
     Column(modifier.padding(8.dp)) {
@@ -97,6 +117,15 @@ private fun BodyContent(
             label = { Text(stringResource(R.string.task_name)) },
             maxLines = 1,
             modifier = Modifier.fillMaxWidth()
+        )
+        Spacer(Modifier.height(4.dp))
+        OutlinedTextField(
+            value = minutesGoalInput.orEmpty(),
+            onValueChange = onMinutesGoalInputChanged,
+            label = { Text(stringResource(R.string.minutes_per_day)) },
+            maxLines = 1,
+            modifier = Modifier.fillMaxWidth(),
+            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
         )
     }
 }
@@ -114,9 +143,12 @@ private fun BodyContent(
 private fun PreviewTaskListScreen() {
     Just10Minutes2Theme {
         AddEditTaskBody(
-            title = "Preview",
+            isEditMode = false,
             taskNameInput = null,
             onTaskNameInputChanged = {},
+            minutesGoalInput = "10",
+            onMinutesGoalInputChanged = {},
+            onSaveClicked = {},
             onNavigateUpClick = {}
         )
     }

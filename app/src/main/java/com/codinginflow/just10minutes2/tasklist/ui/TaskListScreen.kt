@@ -187,7 +187,7 @@ private fun TaskItem(
                         .padding(16.dp)
                 ) {
                     val progress =
-                        1 - (task.millisLeftToday.toFloat() / task.dailyGoalInMillis.toFloat())
+                        1 - (task.millisLeftToday.toFloat() / task.dailyGoalInMilliseconds.toFloat())
                     CircularProgressIndicatorWithBackground(
                         progress = progress,
                     )

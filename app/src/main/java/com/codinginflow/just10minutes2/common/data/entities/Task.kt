@@ -10,14 +10,14 @@ data class Task(
     val millisCompletedToday: Long = 0,
     @PrimaryKey(autoGenerate = true) val id: Long = 0
 ) {
-    val dailyGoalInMillis: Long
+    val dailyGoalInMilliseconds: Long
         get() = dailyGoalInMinutes * 60 * 1000L
 
     val minutesCompletedToday: Int
         get() = (millisCompletedToday / (60 * 1000)).toInt()
 
     val millisLeftToday: Long
-        get() = dailyGoalInMillis - millisCompletedToday
+        get() = dailyGoalInMilliseconds - millisCompletedToday
 
     val isCompletedToday: Boolean
         get() = millisLeftToday <= 0

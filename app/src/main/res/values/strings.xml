@@ -18,7 +18,11 @@
     <string name="minutes_completed_today_placeholder">Completed: %d min</string>
     <string name="task_completed">Task completed</string>
     <string name="task_name_with_minutes_goal">%s (%d min)</string>
-    <string name="name_cant_be_empty">Name can\'t be empty</string>
+    <string name="name_cant_be_empty">Name can\'t be empty!</string>
     <string name="navigate_back">Navigate back</string>
     <string name="task_name">Task name</string>
+    <string name="minutes_per_day">Minutes per day</string>
+    <string name="save_changes">Save changes</string>
+    <string name="please_set_minutes_goal">Please set a minutes goal</string>
+    <string name="minutes_goal_cant_be_zero">Daily minutes goal can\'t be zero!</string>
 </resources>

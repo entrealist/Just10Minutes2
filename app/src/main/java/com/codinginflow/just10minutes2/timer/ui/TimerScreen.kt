@@ -94,7 +94,7 @@ private fun BodyContent(
         )
         CircularTextTimer(
             timeLeftInMillis = selectedTask?.millisLeftToday ?: 0,
-            timeGoalInMillis = selectedTask?.dailyGoalInMillis ?: 0
+            timeGoalInMillis = selectedTask?.dailyGoalInMilliseconds ?: 0
         )
         Spacer(Modifier.height(16.dp))
 
