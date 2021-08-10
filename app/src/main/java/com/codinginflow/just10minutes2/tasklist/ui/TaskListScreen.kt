@@ -19,6 +19,7 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
@@ -43,6 +44,7 @@ fun TaskListScreen(
 
     val lazyListState = rememberLazyListState()
     val scaffoldState = rememberScaffoldState()
+    val context = LocalContext.current
 
     LaunchedEffect(addEditResult) {
         if (addEditResult != null) {
@@ -58,18 +60,8 @@ fun TaskListScreen(
                     addNewTask()
                 is TaskListViewModel.Event.EditTask ->
                     editTask(event.taskId)
-                is TaskListViewModel.Event.ShowTaskSavedConfirmationMessage ->
-                    scaffoldState.snackbarHostState.showSnackbar("not yet implemented")
-                is TaskListViewModel.Event.ShowUndoDeleteTaskMessage -> {
-                    val snackbarResult = scaffoldState.snackbarHostState.showSnackbar(
-                        message = "Task deleted", // TODO: 10.08.2021 Replace for string resource ,
-                        actionLabel = "Undo",
-                        SnackbarDuration.Long
-                    )
-                    if (snackbarResult == SnackbarResult.ActionPerformed) {
-                        viewModel.onUndoDeleteTaskClicked(event.task)
-                    }
-                }
+                is TaskListViewModel.Event.ShowAddEditConfirmationMessage ->
+                    scaffoldState.snackbarHostState.showSnackbar(context.getString(event.msg))
             }
         }
     }

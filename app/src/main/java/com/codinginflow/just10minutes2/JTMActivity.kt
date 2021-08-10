@@ -54,11 +54,7 @@ private fun JTMActivityBody() {
             val currentDestination = navBackStackEntry?.destination
             val showBottomNav = navBackStackEntry?.arguments?.get(ARG_SHOW_BOTTOM_NAV) == true
 
-            AnimatedVisibility(
-                visible = showBottomNav,
-                enter = slideInVertically(initialOffsetY = { it * 2 }),
-                exit = slideOutVertically(targetOffsetY = { it * 2 })
-            ) {
+            if (showBottomNav) {
                 BottomNavigation {
                     bottomNavDestinations.forEach { destination ->
                         BottomNavigationItem( // Followed: https://developer.android.com/jetpack/compose/navigation#bottom-nav
@@ -78,7 +74,8 @@ private fun JTMActivityBody() {
                                     launchSingleTop = true
                                     restoreState = true
                                 }
-                            }
+                            },
+                            alwaysShowLabel = false
                         )
                     }
                 }

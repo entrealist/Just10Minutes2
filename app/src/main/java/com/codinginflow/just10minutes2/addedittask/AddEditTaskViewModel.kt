@@ -1,7 +1,6 @@
 package com.codinginflow.just10minutes2.addedittask
 
 import android.os.Parcelable
-import androidx.annotation.StringRes
 import androidx.lifecycle.*
 import com.codinginflow.just10minutes2.ARG_TASK_ID
 import com.codinginflow.just10minutes2.R
@@ -33,6 +32,22 @@ class AddEditTaskViewModel @Inject constructor(
 
     private val minutesGoalInputLiveData = savedStateHandle.getLiveData<String>("minutesGoalInput")
     val minutesGoalInput: LiveData<String> = minutesGoalInputLiveData
+
+    private val taskNameInputIsErrorLiveData =
+        savedStateHandle.getLiveData<Boolean>("taskNameInputIsError")
+    val taskNameInputIsError: LiveData<Boolean> = taskNameInputIsErrorLiveData
+
+    private val minutesGoalInputIsErrorLiveData =
+        savedStateHandle.getLiveData<Boolean>("minutesGoalInputIsError")
+    val minutesGoalInputIsError: LiveData<Boolean> = minutesGoalInputIsErrorLiveData
+
+    private val taskNameInputErrorMessageLiveData =
+        savedStateHandle.getLiveData<Int>("taskNameInputErrorMessage")
+    val taskNameInputErrorMessage: LiveData<Int> = taskNameInputErrorMessageLiveData
+
+    private val minutesGoalInputErrorMessageLiveData =
+        savedStateHandle.getLiveData<Int>("minutesGoalInputErrorMessage")
+    val minutesGoalInputErrorMessage: LiveData<Int> = minutesGoalInputErrorMessageLiveData
 
     init {
         Timber.d("id = $taskId")
@@ -71,20 +86,27 @@ class AddEditTaskViewModel @Inject constructor(
         val taskNameInput = taskNameInput.value
         val minutesGoalInput = minutesGoalInput.value
 
+        taskNameInputIsErrorLiveData.value = false
+        minutesGoalInputIsErrorLiveData.value = false
+
         if (taskNameInput.isNullOrBlank()) {
-            showInvalidInputMessage(R.string.name_cant_be_empty)
+            taskNameInputIsErrorLiveData.value = true
+            taskNameInputErrorMessageLiveData.value = R.string.task_name_empty_error
             return
         }
 
         if (minutesGoalInput.isNullOrBlank()) {
-            showInvalidInputMessage(R.string.please_set_minutes_goal)
+            minutesGoalInputIsErrorLiveData.value = true
+            minutesGoalInputErrorMessageLiveData.value = R.string.minutes_goal_empty_error
             return
         }
 
         val minutesGoal = minutesGoalInput.toInt()
 
         if (minutesGoal < 1) {
-            showInvalidInputMessage(R.string.minutes_goal_cant_be_zero)
+            minutesGoalInputIsErrorLiveData.value = true
+            minutesGoalInputErrorMessageLiveData.value = R.string.minutes_goal_zero_error
+            return
         }
 
         if (taskId == Task.NO_ID) {
@@ -115,8 +137,15 @@ class AddEditTaskViewModel @Inject constructor(
 
     fun onDeleteClicked() {
         viewModelScope.launch {
-            task?.let { task ->
-                eventChannel.send(Event.NavigateBackWithResult(AddEditTaskResult.TaskDeleted(task.id)))
+            eventChannel.send(Event.ShowDeleteConfirmationDialog)
+        }
+    }
+
+    fun onConfirmDeletion() {
+        viewModelScope.launch {
+            task?.let {
+                taskDao.delete(it)
+                eventChannel.send(Event.NavigateBackWithResult(AddEditTaskResult.TaskDeleted))
             }
         }
     }
@@ -127,12 +156,8 @@ class AddEditTaskViewModel @Inject constructor(
         }
     }
 
-    private fun showInvalidInputMessage(@StringRes msg: Int) {
-        viewModelScope.launch { eventChannel.send(Event.ShowInvalidInputMessage(msg)) }
-    }
-
     sealed class Event {
-        data class ShowInvalidInputMessage(@StringRes val msg: Int) : Event()
+        object ShowDeleteConfirmationDialog : Event()
         data class NavigateBackWithResult(val result: AddEditTaskResult) : Event()
         object NavigateUp : Event()
     }
@@ -145,6 +170,6 @@ class AddEditTaskViewModel @Inject constructor(
         object TaskUpdated : AddEditTaskResult()
 
         @Parcelize
-        data class TaskDeleted(val taskId: Long) : AddEditTaskResult()
+        object TaskDeleted : AddEditTaskResult()
     }
 }
