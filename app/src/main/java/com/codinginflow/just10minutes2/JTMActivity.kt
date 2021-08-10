@@ -14,7 +14,6 @@ import androidx.compose.material.icons.filled.Assessment
 import androidx.compose.material.icons.filled.List
 import androidx.compose.material.icons.filled.Timer
 import androidx.compose.runtime.*
-import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.stringResource
@@ -29,7 +28,6 @@ import com.codinginflow.just10minutes2.timer.ui.TimerScreen
 import com.codinginflow.just10minutes2.tasklist.ui.TaskListScreen
 import com.codinginflow.just10minutes2.common.ui.theme.Just10Minutes2Theme
 import dagger.hilt.android.AndroidEntryPoint
-import timber.log.Timber
 
 @AndroidEntryPoint
 class MainActivity : ComponentActivity() {
@@ -85,7 +83,6 @@ private fun JTMActivityBody() {
                     }
                 }
             }
-
         }
     ) { innerPadding ->
         JTMNavHost(navController, Modifier.padding(innerPadding))
@@ -107,8 +104,11 @@ private fun JTMNavHost(
         }
         composable(BottomNavDestination.TaskList.route) {
             TaskListScreen(
-                navigateToAddNewTask = {
+                addNewTask = {
                     navController.navigate(AppDestinations.AddEditTask.route)
+                },
+                editTask = { taskId ->
+                    navController.navigate(AppDestinations.AddEditTask.route + "?$ARG_TASK_ID=$taskId")
                 }
             )
         }
@@ -116,7 +116,7 @@ private fun JTMNavHost(
             Text("Statistics")
         }
         composable(
-            AppDestinations.AddEditTask.route,
+            route = AppDestinations.AddEditTask.route + "?$ARG_TASK_ID={$ARG_TASK_ID}",
             arguments = listOf(
                 navArgument(ARG_TASK_ID) {
                     type = NavType.LongType
@@ -125,10 +125,10 @@ private fun JTMNavHost(
             )
         ) {
             AddEditTaskScreen(
-                onNavigateUp = {
+                navigateUp = {
                     navController.popBackStack()
                 },
-                onNavigateBackWithResult = { result ->
+                navigateBackWithResult = { result ->
 
                 })
         }
@@ -159,7 +159,7 @@ sealed class BottomNavDestination(
 sealed class AppDestinations(
     val route: String
 ) {
-    object AddEditTask : AppDestinations("AddEditTask?$ARG_TASK_ID={$ARG_TASK_ID}")
+    object AddEditTask : AppDestinations("AddEditTask")
 }
 
 const val ARG_TASK_ID = "taskId"

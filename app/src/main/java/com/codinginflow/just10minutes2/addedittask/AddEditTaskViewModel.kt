@@ -3,6 +3,7 @@ package com.codinginflow.just10minutes2.addedittask
 import android.os.Parcelable
 import androidx.annotation.StringRes
 import androidx.lifecycle.*
+import com.codinginflow.just10minutes2.ARG_TASK_ID
 import com.codinginflow.just10minutes2.R
 import com.codinginflow.just10minutes2.common.data.daos.TaskDao
 import com.codinginflow.just10minutes2.common.data.entities.Task
@@ -12,6 +13,7 @@ import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.launch
 import kotlinx.parcelize.Parcelize
+import timber.log.Timber
 import javax.inject.Inject
 
 @HiltViewModel
@@ -23,15 +25,14 @@ class AddEditTaskViewModel @Inject constructor(
     private val eventChannel = Channel<Event>()
     val events = eventChannel.receiveAsFlow()
 
-    private val taskId = savedStateHandle.get<Long>("taskId") ?: Task.NO_ID
+    val taskId = savedStateHandle.get<Long>(ARG_TASK_ID) ?: Task.NO_ID
+    private var task: Task? = null
 
-    private val taskLivedata = MutableLiveData<Task?>()
-    val task: LiveData<Task?> = taskLivedata
-
-    private val nameInputLiveData = savedStateHandle.getLiveData<String>("taskTitleInput")
-    val nameInput: LiveData<String> = nameInputLiveData
+    private val taskNameInputLiveData = savedStateHandle.getLiveData<String>("taskTitleInput")
+    val taskNameInput: LiveData<String> = taskNameInputLiveData
 
     init {
+        Timber.d("id = $taskId")
         if (taskId != Task.NO_ID) {
             loadTaskFromId(taskId)
         }
@@ -39,21 +40,20 @@ class AddEditTaskViewModel @Inject constructor(
 
     private fun loadTaskFromId(taskId: Long) {
         viewModelScope.launch {
-            val task = taskDao.getTaskById(taskId).first()
-            taskLivedata.value = task
-            val titleInput = nameInputLiveData.value
-            if (titleInput != null) {
-                nameInputLiveData.value = task?.name
+            task = taskDao.getTaskById(taskId).first()
+            val titleInput = taskNameInputLiveData.value
+            if (titleInput == null) {
+                taskNameInputLiveData.value = task?.name
             }
         }
     }
 
     fun setTaskName(name: String) {
-        nameInputLiveData.value = name
+        taskNameInputLiveData.value = name
     }
 
     fun onSaveClick() {
-        val name = nameInput.value
+        val name = taskNameInput.value
 
         if (name.isNullOrBlank()) {
             showInvalidInputMessage(R.string.name_cant_be_empty)
@@ -64,7 +64,7 @@ class AddEditTaskViewModel @Inject constructor(
             val newTask = Task(name = name)
             createTask(newTask)
         } else {
-            val task = task.value
+            val task = task
             if (task != null) { // avoid save before task has loaded
                 val updatedTask = task.copy(name = name)
                 updateTask(updatedTask)
@@ -86,9 +86,15 @@ class AddEditTaskViewModel @Inject constructor(
         }
     }
 
-    fun onDeleteClick(task: Task) {
+    fun onDeleteClicked(task: Task) {
         viewModelScope.launch {
             eventChannel.send(Event.NavigateBackWithResult(AddEditTaskResult.TaskDeleted(task.id)))
+        }
+    }
+
+    fun onNavigateUpClicked() {
+        viewModelScope.launch {
+            eventChannel.send(Event.NavigateUp)
         }
     }
 
@@ -99,6 +105,7 @@ class AddEditTaskViewModel @Inject constructor(
     sealed class Event {
         data class ShowInvalidInputMessage(@StringRes val msg: Int) : Event()
         data class NavigateBackWithResult(val result: AddEditTaskResult) : Event()
+        object NavigateUp : Event()
     }
 
     sealed class AddEditTaskResult : Parcelable {

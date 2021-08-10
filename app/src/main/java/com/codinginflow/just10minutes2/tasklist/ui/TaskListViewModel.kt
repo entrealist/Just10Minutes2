@@ -27,7 +27,14 @@ class TaskListViewModel @Inject constructor(
         }
     }
 
+    fun onEditTaskClicked(task: Task) {
+        viewModelScope.launch {
+            eventChannel.send(Event.EditTask(task.id))
+        }
+    }
+
     sealed class Event {
         object AddNewTask : Event()
+        data class EditTask(val taskId: Long) : Event()
     }
 }

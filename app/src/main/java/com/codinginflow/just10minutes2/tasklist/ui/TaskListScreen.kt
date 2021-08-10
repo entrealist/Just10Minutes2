@@ -28,13 +28,13 @@ import com.codinginflow.just10minutes2.R
 import com.codinginflow.just10minutes2.common.data.entities.Task
 import com.codinginflow.just10minutes2.common.ui.CircularProgressIndicatorWithBackground
 import com.codinginflow.just10minutes2.common.ui.theme.Just10Minutes2Theme
-import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.collectLatest
 
 @Composable
 fun TaskListScreen(
     viewModel: TaskListViewModel = hiltViewModel(),
-    navigateToAddNewTask: () -> Unit
+    addNewTask: () -> Unit,
+    editTask: (taskId: Long) -> Unit,
 ) {
     val tasks by viewModel.tasks.collectAsState(emptyList())
     val lazyListState = rememberLazyListState()
@@ -43,7 +43,9 @@ fun TaskListScreen(
         viewModel.events.collectLatest { event ->
             when (event) {
                 is TaskListViewModel.Event.AddNewTask ->
-                    navigateToAddNewTask()
+                    addNewTask()
+                is TaskListViewModel.Event.EditTask ->
+                    editTask(event.taskId)
             }
         }
     }
@@ -51,6 +53,7 @@ fun TaskListScreen(
     TaskListBody(
         tasks = tasks,
         onAddNewTaskClicked = viewModel::onAddNewTaskClicked,
+        onEditTaskClicked = viewModel::onEditTaskClicked,
         lazyListState = lazyListState
     )
 }
@@ -59,6 +62,7 @@ fun TaskListScreen(
 private fun TaskListBody(
     tasks: List<Task>,
     onAddNewTaskClicked: () -> Unit,
+    onEditTaskClicked: (Task) -> Unit,
     lazyListState: LazyListState,
     modifier: Modifier = Modifier,
     scaffoldState: ScaffoldState = rememberScaffoldState(),
@@ -80,20 +84,37 @@ private fun TaskListBody(
             )
         }
     ) { innerPadding ->
-        TaskList(
+        BodyContent(
             tasks = tasks,
-            modifier = Modifier.padding(innerPadding),
+            onEditTaskClicked = onEditTaskClicked,
             lazyListState = lazyListState,
+            modifier = Modifier.padding(innerPadding)
         )
     }
+}
 
+@Composable
+private fun BodyContent(
+    tasks: List<Task>,
+    onEditTaskClicked: (Task) -> Unit,
+    lazyListState: LazyListState,
+    modifier: Modifier = Modifier
+
+) {
+    TaskList(
+        tasks = tasks,
+        onEditTaskClicked = onEditTaskClicked,
+        lazyListState = lazyListState,
+        modifier = modifier,
+    )
 }
 
 @Composable
 private fun TaskList(
     tasks: List<Task>,
-    modifier: Modifier = Modifier,
-    lazyListState: LazyListState
+    onEditTaskClicked: (Task) -> Unit,
+    lazyListState: LazyListState,
+    modifier: Modifier = Modifier
 ) {
     var expandedItemId by rememberSaveable { mutableStateOf(-1L) }
 
@@ -112,7 +133,8 @@ private fun TaskList(
                     } else {
                         clickedTask.id
                     }
-                }
+                },
+                onEditTaskClicked = onEditTaskClicked
             )
             Divider()
         }
@@ -124,6 +146,7 @@ private fun TaskItem(
     task: Task,
     expanded: Boolean,
     onTaskClicked: (Task) -> Unit,
+    onEditTaskClicked: (Task) -> Unit,
     modifier: Modifier = Modifier
 ) {
     Row(
@@ -181,7 +204,7 @@ private fun TaskItem(
                 Spacer(Modifier.height(8.dp))
                 Row {
                     OutlinedButton(
-                        onClick = { /*TODO*/ },
+                        onClick = { onEditTaskClicked(task) },
                         modifier = Modifier
                             .weight(1f)
                     ) {
@@ -232,6 +255,7 @@ private fun PreviewTaskListScreen() {
                 Task("Example Task 3"),
             ),
             onAddNewTaskClicked = {},
+            onEditTaskClicked = {},
             lazyListState = rememberLazyListState()
         )
     }
@@ -252,7 +276,8 @@ private fun PreviewTaskItem() {
         TaskItem(
             task = Task("Example Task"),
             expanded = true,
-            onTaskClicked = {}
+            onTaskClicked = {},
+            onEditTaskClicked = {}
         )
     }
 }

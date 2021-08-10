@@ -12,10 +12,13 @@
     <string name="title_statistics">Statistics</string>
     <string name="completed">Completed</string>
     <string name="add_new_task">Add new task</string>
+    <string name="add_task">Add task</string>
     <string name="active_task_colon">Active task:</string>
     <string name="edit_task">Edit task</string>
     <string name="minutes_completed_today_placeholder">Completed: %d min</string>
     <string name="task_completed">Task completed</string>
     <string name="task_name_with_minutes_goal">%s (%d min)</string>
     <string name="name_cant_be_empty">Name can\'t be empty</string>
+    <string name="navigate_back">Navigate back</string>
+    <string name="task_name">Task name</string>
 </resources>
