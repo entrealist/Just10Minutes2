@@ -3,12 +3,14 @@ package com.codinginflow.just10minutes2.timer.ui
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.codinginflow.just10minutes2.common.data.TimerPreferencesManager
+import androidx.lifecycle.viewmodel.compose.viewModel
+import com.codinginflow.just10minutes2.common.data.preferences.TimerPreferencesManager
 import com.codinginflow.just10minutes2.common.data.daos.TaskDao
 import com.codinginflow.just10minutes2.common.data.entities.Task
 import com.codinginflow.just10minutes2.timer.TaskTimerManager
 import dagger.hilt.android.lifecycle.HiltViewModel
-import kotlinx.coroutines.flow.*
+import kotlinx.coroutines.channels.Channel
+import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
@@ -20,28 +22,17 @@ class TimerViewModel @Inject constructor(
     savedState: SavedStateHandle
 ) : ViewModel() {
 
-    private val timerPreferencesFlow = timerPreferencesManager.timerPreferencesFlow
+    private val eventChannel = Channel<Event>()
+    val events = eventChannel.receiveAsFlow()
+
+    val activeTask = taskTimerManager.activeTask
 
     val allTasks = taskDao.getAllTasks()
 
-    val selectedTask = timerPreferencesFlow.flatMapLatest { timerPreferences ->
-        timerPreferences.activeTaskId?.let { taskId ->
-            taskDao.getTaskById(taskId)
-        } ?: emptyFlow()
-    }
-
     val timerRunning = taskTimerManager.running
 
-    init {
-        viewModelScope.launch {
-            selectedTask.collect { task ->
-                if (task != null && task.millisLeftToday <= 0) stopTimer()
-            }
-        }
-    }
-
     fun onNewTaskSelected(task: Task) {
-        stopTimer()
+        taskTimerManager.stopTimer()
         viewModelScope.launch {
             timerPreferencesManager.updateActiveTaskId(task.id)
         }
@@ -49,18 +40,20 @@ class TimerViewModel @Inject constructor(
 
     fun onStartTimerClicked() {
         viewModelScope.launch {
-            val selectedTask = selectedTask.first()
-            if (selectedTask != null) {
-                taskTimerManager.startTimerForTask(selectedTask.id)
-            }
+            taskTimerManager.startTimer()
+            eventChannel.send(Event.StartTimerService)
         }
     }
 
     fun onStopTimerClicked() {
-        stopTimer()
+        viewModelScope.launch {
+            taskTimerManager.stopTimer()
+            eventChannel.send(Event.StopTimerService)
+        }
     }
 
-    private fun stopTimer() {
-        taskTimerManager.stopTimer()
+    sealed class Event {
+        object StartTimerService : Event()
+        object StopTimerService : Event()
     }
 }

@@ -17,6 +17,7 @@
     <string name="edit_task">Edit task</string>
     <string name="minutes_completed_today_placeholder">Completed: %d min</string>
     <string name="task_completed">Task completed</string>
+    <string name="task_completed_exclamation_mark">Task completed!</string>
     <string name="task_name_with_minutes_goal">%s (%d min)</string>
     <string name="task_name_empty_error">Task name can\'t be empty!</string>
     <string name="navigate_back">Navigate back</string>
@@ -38,4 +39,8 @@
     <string name="archive_task">Archive task</string>
     <string name="reset_day">Reset day</string>
     <string name="show_less">Show less</string>
+    <string name="timer_service_notification_channel_name">Timer Service Notification Channel</string>
+    <string name="timer_service_notification_channel_description">Necessary for the timer to run in the background</string>
+    <string name="minutes_left_placeholder">%d minutes left</string>
+    <string name="timer_running">Timer running</string>
 </resources>

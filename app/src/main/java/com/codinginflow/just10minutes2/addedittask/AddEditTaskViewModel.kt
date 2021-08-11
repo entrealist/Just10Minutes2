@@ -89,7 +89,7 @@ class AddEditTaskViewModel @Inject constructor(
             createTask(newTask)
         } else {
             val task = task
-            if (task != null) { // avoid save before task has loaded
+            if (task != null) {
                 val updatedTask = task.copy(name = taskNameInput, dailyGoalInMinutes = minutesGoal)
                 updateTask(updatedTask)
             }

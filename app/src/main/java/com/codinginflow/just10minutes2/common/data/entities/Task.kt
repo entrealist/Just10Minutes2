@@ -13,14 +13,14 @@ data class Task(
     val dailyGoalInMilliseconds: Long
         get() = dailyGoalInMinutes * 60 * 1000L
 
-    val minutesCompletedToday: Int
+    val timeCompletedTodayInMinutes: Int
         get() = (millisCompletedToday / (60 * 1000)).toInt()
 
-    val millisLeftToday: Long
+    val timeLeftTodayInMilliseconds: Long
         get() = dailyGoalInMilliseconds - millisCompletedToday
 
     val isCompletedToday: Boolean
-        get() = millisLeftToday <= 0
+        get() = timeLeftTodayInMilliseconds <= 0
 
     companion object {
         const val NO_ID = -1L

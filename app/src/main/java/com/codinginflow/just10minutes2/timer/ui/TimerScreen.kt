@@ -1,5 +1,6 @@
 package com.codinginflow.just10minutes2.timer.ui
 
+import android.content.Intent
 import android.content.res.Configuration
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -10,29 +11,50 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import androidx.core.content.ContextCompat
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.codinginflow.just10minutes2.R
 import com.codinginflow.just10minutes2.common.data.entities.Task
 import com.codinginflow.just10minutes2.common.ui.CircularProgressIndicatorWithBackground
 import com.codinginflow.just10minutes2.common.ui.theme.Just10Minutes2Theme
+import com.codinginflow.just10minutes2.common.util.formatTimeText
+import com.codinginflow.just10minutes2.timer.TimerService
+import kotlinx.coroutines.flow.collectLatest
 import java.util.*
 
 @Composable
 fun TimerScreen(
     viewModel: TimerViewModel = hiltViewModel()
 ) {
-    val selectedTask by viewModel.selectedTask.collectAsState(null)
+    val activeTask by viewModel.activeTask.collectAsState(null)
     val allTasks by viewModel.allTasks.collectAsState(emptyList())
-
     val timerRunning by viewModel.timerRunning.collectAsState(false)
 
+    val context = LocalContext.current
+
+    LaunchedEffect(Unit) {
+        viewModel.events.collectLatest { event ->
+            when (event) {
+                TimerViewModel.Event.StartTimerService -> {
+                    val serviceIntent = Intent(context, TimerService::class.java)
+                    ContextCompat.startForegroundService(context, serviceIntent)
+                }
+                TimerViewModel.Event.StopTimerService -> {
+                    val serviceIntent = Intent(context, TimerService::class.java)
+                    context.stopService(serviceIntent)
+                }
+            }
+        }
+    }
+
     TimerBody(
-        selectedTask = selectedTask,
+        activeTask = activeTask,
         allTasks = allTasks,
         timerRunning = timerRunning,
         onNewTaskSelected = viewModel::onNewTaskSelected,
@@ -43,7 +65,7 @@ fun TimerScreen(
 
 @Composable
 private fun TimerBody(
-    selectedTask: Task?,
+    activeTask: Task?,
     allTasks: List<Task>,
     timerRunning: Boolean,
     onNewTaskSelected: (Task) -> Unit,
@@ -62,7 +84,7 @@ private fun TimerBody(
         },
     ) {
         BodyContent(
-            selectedTask = selectedTask,
+            activeTask = activeTask,
             allTasks = allTasks,
             timerRunning = timerRunning,
             onNewTaskSelected = onNewTaskSelected,
@@ -74,7 +96,7 @@ private fun TimerBody(
 
 @Composable
 private fun BodyContent(
-    selectedTask: Task?,
+    activeTask: Task?,
     allTasks: List<Task>,
     timerRunning: Boolean,
     onNewTaskSelected: (Task) -> Unit,
@@ -88,17 +110,17 @@ private fun BodyContent(
     ) {
         Text(stringResource(R.string.active_task_colon), color = Color.Gray)
         DropdownSelector(
-            selectedTask = selectedTask,
+            selectedTask = activeTask,
             allTasks = allTasks,
             onNewTaskSelected = onNewTaskSelected
         )
         CircularTextTimer(
-            timeLeftInMillis = selectedTask?.millisLeftToday ?: 0,
-            timeGoalInMillis = selectedTask?.dailyGoalInMilliseconds ?: 0
+            timeLeftInMillis = activeTask?.timeLeftTodayInMilliseconds ?: 0,
+            timeGoalInMillis = activeTask?.dailyGoalInMilliseconds ?: 0
         )
         Spacer(Modifier.height(16.dp))
 
-        val buttonEnabled = selectedTask != null && !selectedTask.isCompletedToday
+        val buttonEnabled = activeTask != null && !activeTask.isCompletedToday
         val buttonOnClick = if (timerRunning) onStopTimerClicked else onStartTimerClicked
         val buttonTextRes = if (timerRunning) R.string.stop_timer else R.string.start_timer
         Button(
@@ -180,10 +202,7 @@ private fun CircularTextTimer(
     val progress = 1 - (timeLeftInMillis.toFloat() / timeGoalInMillis.toFloat())
     val completed = timeLeftInMillis <= 0
 
-    val millisAdjusted = timeLeftInMillis + 999
-    val minutes = ((millisAdjusted / 1000) / 60).toInt()
-    val seconds = ((millisAdjusted / 1000) % 60).toInt()
-    val timeText = String.format(Locale.getDefault(), "%02d:%02d", minutes, seconds)
+    val timeText = formatTimeText(timeLeftInMillis)
     val timeTextColor = if (!completed) LocalContentColor.current else Color.LightGray
 
     Box(contentAlignment = Alignment.Center) {
@@ -217,7 +236,7 @@ private fun CircularTextTimer(
 private fun PreviewTimerScreen() {
     Just10Minutes2Theme {
         TimerBody(
-            selectedTask = null,
+            activeTask = null,
             allTasks = emptyList(),
             timerRunning = false,
             onNewTaskSelected = {},
