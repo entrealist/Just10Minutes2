@@ -33,14 +33,6 @@ class AddEditTaskViewModel @Inject constructor(
     private val minutesGoalInputLiveData = savedStateHandle.getLiveData<String>("minutesGoalInput")
     val minutesGoalInput: LiveData<String> = minutesGoalInputLiveData
 
-    private val taskNameInputIsErrorLiveData =
-        savedStateHandle.getLiveData<Boolean>("taskNameInputIsError")
-    val taskNameInputIsError: LiveData<Boolean> = taskNameInputIsErrorLiveData
-
-    private val minutesGoalInputIsErrorLiveData =
-        savedStateHandle.getLiveData<Boolean>("minutesGoalInputIsError")
-    val minutesGoalInputIsError: LiveData<Boolean> = minutesGoalInputIsErrorLiveData
-
     private val taskNameInputErrorMessageLiveData =
         savedStateHandle.getLiveData<Int>("taskNameInputErrorMessage")
     val taskNameInputErrorMessage: LiveData<Int> = taskNameInputErrorMessageLiveData
@@ -83,31 +75,14 @@ class AddEditTaskViewModel @Inject constructor(
     }
 
     fun onSaveClicked() {
+        if (!validateInput()) return
+
         val taskNameInput = taskNameInput.value
         val minutesGoalInput = minutesGoalInput.value
 
-        taskNameInputIsErrorLiveData.value = false
-        minutesGoalInputIsErrorLiveData.value = false
-
-        if (taskNameInput.isNullOrBlank()) {
-            taskNameInputIsErrorLiveData.value = true
-            taskNameInputErrorMessageLiveData.value = R.string.task_name_empty_error
-            return
-        }
-
-        if (minutesGoalInput.isNullOrBlank()) {
-            minutesGoalInputIsErrorLiveData.value = true
-            minutesGoalInputErrorMessageLiveData.value = R.string.minutes_goal_empty_error
-            return
-        }
+        if (taskNameInput == null || minutesGoalInput == null) return
 
         val minutesGoal = minutesGoalInput.toInt()
-
-        if (minutesGoal < 1) {
-            minutesGoalInputIsErrorLiveData.value = true
-            minutesGoalInputErrorMessageLiveData.value = R.string.minutes_goal_zero_error
-            return
-        }
 
         if (taskId == Task.NO_ID) {
             val newTask = Task(name = taskNameInput, dailyGoalInMinutes = minutesGoal)
@@ -119,6 +94,31 @@ class AddEditTaskViewModel @Inject constructor(
                 updateTask(updatedTask)
             }
         }
+    }
+
+    private fun validateInput(): Boolean {
+        val taskNameInput = taskNameInput.value
+        val minutesGoalInput = minutesGoalInput.value
+
+        taskNameInputErrorMessageLiveData.value = null
+        minutesGoalInputErrorMessageLiveData.value = null
+
+        var hasError = false
+
+        if (taskNameInput.isNullOrBlank()) {
+            taskNameInputErrorMessageLiveData.value = R.string.task_name_empty_error
+            hasError = true
+        }
+
+        if (minutesGoalInput.isNullOrBlank()) {
+            minutesGoalInputErrorMessageLiveData.value = R.string.minutes_goal_empty_error
+            hasError = true
+        } else if (minutesGoalInput.toInt() < 1) {
+            minutesGoalInputErrorMessageLiveData.value = R.string.minutes_goal_zero_error
+            hasError = true
+        }
+
+        return !hasError
     }
 
     private fun createTask(task: Task) {

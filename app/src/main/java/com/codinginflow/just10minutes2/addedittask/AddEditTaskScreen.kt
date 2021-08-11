@@ -31,10 +31,7 @@ fun AddEditTaskScreen(
     val taskNameInput by viewModel.taskNameInput.observeAsState()
     val minutesGoalInput by viewModel.minutesGoalInput.observeAsState()
 
-    val taskNameInputIsError by viewModel.taskNameInputIsError.observeAsState(false)
     val taskNameInputErrorMessage by viewModel.taskNameInputErrorMessage.observeAsState()
-
-    val minutesGoalInputIsError by viewModel.minutesGoalInputIsError.observeAsState(false)
     val minutesGoalInputErrorMessage by viewModel.minutesGoalInputErrorMessage.observeAsState()
 
     val scaffoldState = rememberScaffoldState()
@@ -57,11 +54,9 @@ fun AddEditTaskScreen(
         isEditMode = viewModel.taskId != Task.NO_ID,
         taskNameInput = taskNameInput,
         onTaskNameInputChanged = viewModel::onTaskNameInputChanged,
-        taskNameInputIsError = taskNameInputIsError,
         taskNameInputErrorMessage = taskNameInputErrorMessage,
         minutesGoalInput = minutesGoalInput,
         onMinutesGoalInputChanged = viewModel::onMinutesGoalInputChanged,
-        minutesGoalInputIsError = minutesGoalInputIsError,
         minutesGoalInputErrorMessage = minutesGoalInputErrorMessage,
         onSaveClicked = viewModel::onSaveClicked,
         onDeleteClicked = viewModel::onDeleteClicked,
@@ -78,11 +73,9 @@ private fun AddEditTaskBody(
     isEditMode: Boolean,
     taskNameInput: String?,
     onTaskNameInputChanged: (String) -> Unit,
-    taskNameInputIsError: Boolean,
     @StringRes taskNameInputErrorMessage: Int?,
     minutesGoalInput: String?,
     onMinutesGoalInputChanged: (String) -> Unit,
-    minutesGoalInputIsError: Boolean,
     @StringRes minutesGoalInputErrorMessage: Int?,
     onSaveClicked: () -> Unit,
     onDeleteClicked: () -> Unit,
@@ -113,7 +106,7 @@ private fun AddEditTaskBody(
                 navigationIcon = {
                     IconButton(onClick = onNavigateUpClick) {
                         Icon(
-                            Icons.Default.ArrowBack,
+                            Icons.Default.Close,
                             contentDescription = stringResource(R.string.navigate_back)
                         )
                     }
@@ -125,11 +118,9 @@ private fun AddEditTaskBody(
             isEditMode = isEditMode,
             taskNameInput = taskNameInput,
             onTaskNameInputChanged = onTaskNameInputChanged,
-            taskNameInputIsError = taskNameInputIsError,
             taskNameInputErrorMessage = taskNameInputErrorMessage,
             minutesGoalInput = minutesGoalInput,
             onMinutesGoalInputChanged = onMinutesGoalInputChanged,
-            minutesGoalInputIsError = minutesGoalInputIsError,
             minutesGoalInputErrorMessage = minutesGoalInputErrorMessage,
             onDeleteClicked = onDeleteClicked,
             modifier = Modifier.padding(innerPadding)
@@ -164,11 +155,9 @@ private fun BodyContent(
     isEditMode: Boolean,
     taskNameInput: String?,
     onTaskNameInputChanged: (String) -> Unit,
-    taskNameInputIsError: Boolean,
     @StringRes taskNameInputErrorMessage: Int?,
     minutesGoalInput: String?,
     onMinutesGoalInputChanged: (String) -> Unit,
-    minutesGoalInputIsError: Boolean,
     @StringRes minutesGoalInputErrorMessage: Int?,
     onDeleteClicked: () -> Unit,
     modifier: Modifier = Modifier
@@ -179,6 +168,8 @@ private fun BodyContent(
             .fillMaxSize(), verticalArrangement = Arrangement.SpaceBetween
     ) {
         Column {
+            val taskNameInputIsError = taskNameInputErrorMessage != null
+            val minutesGoalInputIsError = minutesGoalInputErrorMessage != null
             OutlinedTextField(
                 value = taskNameInput.orEmpty(),
                 onValueChange = onTaskNameInputChanged,
@@ -264,11 +255,9 @@ private fun PreviewTaskListScreen() {
             isEditMode = true,
             taskNameInput = null,
             onTaskNameInputChanged = {},
-            taskNameInputIsError = false,
             taskNameInputErrorMessage = null,
             minutesGoalInput = "10",
             onMinutesGoalInputChanged = {},
-            minutesGoalInputIsError = false,
             minutesGoalInputErrorMessage = null,
             onSaveClicked = {},
             onDeleteClicked = {},
