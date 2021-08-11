@@ -43,4 +43,5 @@
     <string name="timer_service_notification_channel_description">Necessary for the timer to run in the background</string>
     <string name="minutes_left_placeholder">%d minutes left</string>
     <string name="timer_running">Timer running</string>
+    <string name="timer_stopped">Timer stopped</string>
 </resources>

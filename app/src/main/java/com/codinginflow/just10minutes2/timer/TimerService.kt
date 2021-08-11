@@ -61,7 +61,6 @@ class TimerService : Service() {
         notification
             .setContentTitle(task.name)
             .setContentText(formatTimeText(task.timeLeftTodayInMilliseconds))
-            .setTimeoutAfter(300) // avoid notification sometimes sticking around after service destroy
         notificationManager.notify(TIMER_NOTIFICATION_ID, notification.build())
     }
 

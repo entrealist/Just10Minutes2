@@ -8,6 +8,7 @@ import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
+import timber.log.Timber
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -58,4 +59,6 @@ class TaskTimerManager @Inject constructor(
         timerJob?.cancel()
         runningFlow.value = false
     }
+
+    // TODO: 12.08.2021 Handle process death
 }

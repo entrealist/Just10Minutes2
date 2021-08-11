@@ -36,6 +36,7 @@ fun TimerScreen(
     val allTasks by viewModel.allTasks.collectAsState(emptyList())
     val timerRunning by viewModel.timerRunning.collectAsState(false)
 
+    val scaffoldState = rememberScaffoldState()
     val context = LocalContext.current
 
     LaunchedEffect(Unit) {
@@ -49,6 +50,8 @@ fun TimerScreen(
                     val serviceIntent = Intent(context, TimerService::class.java)
                     context.stopService(serviceIntent)
                 }
+                TimerViewModel.Event.ShowTimerStoppedMessage ->
+                    scaffoldState.snackbarHostState.showSnackbar(context.getString(R.string.timer_stopped))
             }
         }
     }
@@ -60,6 +63,7 @@ fun TimerScreen(
         onNewTaskSelected = viewModel::onNewTaskSelected,
         onStartTimerClicked = viewModel::onStartTimerClicked,
         onStopTimerClicked = viewModel::onStopTimerClicked,
+        scaffoldState = scaffoldState,
     )
 }
 
