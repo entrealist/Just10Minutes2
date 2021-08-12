@@ -69,9 +69,10 @@ fun TaskListScreen(
     TaskListBody(
         tasks = tasks,
         onAddNewTaskClicked = viewModel::onAddNewTaskClicked,
+        onOpenTimerClicked = {},
         onEditTaskClicked = viewModel::onEditTaskClicked,
         lazyListState = lazyListState,
-        scaffoldState = scaffoldState,
+        scaffoldState = scaffoldState
     )
 }
 
@@ -80,6 +81,7 @@ private fun TaskListBody(
     tasks: List<Task>,
     onAddNewTaskClicked: () -> Unit,
     onEditTaskClicked: (Task) -> Unit,
+    onOpenTimerClicked: (Task) -> Unit,
     lazyListState: LazyListState,
     modifier: Modifier = Modifier,
     scaffoldState: ScaffoldState = rememberScaffoldState(),
@@ -104,6 +106,7 @@ private fun TaskListBody(
         BodyContent(
             tasks = tasks,
             onEditTaskClicked = onEditTaskClicked,
+            onOpenTimerClicked = onOpenTimerClicked,
             lazyListState = lazyListState,
             modifier = Modifier.padding(innerPadding)
         )
@@ -114,6 +117,7 @@ private fun TaskListBody(
 private fun BodyContent(
     tasks: List<Task>,
     onEditTaskClicked: (Task) -> Unit,
+    onOpenTimerClicked: (Task) -> Unit,
     lazyListState: LazyListState,
     modifier: Modifier = Modifier
 
@@ -121,8 +125,9 @@ private fun BodyContent(
     TaskList(
         tasks = tasks,
         onEditTaskClicked = onEditTaskClicked,
+        onOpenTimerClicked = onOpenTimerClicked,
         lazyListState = lazyListState,
-        modifier = modifier,
+        modifier = modifier
     )
 }
 
@@ -130,6 +135,7 @@ private fun BodyContent(
 private fun TaskList(
     tasks: List<Task>,
     onEditTaskClicked: (Task) -> Unit,
+    onOpenTimerClicked: (Task) -> Unit,
     lazyListState: LazyListState,
     modifier: Modifier = Modifier
 ) {
@@ -151,7 +157,8 @@ private fun TaskList(
                         clickedTask.id
                     }
                 },
-                onEditTaskClicked = onEditTaskClicked
+                onEditTaskClicked = onEditTaskClicked,
+                onOpenTimerClicked = onOpenTimerClicked
             )
             Divider()
         }
@@ -164,6 +171,7 @@ private fun TaskItem(
     expanded: Boolean,
     onTaskClicked: (Task) -> Unit,
     onEditTaskClicked: (Task) -> Unit,
+    onOpenTimerClicked: (Task) -> Unit,
     modifier: Modifier = Modifier
 ) {
     Row(
@@ -236,7 +244,7 @@ private fun TaskItem(
                     val timerButtonTextRes =
                         if (!task.isCompletedToday) R.string.open_timer else R.string.task_completed
                     OutlinedButton(
-                        onClick = { /*TODO*/ },
+                        onClick = { onOpenTimerClicked(task) },
                         enabled = !task.isCompletedToday,
                         modifier = Modifier.weight(1f)
                     ) {
@@ -273,6 +281,7 @@ private fun PreviewTaskListScreen() {
             ),
             onAddNewTaskClicked = {},
             onEditTaskClicked = {},
+            onOpenTimerClicked = {},
             lazyListState = rememberLazyListState()
         )
     }
@@ -294,7 +303,8 @@ private fun PreviewTaskItem() {
             task = Task("Example Task"),
             expanded = true,
             onTaskClicked = {},
-            onEditTaskClicked = {}
+            onEditTaskClicked = {},
+            onOpenTimerClicked = {},
         )
     }
 }

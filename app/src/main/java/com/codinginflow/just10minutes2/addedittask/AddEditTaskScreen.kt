@@ -191,6 +191,7 @@ private fun BodyContent(
                 val errorMessage = minutesGoalInputErrorMessage?.let { stringResource(it) } ?: ""
                 Text(errorMessage, color = MaterialTheme.colors.error)
             }
+            Spacer(Modifier.height(8.dp))
         }
         if (isEditMode) {
             Column {

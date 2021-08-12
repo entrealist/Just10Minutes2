@@ -18,31 +18,30 @@ import javax.inject.Inject
 @HiltViewModel
 class AddEditTaskViewModel @Inject constructor(
     private val taskDao: TaskDao,
-    savedStateHandle: SavedStateHandle
+    savedState: SavedStateHandle
 ) : ViewModel() {
 
     private val eventChannel = Channel<Event>()
     val events = eventChannel.receiveAsFlow()
 
-    val taskId = savedStateHandle.get<Long>(ARG_TASK_ID) ?: Task.NO_ID
+    val taskId = savedState.get<Long>(ARG_TASK_ID) ?: Task.NO_ID
     private var task: Task? = null
 
-    private val taskNameInputLiveData = savedStateHandle.getLiveData<String>("taskTitleInput")
+    private val taskNameInputLiveData = savedState.getLiveData<String>("taskTitleInput")
     val taskNameInput: LiveData<String> = taskNameInputLiveData
 
-    private val minutesGoalInputLiveData = savedStateHandle.getLiveData<String>("minutesGoalInput")
+    private val minutesGoalInputLiveData = savedState.getLiveData<String>("minutesGoalInput")
     val minutesGoalInput: LiveData<String> = minutesGoalInputLiveData
 
     private val taskNameInputErrorMessageLiveData =
-        savedStateHandle.getLiveData<Int>("taskNameInputErrorMessage")
+        savedState.getLiveData<Int>("taskNameInputErrorMessage")
     val taskNameInputErrorMessage: LiveData<Int> = taskNameInputErrorMessageLiveData
 
     private val minutesGoalInputErrorMessageLiveData =
-        savedStateHandle.getLiveData<Int>("minutesGoalInputErrorMessage")
+        savedState.getLiveData<Int>("minutesGoalInputErrorMessage")
     val minutesGoalInputErrorMessage: LiveData<Int> = minutesGoalInputErrorMessageLiveData
 
     init {
-        Timber.d("id = $taskId")
         if (taskId != Task.NO_ID) {
             loadTaskFromId(taskId)
         }

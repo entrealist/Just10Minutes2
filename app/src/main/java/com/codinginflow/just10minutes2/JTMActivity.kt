@@ -100,7 +100,6 @@ private fun JTMNavHost(
             route = BottomNavDestination.Timer.route,
             arguments = listOf(
                 navArgument(ARG_SHOW_BOTTOM_NAV) {
-                    type = NavType.BoolType
                     defaultValue = true
                 }
             )
@@ -111,7 +110,6 @@ private fun JTMNavHost(
             route = BottomNavDestination.TaskList.route,
             arguments = listOf(
                 navArgument(ARG_SHOW_BOTTOM_NAV) {
-                    type = NavType.BoolType
                     defaultValue = true
                 }
             )) { navBackStackEntry ->
@@ -136,7 +134,6 @@ private fun JTMNavHost(
             route = BottomNavDestination.Statistics.route,
             arguments = listOf(
                 navArgument(ARG_SHOW_BOTTOM_NAV) {
-                    type = NavType.BoolType
                     defaultValue = true
                 }
             )) {
