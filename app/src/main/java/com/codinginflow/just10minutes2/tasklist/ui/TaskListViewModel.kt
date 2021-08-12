@@ -3,6 +3,7 @@ package com.codinginflow.just10minutes2.tasklist.ui
 import androidx.annotation.StringRes
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import androidx.lifecycle.viewmodel.compose.viewModel
 import com.codinginflow.just10minutes2.R
 import com.codinginflow.just10minutes2.addedittask.AddEditTaskViewModel
 import com.codinginflow.just10minutes2.common.data.daos.TaskDao
@@ -49,9 +50,16 @@ class TaskListViewModel @Inject constructor(
         }
     }
 
+    fun onOpenTimerForTaskClicked(task: Task) {
+        viewModelScope.launch {
+            eventChannel.send(Event.OpenTimerForTask(task))
+        }
+    }
+
     sealed class Event {
         object AddNewTask : Event()
         data class EditTask(val taskId: Long) : Event()
         data class ShowAddEditConfirmationMessage(@StringRes val msg: Int) : Event()
+        data class OpenTimerForTask(val task: Task) : Event()
     }
 }

@@ -23,6 +23,7 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import com.codinginflow.just10minutes2.R
 import com.codinginflow.just10minutes2.common.data.entities.Task
 import com.codinginflow.just10minutes2.common.ui.CircularProgressIndicatorWithBackground
+import com.codinginflow.just10minutes2.common.ui.SharedViewModel
 import com.codinginflow.just10minutes2.common.ui.theme.Just10Minutes2Theme
 import com.codinginflow.just10minutes2.common.util.formatTimeText
 import com.codinginflow.just10minutes2.timer.TimerService
@@ -30,7 +31,8 @@ import kotlinx.coroutines.flow.collectLatest
 
 @Composable
 fun TimerScreen(
-    viewModel: TimerViewModel = hiltViewModel()
+    viewModel: TimerViewModel = hiltViewModel(),
+    sharedViewModel: SharedViewModel,
 ) {
     val activeTask by viewModel.activeTask.collectAsState(null)
     val allTasks by viewModel.allTasks.collectAsState(emptyList())
@@ -40,6 +42,12 @@ fun TimerScreen(
     val context = LocalContext.current
 
     var showSelectNewTaskConfirmationDialog by rememberSaveable { mutableStateOf(false) }
+
+    LaunchedEffect(Unit) {
+        sharedViewModel.taskToOpenInTimer.collectLatest { task ->
+            viewModel.onNewTaskSelected(task)
+        }
+    }
 
     LaunchedEffect(Unit) {
         viewModel.events.collectLatest { event ->

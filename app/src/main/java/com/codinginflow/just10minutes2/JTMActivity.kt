@@ -17,14 +17,18 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.stringResource
+import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavDestination.Companion.hierarchy
 import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.NavHostController
+import androidx.navigation.NavOptions
 import androidx.navigation.NavType
 import androidx.navigation.compose.*
+import androidx.navigation.navOptions
 import com.codinginflow.just10minutes2.addedittask.AddEditTaskScreen
 import com.codinginflow.just10minutes2.addedittask.AddEditTaskViewModel
 import com.codinginflow.just10minutes2.common.data.entities.Task
+import com.codinginflow.just10minutes2.common.ui.SharedViewModel
 import com.codinginflow.just10minutes2.timer.ui.TimerScreen
 import com.codinginflow.just10minutes2.tasklist.ui.TaskListScreen
 import com.codinginflow.just10minutes2.common.ui.theme.Just10Minutes2Theme
@@ -38,7 +42,8 @@ class MainActivity : ComponentActivity() {
             Just10Minutes2Theme {
                 // A surface container using the 'background' color from the theme
                 Surface(color = MaterialTheme.colors.background) {
-                    JTMActivityBody()
+                    val sharedViewModel: SharedViewModel = hiltViewModel()
+                    JTMActivityBody(sharedViewModel)
                 }
             }
         }
@@ -46,7 +51,9 @@ class MainActivity : ComponentActivity() {
 }
 
 @Composable
-private fun JTMActivityBody() {
+private fun JTMActivityBody(
+    sharedViewModel: SharedViewModel
+) {
     val navController = rememberNavController()
     Scaffold(
         bottomBar = {
@@ -67,13 +74,10 @@ private fun JTMActivityBody() {
                             label = { Text(stringResource(destination.labelRes)) },
                             selected = currentDestination?.hierarchy?.any { it.route == destination.route } == true,
                             onClick = {
-                                navController.navigate(destination.route) {
-                                    popUpTo(navController.graph.findStartDestination().id) {
-                                        saveState = true
-                                    }
-                                    launchSingleTop = true
-                                    restoreState = true
-                                }
+                                navController.navigate(
+                                    route = destination.route,
+                                    navOptions = createNavOptionsForBottomNavigation(navController)
+                                )
                             },
                             alwaysShowLabel = false
                         )
@@ -82,13 +86,14 @@ private fun JTMActivityBody() {
             }
         }
     ) { innerPadding ->
-        JTMNavHost(navController, Modifier.padding(innerPadding))
+        JTMNavHost(navController, sharedViewModel, Modifier.padding(innerPadding))
     }
 }
 
 @Composable
 private fun JTMNavHost(
     navController: NavHostController,
+    sharedViewModel: SharedViewModel,
     modifier: Modifier = Modifier
 ) {
     NavHost(
@@ -104,7 +109,7 @@ private fun JTMNavHost(
                 }
             )
         ) {
-            TimerScreen()
+            TimerScreen(sharedViewModel = sharedViewModel)
         }
         composable(
             route = BottomNavDestination.TaskList.route,
@@ -114,6 +119,7 @@ private fun JTMNavHost(
                 }
             )) { navBackStackEntry ->
             TaskListScreen(
+                sharedViewModel = sharedViewModel,
                 addNewTask = {
                     navController.navigate(AppDestinations.AddEditTask.route)
                 },
@@ -126,6 +132,12 @@ private fun JTMNavHost(
                 onAddEditResultProcessed = {
                     navBackStackEntry.savedStateHandle.remove<AddEditTaskViewModel.AddEditTaskResult>(
                         KEY_ADD_EDIT_RESULT
+                    )
+                },
+                navigateToTimer = {
+                    navController.navigate(
+                        route = BottomNavDestination.Timer.route,
+                        navOptions = createNavOptionsForBottomNavigation(navController)
                     )
                 }
             )
@@ -188,6 +200,16 @@ sealed class AppDestinations(
     val route: String
 ) {
     object AddEditTask : AppDestinations("AddEditTask")
+}
+
+private fun createNavOptionsForBottomNavigation(navController: NavHostController): NavOptions {
+    return navOptions {
+        popUpTo(navController.graph.findStartDestination().id) {
+            saveState = true
+        }
+        launchSingleTop = true
+        restoreState = true
+    }
 }
 
 const val ARG_TASK_ID = "taskId"

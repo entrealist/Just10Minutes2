@@ -29,16 +29,19 @@ import com.codinginflow.just10minutes2.R
 import com.codinginflow.just10minutes2.addedittask.AddEditTaskViewModel
 import com.codinginflow.just10minutes2.common.data.entities.Task
 import com.codinginflow.just10minutes2.common.ui.CircularProgressIndicatorWithBackground
+import com.codinginflow.just10minutes2.common.ui.SharedViewModel
 import com.codinginflow.just10minutes2.common.ui.theme.Just10Minutes2Theme
 import kotlinx.coroutines.flow.collectLatest
 
 @Composable
 fun TaskListScreen(
     viewModel: TaskListViewModel = hiltViewModel(),
+    sharedViewModel: SharedViewModel,
     addNewTask: () -> Unit,
     editTask: (taskId: Long) -> Unit,
     addEditResult: AddEditTaskViewModel.AddEditTaskResult?,
     onAddEditResultProcessed: () -> Unit,
+    navigateToTimer: () -> Unit
 ) {
     val tasks by viewModel.tasks.collectAsState(emptyList())
 
@@ -62,6 +65,10 @@ fun TaskListScreen(
                     editTask(event.taskId)
                 is TaskListViewModel.Event.ShowAddEditConfirmationMessage ->
                     scaffoldState.snackbarHostState.showSnackbar(context.getString(event.msg))
+                is TaskListViewModel.Event.OpenTimerForTask -> {
+                    sharedViewModel.setTaskIdToOpenInTimer(event.task)
+                    navigateToTimer()
+                }
             }
         }
     }
@@ -69,7 +76,7 @@ fun TaskListScreen(
     TaskListBody(
         tasks = tasks,
         onAddNewTaskClicked = viewModel::onAddNewTaskClicked,
-        onOpenTimerClicked = {},
+        onOpenTimerForTaskClicked = viewModel::onOpenTimerForTaskClicked,
         onEditTaskClicked = viewModel::onEditTaskClicked,
         lazyListState = lazyListState,
         scaffoldState = scaffoldState
@@ -81,7 +88,7 @@ private fun TaskListBody(
     tasks: List<Task>,
     onAddNewTaskClicked: () -> Unit,
     onEditTaskClicked: (Task) -> Unit,
-    onOpenTimerClicked: (Task) -> Unit,
+    onOpenTimerForTaskClicked: (Task) -> Unit,
     lazyListState: LazyListState,
     modifier: Modifier = Modifier,
     scaffoldState: ScaffoldState = rememberScaffoldState(),
@@ -106,7 +113,7 @@ private fun TaskListBody(
         BodyContent(
             tasks = tasks,
             onEditTaskClicked = onEditTaskClicked,
-            onOpenTimerClicked = onOpenTimerClicked,
+            onOpenTimerForTaskClicked = onOpenTimerForTaskClicked,
             lazyListState = lazyListState,
             modifier = Modifier.padding(innerPadding)
         )
@@ -117,7 +124,7 @@ private fun TaskListBody(
 private fun BodyContent(
     tasks: List<Task>,
     onEditTaskClicked: (Task) -> Unit,
-    onOpenTimerClicked: (Task) -> Unit,
+    onOpenTimerForTaskClicked: (Task) -> Unit,
     lazyListState: LazyListState,
     modifier: Modifier = Modifier
 
@@ -125,7 +132,7 @@ private fun BodyContent(
     TaskList(
         tasks = tasks,
         onEditTaskClicked = onEditTaskClicked,
-        onOpenTimerClicked = onOpenTimerClicked,
+        onOpenTimerForTaskClicked = onOpenTimerForTaskClicked,
         lazyListState = lazyListState,
         modifier = modifier
     )
@@ -135,7 +142,7 @@ private fun BodyContent(
 private fun TaskList(
     tasks: List<Task>,
     onEditTaskClicked: (Task) -> Unit,
-    onOpenTimerClicked: (Task) -> Unit,
+    onOpenTimerForTaskClicked: (Task) -> Unit,
     lazyListState: LazyListState,
     modifier: Modifier = Modifier
 ) {
@@ -158,7 +165,7 @@ private fun TaskList(
                     }
                 },
                 onEditTaskClicked = onEditTaskClicked,
-                onOpenTimerClicked = onOpenTimerClicked
+                onOpenTimerForTaskClicked = onOpenTimerForTaskClicked
             )
             Divider()
         }
@@ -171,7 +178,7 @@ private fun TaskItem(
     expanded: Boolean,
     onTaskClicked: (Task) -> Unit,
     onEditTaskClicked: (Task) -> Unit,
-    onOpenTimerClicked: (Task) -> Unit,
+    onOpenTimerForTaskClicked: (Task) -> Unit,
     modifier: Modifier = Modifier
 ) {
     Row(
@@ -244,7 +251,7 @@ private fun TaskItem(
                     val timerButtonTextRes =
                         if (!task.isCompletedToday) R.string.open_timer else R.string.task_completed
                     OutlinedButton(
-                        onClick = { onOpenTimerClicked(task) },
+                        onClick = { onOpenTimerForTaskClicked(task) },
                         enabled = !task.isCompletedToday,
                         modifier = Modifier.weight(1f)
                     ) {
@@ -281,7 +288,7 @@ private fun PreviewTaskListScreen() {
             ),
             onAddNewTaskClicked = {},
             onEditTaskClicked = {},
-            onOpenTimerClicked = {},
+            onOpenTimerForTaskClicked = {},
             lazyListState = rememberLazyListState()
         )
     }
@@ -304,7 +311,7 @@ private fun PreviewTaskItem() {
             expanded = true,
             onTaskClicked = {},
             onEditTaskClicked = {},
-            onOpenTimerClicked = {},
+            onOpenTimerForTaskClicked = {},
         )
     }
 }
