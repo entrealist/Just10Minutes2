@@ -45,7 +45,7 @@ fun TimerScreen(
 
     LaunchedEffect(Unit) {
         sharedViewModel.taskToOpenInTimer.collectLatest { task ->
-            viewModel.onNewTaskSelected(task)
+            viewModel.onTaskSelected(task)
         }
     }
 
@@ -74,7 +74,7 @@ fun TimerScreen(
         timerRunning = timerRunning,
         onStartTimerClicked = viewModel::onStartTimerClicked,
         onStopTimerClicked = viewModel::onStopTimerClicked,
-        onNewTaskSelected = viewModel::onNewTaskSelected,
+        onNewTaskSelected = viewModel::onTaskSelected,
         showSelectNewTaskConfirmationDialog = showSelectNewTaskConfirmationDialog,
         onDismissSelectNewTaskConfirmationDialog = {
             viewModel.onSelectNewTaskCanceled()

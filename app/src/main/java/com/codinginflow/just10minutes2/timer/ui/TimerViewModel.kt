@@ -38,8 +38,11 @@ class TimerViewModel @Inject constructor(
 
     val timerRunning = taskTimerManager.timerRunning
 
-    fun onNewTaskSelected(newTask: Task) {
+    fun onTaskSelected(newTask: Task) {
         viewModelScope.launch {
+            val activeTask = activeTask.first()
+            if (activeTask == newTask) return@launch
+
             val timerRunning = timerRunning.first()
             if (!timerRunning) {
                 changeActiveTask(newTask)
@@ -88,7 +91,6 @@ class TimerViewModel @Inject constructor(
             if (timerRunning) {
                 taskTimerManager.stopTimer()
                 eventChannel.send(Event.StopTimerService)
-                eventChannel.send(Event.ShowTimerStoppedMessage)
             }
         }
     }

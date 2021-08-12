@@ -248,19 +248,16 @@ private fun TaskItem(
                         Text(stringResource(R.string.edit_task))
                     }
                     Spacer(Modifier.width(8.dp))
-                    val timerButtonTextRes =
-                        if (!task.isCompletedToday) R.string.open_timer else R.string.task_completed
                     OutlinedButton(
                         onClick = { onOpenTimerForTaskClicked(task) },
-                        enabled = !task.isCompletedToday,
                         modifier = Modifier.weight(1f)
                     ) {
                         Icon(
                             imageVector = Icons.Default.Timer,
-                            contentDescription = stringResource(R.string.start_timer),
+                            contentDescription = stringResource(R.string.open_timer),
                         )
                         Spacer(Modifier.size(ButtonDefaults.IconSpacing))
-                        Text(stringResource(timerButtonTextRes))
+                        Text(stringResource(R.string.open_timer))
                     }
                 }
             }
