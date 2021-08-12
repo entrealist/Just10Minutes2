@@ -20,7 +20,7 @@ class TimerViewModel @Inject constructor(
     private val taskDao: TaskDao,
     private val taskTimerManager: TaskTimerManager,
     private val timerPreferencesManager: TimerPreferencesManager,
-    savedState: SavedStateHandle
+    private val savedState: SavedStateHandle
 ) : ViewModel() {
 
     private val eventChannel = Channel<Event>()
@@ -30,7 +30,11 @@ class TimerViewModel @Inject constructor(
 
     val allTasks = taskDao.getAllTasks()
 
-    var pendingNewTask: Task? = null // TODO: 12.08.2021 save in savedStateHandle
+    private var pendingNewTask = savedState.get<Task>("pendingNewTask")
+        set(value) {
+            field = value
+            savedState.set("pendingNewTask", value)
+        }
 
     val timerRunning = taskTimerManager.timerRunning
 

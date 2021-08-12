@@ -75,50 +75,34 @@ class AddEditTaskViewModel @Inject constructor(
     }
 
     fun onSaveClicked() {
-        if (!validateInput()) return
-
         val taskNameInput = taskNameInput.value
-        val minutesGoalInput = minutesGoalInput.value
-
-        if (taskNameInput == null || minutesGoalInput == null) return
-
-        val minutesGoal = minutesGoalInput.toInt()
-
-        if (taskId == Task.NO_ID) {
-            val newTask = Task(name = taskNameInput, dailyGoalInMinutes = minutesGoal)
-            createTask(newTask)
-        } else {
-            val task = task
-            if (task != null) {
-                val updatedTask = task.copy(name = taskNameInput, dailyGoalInMinutes = minutesGoal)
-                updateTask(updatedTask)
-            }
-        }
-    }
-
-    private fun validateInput(): Boolean {
-        val taskNameInput = taskNameInput.value
-        val minutesGoalInput = minutesGoalInput.value
+        val minutesGoalInput = minutesGoalInput.value?.toIntOrNull()
 
         taskNameInputErrorMessageLiveData.value = null
         minutesGoalInputErrorMessageLiveData.value = null
 
-        var hasError = false
-
-        if (taskNameInput.isNullOrBlank()) {
-            taskNameInputErrorMessageLiveData.value = R.string.task_name_empty_error
-            hasError = true
+        if (!taskNameInput.isNullOrEmpty() && minutesGoalInput != null && minutesGoalInput > 0) {
+            if (taskId == Task.NO_ID) {
+                val newTask = Task(name = taskNameInput, dailyGoalInMinutes = minutesGoalInput)
+                createTask(newTask)
+            } else {
+                val task = task
+                if (task != null) {
+                    val updatedTask =
+                        task.copy(name = taskNameInput, dailyGoalInMinutes = minutesGoalInput)
+                    updateTask(updatedTask)
+                }
+            }
+        } else {
+            if (taskNameInput.isNullOrBlank()) {
+                taskNameInputErrorMessageLiveData.value = R.string.task_name_empty_error
+            }
+            if (minutesGoalInput == null) {
+                minutesGoalInputErrorMessageLiveData.value = R.string.minutes_goal_empty_error
+            } else if (minutesGoalInput == 0) {
+                minutesGoalInputErrorMessageLiveData.value = R.string.minutes_goal_zero_error
+            }
         }
-
-        if (minutesGoalInput.isNullOrBlank()) {
-            minutesGoalInputErrorMessageLiveData.value = R.string.minutes_goal_empty_error
-            hasError = true
-        } else if (minutesGoalInput.toInt() < 1) {
-            minutesGoalInputErrorMessageLiveData.value = R.string.minutes_goal_zero_error
-            hasError = true
-        }
-
-        return !hasError
     }
 
     private fun createTask(task: Task) {
