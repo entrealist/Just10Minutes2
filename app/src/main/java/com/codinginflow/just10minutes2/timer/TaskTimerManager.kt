@@ -2,13 +2,14 @@ package com.codinginflow.just10minutes2.timer
 
 import com.codinginflow.just10minutes2.common.data.preferences.TimerPreferencesManager
 import com.codinginflow.just10minutes2.common.data.daos.TaskDao
+import com.codinginflow.just10minutes2.common.data.entities.Task
 import com.codinginflow.just10minutes2.common.di.ApplicationScope
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
-import timber.log.Timber
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -28,15 +29,21 @@ class TaskTimerManager @Inject constructor(
         } ?: emptyFlow()
     }
 
-    private val runningFlow = MutableStateFlow(false)
-    val running: Flow<Boolean> = runningFlow
+    private val timerRunningFlow = MutableStateFlow(false)
+    val timerRunning: Flow<Boolean> = timerRunningFlow
+
+    private val timerFinishedChannel = Channel<Task>()
+    val timerFinished = timerFinishedChannel.receiveAsFlow()
 
     var timerJob: Job? = null
 
     init {
         applicationScope.launch {
             activeTask.collect { task ->
-                if (task != null && task.timeLeftTodayInMilliseconds <= 0) stopTimer()
+                if (task != null && task.timeLeftTodayInMilliseconds <= 0 && timerRunning.first()) {
+                    timerFinishedChannel.send(task)
+                    stopTimer()
+                }
             }
         }
     }
@@ -46,7 +53,7 @@ class TaskTimerManager @Inject constructor(
         timerJob = applicationScope.launch {
             val activeTask = activeTask.first()
             if (activeTask != null) {
-                runningFlow.value = true
+                timerRunningFlow.value = true
                 while (true) {
                     delay(TICK_DELAY)
                     taskDao.increaseMillisCompletedToday(activeTask.id, TICK_DELAY)
@@ -57,7 +64,7 @@ class TaskTimerManager @Inject constructor(
 
     fun stopTimer() {
         timerJob?.cancel()
-        runningFlow.value = false
+        timerRunningFlow.value = false
     }
 
     // TODO: 12.08.2021 Handle process death

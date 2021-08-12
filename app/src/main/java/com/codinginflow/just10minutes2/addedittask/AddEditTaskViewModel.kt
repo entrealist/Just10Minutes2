@@ -141,7 +141,7 @@ class AddEditTaskViewModel @Inject constructor(
         }
     }
 
-    fun onConfirmDeletion() {
+    fun onDeletionConfirmed() {
         viewModelScope.launch {
             task?.let {
                 taskDao.delete(it)

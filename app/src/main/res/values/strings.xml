@@ -33,7 +33,7 @@
     <string name="task_updated">Task updated</string>
     <string name="task_deleted">Task deleted</string>
     <string name="confirm_deletion">Confirm deletion</string>
-    <string name="confirm_task_deletion_text">Do you really want to delete this task? This will also remove all its statistics. Consider archiving the task instead.</string>
+    <string name="confirm_task_deletion_message">Do you really want to delete this task? This will also remove all its statistics. Consider archiving the task instead.</string>
     <string name="delete">Delete</string>
     <string name="cancel">Cancel</string>
     <string name="archive_task">Archive task</string>
@@ -44,4 +44,8 @@
     <string name="minutes_left_placeholder">%d minutes left</string>
     <string name="timer_running">Timer running</string>
     <string name="timer_stopped">Timer stopped</string>
+    <string name="confirm_switch_task">Switch task?</string>
+    <string name="confirm_switch_task_message">Do you want to switch to a different task? This will stop the currently running timer.</string>
+    <string name="confirm">Confirm</string>
+    <string name="confirm_switch">Switch</string>
 </resources>

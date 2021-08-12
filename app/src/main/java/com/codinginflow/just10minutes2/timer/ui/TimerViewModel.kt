@@ -10,6 +10,7 @@ import com.codinginflow.just10minutes2.common.data.entities.Task
 import com.codinginflow.just10minutes2.timer.TaskTimerManager
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.channels.Channel
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.launch
 import javax.inject.Inject
@@ -29,9 +30,37 @@ class TimerViewModel @Inject constructor(
 
     val allTasks = taskDao.getAllTasks()
 
-    val timerRunning = taskTimerManager.running
+    var pendingNewTask: Task? = null // TODO: 12.08.2021 save in savedStateHandle
 
-    fun onNewTaskSelected(task: Task) {
+    val timerRunning = taskTimerManager.timerRunning
+
+    fun onNewTaskSelected(newTask: Task) {
+        viewModelScope.launch {
+            val timerRunning = timerRunning.first()
+            if (!timerRunning) {
+                changeActiveTask(newTask)
+            } else {
+                pendingNewTask = newTask
+                eventChannel.send(Event.ShowNewTaskSelectionConfirmationDialog)
+            }
+        }
+    }
+
+    fun onSelectNewTaskConfirmed() {
+        pendingNewTask?.let {
+            changeActiveTask(it)
+            pendingNewTask = null
+            viewModelScope.launch {
+                eventChannel.send(Event.ShowTimerStoppedMessage)
+            }
+        }
+    }
+
+    fun onSelectNewTaskCanceled() {
+        pendingNewTask = null
+    }
+
+    private fun changeActiveTask(task: Task) {
         stopTimer()
         viewModelScope.launch {
             timerPreferencesManager.updateActiveTaskId(task.id)
@@ -51,15 +80,19 @@ class TimerViewModel @Inject constructor(
 
     private fun stopTimer() {
         viewModelScope.launch {
-            taskTimerManager.stopTimer()
-            eventChannel.send(Event.StopTimerService)
-            eventChannel.send(Event.ShowTimerStoppedMessage)
+            val timerRunning = timerRunning.first()
+            if (timerRunning) {
+                taskTimerManager.stopTimer()
+                eventChannel.send(Event.StopTimerService)
+                eventChannel.send(Event.ShowTimerStoppedMessage)
+            }
         }
     }
 
     sealed class Event {
         object StartTimerService : Event()
         object StopTimerService : Event()
+        object ShowNewTaskSelectionConfirmationDialog : Event()
         object ShowTimerStoppedMessage : Event()
     }
 }

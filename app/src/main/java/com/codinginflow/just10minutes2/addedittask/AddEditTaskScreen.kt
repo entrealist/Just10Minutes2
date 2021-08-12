@@ -11,7 +11,6 @@ import androidx.compose.runtime.*
 import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.tooling.preview.Preview
@@ -63,7 +62,7 @@ fun AddEditTaskScreen(
         onNavigateUpClick = viewModel::onNavigateUpClicked,
         showDeleteConfirmationDialog = showDeleteConfirmationDialog,
         onDismissDeleteConfirmationDialog = { showDeleteConfirmationDialog = false },
-        onConfirmDeletion = viewModel::onConfirmDeletion,
+        onDeleteConfirmed = viewModel::onDeletionConfirmed,
         scaffoldState = scaffoldState
     )
 }
@@ -82,7 +81,7 @@ private fun AddEditTaskBody(
     onNavigateUpClick: () -> Unit,
     showDeleteConfirmationDialog: Boolean,
     onDismissDeleteConfirmationDialog: () -> Unit,
-    onConfirmDeletion: () -> Unit,
+    onDeleteConfirmed: () -> Unit,
     modifier: Modifier = Modifier,
     scaffoldState: ScaffoldState = rememberScaffoldState(),
 ) {
@@ -129,14 +128,10 @@ private fun AddEditTaskBody(
         if (showDeleteConfirmationDialog) {
             AlertDialog(
                 onDismissRequest = onDismissDeleteConfirmationDialog,
-                title = {
-                    Text(stringResource(R.string.confirm_deletion))
-                },
-                text = {
-                    Text(stringResource(R.string.confirm_task_deletion_text))
-                },
+                title = { Text(stringResource(R.string.confirm_deletion)) },
+                text = { Text(stringResource(R.string.confirm_task_deletion_message)) },
                 confirmButton = {
-                    TextButton(onClick = onConfirmDeletion) {
+                    TextButton(onClick = onDeleteConfirmed) {
                         Text(stringResource(R.string.delete))
                     }
                 },
@@ -263,7 +258,7 @@ private fun PreviewTaskListScreen() {
             onDeleteClicked = {},
             onNavigateUpClick = {},
             onDismissDeleteConfirmationDialog = {},
-            onConfirmDeletion = {},
+            onDeleteConfirmed = {},
             showDeleteConfirmationDialog = true
         )
     }

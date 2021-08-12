@@ -8,6 +8,7 @@ import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowDropDown
 import androidx.compose.runtime.*
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -26,7 +27,6 @@ import com.codinginflow.just10minutes2.common.ui.theme.Just10Minutes2Theme
 import com.codinginflow.just10minutes2.common.util.formatTimeText
 import com.codinginflow.just10minutes2.timer.TimerService
 import kotlinx.coroutines.flow.collectLatest
-import java.util.*
 
 @Composable
 fun TimerScreen(
@@ -39,6 +39,8 @@ fun TimerScreen(
     val scaffoldState = rememberScaffoldState()
     val context = LocalContext.current
 
+    var showSelectNewTaskConfirmationDialog by rememberSaveable { mutableStateOf(false) }
+
     LaunchedEffect(Unit) {
         viewModel.events.collectLatest { event ->
             when (event) {
@@ -50,6 +52,8 @@ fun TimerScreen(
                     val serviceIntent = Intent(context, TimerService::class.java)
                     context.stopService(serviceIntent)
                 }
+                is TimerViewModel.Event.ShowNewTaskSelectionConfirmationDialog ->
+                    showSelectNewTaskConfirmationDialog = true
                 TimerViewModel.Event.ShowTimerStoppedMessage ->
                     scaffoldState.snackbarHostState.showSnackbar(context.getString(R.string.timer_stopped))
             }
@@ -60,9 +64,19 @@ fun TimerScreen(
         activeTask = activeTask,
         allTasks = allTasks,
         timerRunning = timerRunning,
-        onNewTaskSelected = viewModel::onNewTaskSelected,
         onStartTimerClicked = viewModel::onStartTimerClicked,
         onStopTimerClicked = viewModel::onStopTimerClicked,
+        onNewTaskSelected = viewModel::onNewTaskSelected,
+        showSelectNewTaskConfirmationDialog = showSelectNewTaskConfirmationDialog,
+        onDismissSelectNewTaskConfirmationDialog = {
+            viewModel.onSelectNewTaskCanceled()
+            showSelectNewTaskConfirmationDialog = false
+        },
+        onSelectNewTaskConfirmed = {
+            viewModel.onSelectNewTaskConfirmed()
+            showSelectNewTaskConfirmationDialog = false
+
+        },
         scaffoldState = scaffoldState,
     )
 }
@@ -72,9 +86,12 @@ private fun TimerBody(
     activeTask: Task?,
     allTasks: List<Task>,
     timerRunning: Boolean,
-    onNewTaskSelected: (Task) -> Unit,
     onStartTimerClicked: () -> Unit,
     onStopTimerClicked: () -> Unit,
+    onNewTaskSelected: (Task) -> Unit,
+    showSelectNewTaskConfirmationDialog: Boolean,
+    onDismissSelectNewTaskConfirmationDialog: () -> Unit,
+    onSelectNewTaskConfirmed: () -> Unit,
     modifier: Modifier = Modifier,
     scaffoldState: ScaffoldState = rememberScaffoldState(),
 ) {
@@ -95,6 +112,23 @@ private fun TimerBody(
             onStartTimerClicked = onStartTimerClicked,
             onStopTimerClicked = onStopTimerClicked
         )
+
+        if (showSelectNewTaskConfirmationDialog) {
+            AlertDialog(
+                onDismissRequest = onDismissSelectNewTaskConfirmationDialog,
+                text = { Text(stringResource(R.string.confirm_switch_task_message)) },
+                confirmButton = {
+                    TextButton(onClick = onSelectNewTaskConfirmed) {
+                        Text(stringResource(R.string.confirm_switch))
+                    }
+                },
+                dismissButton = {
+                    TextButton(onClick = onDismissSelectNewTaskConfirmationDialog) {
+                        Text(stringResource(R.string.cancel))
+                    }
+                },
+            )
+        }
     }
 }
 
@@ -103,10 +137,11 @@ private fun BodyContent(
     activeTask: Task?,
     allTasks: List<Task>,
     timerRunning: Boolean,
-    onNewTaskSelected: (Task) -> Unit,
     onStartTimerClicked: () -> Unit,
     onStopTimerClicked: () -> Unit,
-) {
+    onNewTaskSelected: (Task) -> Unit,
+
+    ) {
     Column(
         modifier = Modifier.fillMaxSize(),
         horizontalAlignment = Alignment.CenterHorizontally,
@@ -243,9 +278,12 @@ private fun PreviewTimerScreen() {
             activeTask = null,
             allTasks = emptyList(),
             timerRunning = false,
-            onNewTaskSelected = {},
             onStartTimerClicked = {},
-            onStopTimerClicked = {}
+            onStopTimerClicked = {},
+            onNewTaskSelected = {},
+            showSelectNewTaskConfirmationDialog = false,
+            onSelectNewTaskConfirmed = {},
+            onDismissSelectNewTaskConfirmationDialog = {}
         )
     }
 }

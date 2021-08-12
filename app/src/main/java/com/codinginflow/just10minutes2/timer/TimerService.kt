@@ -47,12 +47,14 @@ class TimerService : Service() {
         serviceScope.launch {
             taskTimerManager.activeTask.collect { task ->
                 if (task != null) {
-                    if (task.timeLeftTodayInMilliseconds > 0) {
-                        updateNotification(task)
-                    } else {
-                        onTaskFinished(task)
-                    }
+                    updateNotification(task)
                 }
+            }
+        }
+
+        serviceScope.launch {
+            taskTimerManager.timerFinished.collect { task ->
+                onTaskFinished(task)
             }
         }
     }
@@ -71,7 +73,7 @@ class TimerService : Service() {
             .setContentText(task.name)
             .setColor(ContextCompat.getColor(this, R.color.design_default_color_primary))
             .build()
-        notificationManager.notify(TASK_FINISHED_NOTIFICATION_ID, finishNotification)
+        notificationManager.notify(task.id.toInt(), finishNotification)
         stopSelf()
     }
 
@@ -98,4 +100,3 @@ class TimerService : Service() {
 
 private const val NOTIFICATION_CHANNEL_ID = "TimerServiceChannel"
 private const val TIMER_NOTIFICATION_ID = 123
-private const val TASK_FINISHED_NOTIFICATION_ID = 124
