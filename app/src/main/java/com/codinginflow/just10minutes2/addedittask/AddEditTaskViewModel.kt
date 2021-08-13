@@ -13,7 +13,6 @@ import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.launch
 import kotlinx.parcelize.Parcelize
-import timber.log.Timber
 import javax.inject.Inject
 
 @HiltViewModel
@@ -51,7 +50,7 @@ class AddEditTaskViewModel @Inject constructor(
 
     private fun loadTaskFromId(taskId: Long) {
         viewModelScope.launch {
-            task = taskDao.getTaskById(taskId).first()
+            task = taskDao.getNotArchivedTaskById(taskId).first()
             val titleInput = taskNameInputLiveData.value
             if (titleInput == null) {
                 taskNameInputLiveData.value = task?.name
@@ -120,17 +119,34 @@ class AddEditTaskViewModel @Inject constructor(
         }
     }
 
-    fun onDeleteClicked() {
+    fun onDeleteTaskClicked() {
         viewModelScope.launch {
-            eventChannel.send(Event.ShowDeleteConfirmationDialog)
+            eventChannel.send(Event.ShowDeleteTaskConfirmationDialog)
         }
     }
 
-    fun onDeletionConfirmed() {
+    fun onDeleteTaskConfirmed() {
         viewModelScope.launch {
-            task?.let {
-                taskDao.delete(it)
+            task?.let { task ->
+                taskTimerManager.stopTimerIfTaskIsActive(task)
+                taskDao.deleteTask(task)
                 eventChannel.send(Event.NavigateBackWithResult(AddEditTaskResult.TaskDeleted))
+            }
+        }
+    }
+
+    fun onArchiveTaskClicked() {
+        viewModelScope.launch {
+            eventChannel.send(Event.ShowArchiveTaskConfirmationDialog)
+        }
+    }
+
+    fun onArchiveTaskConfirmed() {
+        viewModelScope.launch {
+            task?.let { task ->
+                taskTimerManager.stopTimerIfTaskIsActive(task)
+                taskDao.setArchivedState(task.id, true)
+                eventChannel.send(Event.NavigateBackWithResult(AddEditTaskResult.TaskArchived))
             }
         }
     }
@@ -144,10 +160,7 @@ class AddEditTaskViewModel @Inject constructor(
     fun onResetDayConfirmed() {
         viewModelScope.launch {
             task?.let { task ->
-                val activeTask = taskTimerManager.activeTask.first()
-                if (activeTask?.id == task.id) {
-                    taskTimerManager.stopTimer()
-                }
+                taskTimerManager.stopTimerIfTaskIsActive(task)
                 taskDao.resetMillisCompletedTodayForTask(task.id)
                 eventChannel.send(Event.ShowResetDayCompletedMessage)
             }
@@ -161,7 +174,8 @@ class AddEditTaskViewModel @Inject constructor(
     }
 
     sealed class Event {
-        object ShowDeleteConfirmationDialog : Event()
+        object ShowDeleteTaskConfirmationDialog : Event()
+        object ShowArchiveTaskConfirmationDialog : Event()
         object ShowResetDayConfirmationDialog : Event()
         object ShowResetDayCompletedMessage : Event()
         data class NavigateBackWithResult(val result: AddEditTaskResult) : Event()
@@ -177,5 +191,8 @@ class AddEditTaskViewModel @Inject constructor(
 
         @Parcelize
         object TaskDeleted : AddEditTaskResult()
+
+        @Parcelize
+        object TaskArchived : AddEditTaskResult()
     }
 }

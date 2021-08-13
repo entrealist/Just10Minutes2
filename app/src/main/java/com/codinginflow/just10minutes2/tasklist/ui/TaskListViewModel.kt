@@ -3,7 +3,6 @@ package com.codinginflow.just10minutes2.tasklist.ui
 import androidx.annotation.StringRes
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import androidx.lifecycle.viewmodel.compose.viewModel
 import com.codinginflow.just10minutes2.R
 import com.codinginflow.just10minutes2.addedittask.AddEditTaskViewModel
 import com.codinginflow.just10minutes2.common.data.daos.TaskDao
@@ -12,7 +11,6 @@ import com.codinginflow.just10minutes2.timer.TaskTimerManager
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.combine
-import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.launch
 import javax.inject.Inject
@@ -27,7 +25,7 @@ class TaskListViewModel @Inject constructor(
     private val eventChannel = Channel<Event>()
     val events = eventChannel.receiveAsFlow()
 
-    val tasks = taskDao.getAllTasks()
+    val tasks = taskDao.getAllNotArchivedTasks()
 
     private val activeTask = taskTimerManager.activeTask
     private val timerRunning = taskTimerManager.timerRunning
@@ -55,11 +53,13 @@ class TaskListViewModel @Inject constructor(
         viewModelScope.launch {
             when (addEditResult) {
                 is AddEditTaskViewModel.AddEditTaskResult.TaskCreated ->
-                    eventChannel.send(Event.ShowAddEditConfirmationMessage(R.string.task_created))
+                    eventChannel.send(Event.ShowAddEditScreenConfirmationMessage(R.string.task_created))
                 is AddEditTaskViewModel.AddEditTaskResult.TaskUpdated ->
-                    eventChannel.send(Event.ShowAddEditConfirmationMessage(R.string.task_updated))
+                    eventChannel.send(Event.ShowAddEditScreenConfirmationMessage(R.string.task_updated))
                 is AddEditTaskViewModel.AddEditTaskResult.TaskDeleted ->
-                    eventChannel.send(Event.ShowAddEditConfirmationMessage(R.string.task_deleted))
+                    eventChannel.send(Event.ShowAddEditScreenConfirmationMessage(R.string.task_deleted))
+                is AddEditTaskViewModel.AddEditTaskResult.TaskArchived ->
+                    eventChannel.send(Event.ShowAddEditScreenConfirmationMessage(R.string.task_archived))
             }
         }
     }
@@ -73,7 +73,7 @@ class TaskListViewModel @Inject constructor(
     sealed class Event {
         object AddNewTask : Event()
         data class EditTask(val taskId: Long) : Event()
-        data class ShowAddEditConfirmationMessage(@StringRes val msg: Int) : Event()
+        data class ShowAddEditScreenConfirmationMessage(@StringRes val msg: Int) : Event()
         data class OpenTimerForTask(val task: Task) : Event()
     }
 }

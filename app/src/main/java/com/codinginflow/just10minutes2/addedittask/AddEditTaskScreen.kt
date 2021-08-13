@@ -37,21 +37,24 @@ fun AddEditTaskScreen(
     val scaffoldState = rememberScaffoldState()
     val context = LocalContext.current
 
-    var showDeleteConfirmationDialog by rememberSaveable { mutableStateOf(false) }
+    var showDeleteTaskConfirmationDialog by rememberSaveable { mutableStateOf(false) }
     var showResetDayConfirmationDialog by rememberSaveable { mutableStateOf(false) }
+    var showArchiveTaskConfirmationDialog by rememberSaveable { mutableStateOf(false) }
 
     LaunchedEffect(Unit) {
         viewModel.events.collectLatest { event ->
             when (event) {
                 is AddEditTaskViewModel.Event.NavigateBackWithResult ->
                     navigateBackWithResult(event.result)
-                is AddEditTaskViewModel.Event.ShowDeleteConfirmationDialog ->
-                    showDeleteConfirmationDialog = true
                 is AddEditTaskViewModel.Event.NavigateUp -> navigateUp()
-                AddEditTaskViewModel.Event.ShowResetDayConfirmationDialog ->
+                is AddEditTaskViewModel.Event.ShowResetDayConfirmationDialog ->
                     showResetDayConfirmationDialog = true
-                AddEditTaskViewModel.Event.ShowResetDayCompletedMessage ->
+                is AddEditTaskViewModel.Event.ShowResetDayCompletedMessage ->
                     scaffoldState.snackbarHostState.showSnackbar(context.getString(R.string.task_day_reset_completed))
+                is AddEditTaskViewModel.Event.ShowArchiveTaskConfirmationDialog ->
+                    showArchiveTaskConfirmationDialog = true
+                is AddEditTaskViewModel.Event.ShowDeleteTaskConfirmationDialog ->
+                    showDeleteTaskConfirmationDialog = true
             }
         }
     }
@@ -66,18 +69,22 @@ fun AddEditTaskScreen(
         minutesGoalInputErrorMessage = minutesGoalInputErrorMessage,
         onNavigateUpClick = viewModel::onNavigateUpClicked,
         onSaveClicked = viewModel::onSaveClicked,
-        onDeleteClicked = viewModel::onDeleteClicked,
-        showDeleteConfirmationDialog = showDeleteConfirmationDialog,
-        onDismissDeleteConfirmationDialog = { showDeleteConfirmationDialog = false },
-        onDismissResetDayConfirmationDialog = { showResetDayConfirmationDialog = false },
-        onDeleteConfirmed = viewModel::onDeletionConfirmed,
         onResetDayClicked = viewModel::onResetDayClicked,
         showResetDayConfirmationDialog = showResetDayConfirmationDialog,
+        onDismissResetDayConfirmationDialog = { showResetDayConfirmationDialog = false },
         onResetDayConfirmed = {
             showResetDayConfirmationDialog = false
             viewModel.onResetDayConfirmed()
         },
-        scaffoldState = scaffoldState
+        onArchiveTaskClicked = viewModel::onArchiveTaskClicked,
+        showArchiveTaskConfirmationDialog = showArchiveTaskConfirmationDialog,
+        onDismissArchiveTaskConfirmationDialog = { showArchiveTaskConfirmationDialog = false },
+        onArchiveTaskConfirmed = viewModel::onArchiveTaskConfirmed,
+        onDeleteTaskClicked = viewModel::onDeleteTaskClicked,
+        showDeleteTaskConfirmationDialog = showDeleteTaskConfirmationDialog,
+        onDismissDeleteTaskConfirmationDialog = { showDeleteTaskConfirmationDialog = false },
+        onDeleteTaskConfirmed = viewModel::onDeleteTaskConfirmed,
+        scaffoldState = scaffoldState,
     )
 }
 
@@ -92,14 +99,18 @@ private fun AddEditTaskBody(
     @StringRes minutesGoalInputErrorMessage: Int?,
     onNavigateUpClick: () -> Unit,
     onSaveClicked: () -> Unit,
-    onDeleteClicked: () -> Unit,
-    showDeleteConfirmationDialog: Boolean,
-    onDismissDeleteConfirmationDialog: () -> Unit,
-    onDeleteConfirmed: () -> Unit,
     onResetDayClicked: () -> Unit,
     showResetDayConfirmationDialog: Boolean,
     onDismissResetDayConfirmationDialog: () -> Unit,
     onResetDayConfirmed: () -> Unit,
+    onArchiveTaskClicked: () -> Unit,
+    showArchiveTaskConfirmationDialog: Boolean,
+    onDismissArchiveTaskConfirmationDialog: () -> Unit,
+    onArchiveTaskConfirmed: () -> Unit,
+    onDeleteTaskClicked: () -> Unit,
+    showDeleteTaskConfirmationDialog: Boolean,
+    onDismissDeleteTaskConfirmationDialog: () -> Unit,
+    onDeleteTaskConfirmed: () -> Unit,
     modifier: Modifier = Modifier,
     scaffoldState: ScaffoldState = rememberScaffoldState(),
 ) {
@@ -139,28 +150,11 @@ private fun AddEditTaskBody(
             minutesGoalInput = minutesGoalInput,
             onMinutesGoalInputChanged = onMinutesGoalInputChanged,
             minutesGoalInputErrorMessage = minutesGoalInputErrorMessage,
-            onDeleteClicked = onDeleteClicked,
             onResetDayClicked = onResetDayClicked,
+            onArchiveTaskClicked = onArchiveTaskClicked,
+            onDeleteTaskClicked = onDeleteTaskClicked,
             modifier = Modifier.padding(innerPadding)
         )
-
-        if (showDeleteConfirmationDialog) {
-            AlertDialog(
-                onDismissRequest = onDismissDeleteConfirmationDialog,
-                title = { Text(stringResource(R.string.confirm_deletion)) },
-                text = { Text(stringResource(R.string.confirm_task_deletion_message)) },
-                confirmButton = {
-                    TextButton(onClick = onDeleteConfirmed) {
-                        Text(stringResource(R.string.delete))
-                    }
-                },
-                dismissButton = {
-                    TextButton(onClick = onDismissDeleteConfirmationDialog) {
-                        Text(stringResource(R.string.cancel))
-                    }
-                },
-            )
-        }
 
         if (showResetDayConfirmationDialog) {
             AlertDialog(
@@ -179,6 +173,42 @@ private fun AddEditTaskBody(
                 },
             )
         }
+
+        if (showArchiveTaskConfirmationDialog) {
+            AlertDialog(
+                onDismissRequest = onDismissArchiveTaskConfirmationDialog,
+                title = { Text(stringResource(R.string.confirm_archiving)) },
+                text = { Text(stringResource(R.string.confirm_archive_task_message)) },
+                confirmButton = {
+                    TextButton(onClick = onArchiveTaskConfirmed) {
+                        Text(stringResource(R.string.archive))
+                    }
+                },
+                dismissButton = {
+                    TextButton(onClick = onDismissArchiveTaskConfirmationDialog) {
+                        Text(stringResource(R.string.cancel))
+                    }
+                },
+            )
+        }
+
+        if (showDeleteTaskConfirmationDialog) {
+            AlertDialog(
+                onDismissRequest = onDismissDeleteTaskConfirmationDialog,
+                title = { Text(stringResource(R.string.confirm_deletion)) },
+                text = { Text(stringResource(R.string.confirm_delete_task_message)) },
+                confirmButton = {
+                    TextButton(onClick = onDeleteTaskConfirmed) {
+                        Text(stringResource(R.string.delete))
+                    }
+                },
+                dismissButton = {
+                    TextButton(onClick = onDismissDeleteTaskConfirmationDialog) {
+                        Text(stringResource(R.string.cancel))
+                    }
+                },
+            )
+        }
     }
 }
 
@@ -191,8 +221,9 @@ private fun BodyContent(
     minutesGoalInput: String?,
     onMinutesGoalInputChanged: (String) -> Unit,
     @StringRes minutesGoalInputErrorMessage: Int?,
-    onDeleteClicked: () -> Unit,
     onResetDayClicked: () -> Unit,
+    onArchiveTaskClicked: () -> Unit,
+    onDeleteTaskClicked: () -> Unit,
     modifier: Modifier = Modifier
 ) {
     Column(
@@ -246,7 +277,7 @@ private fun BodyContent(
                 }
                 Spacer(Modifier.height(8.dp))
                 OutlinedButton(
-                    onClick = {},
+                    onClick = onArchiveTaskClicked,
                     modifier = Modifier.fillMaxWidth()
                 ) {
                     Icon(
@@ -258,7 +289,7 @@ private fun BodyContent(
                 }
                 Spacer(Modifier.height(8.dp))
                 OutlinedButton(
-                    onClick = onDeleteClicked,
+                    onClick = onDeleteTaskClicked,
                     modifier = Modifier.fillMaxWidth()
                 ) {
                     Icon(
@@ -295,14 +326,18 @@ private fun PreviewTaskListScreen() {
             minutesGoalInputErrorMessage = null,
             onSaveClicked = {},
             onNavigateUpClick = {},
-            showDeleteConfirmationDialog = false,
-            onDeleteClicked = {},
-            onDismissDeleteConfirmationDialog = {},
-            onDeleteConfirmed = {},
             showResetDayConfirmationDialog = false,
             onResetDayClicked = {},
             onDismissResetDayConfirmationDialog = {},
-            onResetDayConfirmed = {}
+            onResetDayConfirmed = {},
+            showArchiveTaskConfirmationDialog = false,
+            onArchiveTaskClicked = {},
+            onDismissArchiveTaskConfirmationDialog = {},
+            onArchiveTaskConfirmed = {},
+            showDeleteTaskConfirmationDialog = false,
+            onDeleteTaskClicked = {},
+            onDismissDeleteTaskConfirmationDialog = {},
+            onDeleteTaskConfirmed = {},
         )
     }
 }

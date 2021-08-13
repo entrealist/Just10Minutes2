@@ -3,7 +3,6 @@ package com.codinginflow.just10minutes2.timer.ui
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import androidx.lifecycle.viewmodel.compose.viewModel
 import com.codinginflow.just10minutes2.common.data.preferences.TimerPreferencesManager
 import com.codinginflow.just10minutes2.common.data.daos.TaskDao
 import com.codinginflow.just10minutes2.common.data.entities.Task
@@ -28,7 +27,7 @@ class TimerViewModel @Inject constructor(
 
     val activeTask = taskTimerManager.activeTask
 
-    val allTasks = taskDao.getAllTasks()
+    val allTasks = taskDao.getAllNotArchivedTasks()
 
     private var pendingNewTask = savedState.get<Task>("pendingNewTask")
         set(value) {
@@ -68,36 +67,17 @@ class TimerViewModel @Inject constructor(
     }
 
     private fun changeActiveTask(task: Task) {
-        stopTimer()
+        taskTimerManager.stopTimer()
         viewModelScope.launch {
             timerPreferencesManager.updateActiveTaskId(task.id)
         }
     }
 
-    fun onStartTimerClicked() {
-        viewModelScope.launch {
-            taskTimerManager.startTimer()
-            eventChannel.send(Event.StartTimerService)
-        }
-    }
+    fun onStartTimerClicked() = taskTimerManager.startTimer()
 
-    fun onStopTimerClicked() {
-        stopTimer()
-    }
-
-    private fun stopTimer() {
-        viewModelScope.launch {
-            val timerRunning = timerRunning.first()
-            if (timerRunning) {
-                taskTimerManager.stopTimer()
-                eventChannel.send(Event.StopTimerService)
-            }
-        }
-    }
+    fun onStopTimerClicked() = taskTimerManager.stopTimer()
 
     sealed class Event {
-        object StartTimerService : Event()
-        object StopTimerService : Event()
         object ShowNewTaskSelectionConfirmationDialog : Event()
         object ShowTimerStoppedMessage : Event()
     }

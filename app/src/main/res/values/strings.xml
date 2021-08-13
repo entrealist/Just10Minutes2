@@ -32,7 +32,7 @@
     <string name="task_updated">Task updated</string>
     <string name="task_deleted">Task deleted</string>
     <string name="confirm_deletion">Confirm deletion</string>
-    <string name="confirm_task_deletion_message">Do you really want to delete this task? This will also remove all its statistics. Consider archiving the task instead.</string>
+    <string name="confirm_delete_task_message">Do you really want to delete this task? This will also remove all its statistics. Consider archiving the task instead.</string>
     <string name="delete">Delete</string>
     <string name="cancel">Cancel</string>
     <string name="archive_task">Archive task</string>
@@ -53,9 +53,12 @@
     <string name="statistics">Statistics</string>
     <string name="show_statistics">Show statistics</string>
     <string name="archive">Archive</string>
-    <string name="completed_today">completed today</string>
+    <string name="today">today</string>
     <string name="task_day_reset_completed">Task has been reset</string>
     <string name="confirm_reset">Confirm reset</string>
     <string name="confirm_task_reset_day_message">Do you really want to reset the completed time for today?</string>
     <string name="reset">Reset</string>
+    <string name="confirm_archiving">Confirm archiving</string>
+    <string name="confirm_archive_task_message">Archiving a task will make it inactive but keep all its statistics and data. You can always revert this later. Continue?</string>
+    <string name="task_archived">Task archived</string>
 </resources>

@@ -11,6 +11,7 @@ data class Task(
     val name: String,
     val dailyGoalInMinutes: Int = 10,
     val millisCompletedToday: Long = 0,
+    val archived: Boolean = false,
     @PrimaryKey(autoGenerate = true) val id: Long = 0
 ): Parcelable {
     val dailyGoalInMilliseconds: Long

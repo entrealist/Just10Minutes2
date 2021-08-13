@@ -60,17 +60,9 @@ fun TimerScreen(
     LaunchedEffect(Unit) {
         viewModel.events.collectLatest { event ->
             when (event) {
-                TimerViewModel.Event.StartTimerService -> {
-                    val serviceIntent = Intent(context, TimerService::class.java)
-                    ContextCompat.startForegroundService(context, serviceIntent)
-                }
-                TimerViewModel.Event.StopTimerService -> {
-                    val serviceIntent = Intent(context, TimerService::class.java)
-                    context.stopService(serviceIntent)
-                }
                 is TimerViewModel.Event.ShowNewTaskSelectionConfirmationDialog ->
                     showSelectNewTaskConfirmationDialog = true
-                TimerViewModel.Event.ShowTimerStoppedMessage ->
+                is TimerViewModel.Event.ShowTimerStoppedMessage ->
                     scaffoldState.snackbarHostState.showSnackbar(context.getString(R.string.timer_stopped))
             }
         }

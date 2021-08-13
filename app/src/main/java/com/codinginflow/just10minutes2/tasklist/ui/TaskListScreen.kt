@@ -16,6 +16,7 @@ import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
@@ -62,7 +63,7 @@ fun TaskListScreen(
                     addNewTask()
                 is TaskListViewModel.Event.EditTask ->
                     editTask(event.taskId)
-                is TaskListViewModel.Event.ShowAddEditConfirmationMessage ->
+                is TaskListViewModel.Event.ShowAddEditScreenConfirmationMessage ->
                     scaffoldState.snackbarHostState.showSnackbar(context.getString(event.msg))
                 is TaskListViewModel.Event.OpenTimerForTask -> {
                     sharedViewModel.setTaskIdToOpenInTimer(event.task)
@@ -213,8 +214,9 @@ private fun TaskItem(
                             R.string.completed_and_total_minutes,
                             task.timeCompletedTodayInMinutes,
                             task.dailyGoalInMinutes
-                        ) + " " + stringResource(R.string.completed_today),
-                        fontSize = 14.sp
+                        ) + " " + stringResource(R.string.today),
+                        fontSize = 14.sp,
+                        color = Color.Gray
                     )
                 }
                 Box(
