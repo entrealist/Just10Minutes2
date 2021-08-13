@@ -6,6 +6,7 @@ import com.codinginflow.just10minutes2.ARG_TASK_ID
 import com.codinginflow.just10minutes2.R
 import com.codinginflow.just10minutes2.common.data.daos.TaskDao
 import com.codinginflow.just10minutes2.common.data.entities.Task
+import com.codinginflow.just10minutes2.timer.TaskTimerManager
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.first
@@ -18,6 +19,7 @@ import javax.inject.Inject
 @HiltViewModel
 class AddEditTaskViewModel @Inject constructor(
     private val taskDao: TaskDao,
+    private val taskTimerManager: TaskTimerManager,
     savedState: SavedStateHandle
 ) : ViewModel() {
 
@@ -133,6 +135,25 @@ class AddEditTaskViewModel @Inject constructor(
         }
     }
 
+    fun onResetDayClicked() {
+        viewModelScope.launch {
+            eventChannel.send(Event.ShowResetDayConfirmationDialog)
+        }
+    }
+
+    fun onResetDayConfirmed() {
+        viewModelScope.launch {
+            task?.let { task ->
+                val activeTask = taskTimerManager.activeTask.first()
+                if (activeTask?.id == task.id) {
+                    taskTimerManager.stopTimer()
+                }
+                taskDao.resetMillisCompletedTodayForTask(task.id)
+                eventChannel.send(Event.ShowResetDayCompletedMessage)
+            }
+        }
+    }
+
     fun onNavigateUpClicked() {
         viewModelScope.launch {
             eventChannel.send(Event.NavigateUp)
@@ -141,6 +162,8 @@ class AddEditTaskViewModel @Inject constructor(
 
     sealed class Event {
         object ShowDeleteConfirmationDialog : Event()
+        object ShowResetDayConfirmationDialog : Event()
+        object ShowResetDayCompletedMessage : Event()
         data class NavigateBackWithResult(val result: AddEditTaskResult) : Event()
         object NavigateUp : Event()
     }

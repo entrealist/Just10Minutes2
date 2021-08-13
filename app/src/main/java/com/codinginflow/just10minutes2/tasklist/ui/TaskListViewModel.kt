@@ -8,8 +8,10 @@ import com.codinginflow.just10minutes2.R
 import com.codinginflow.just10minutes2.addedittask.AddEditTaskViewModel
 import com.codinginflow.just10minutes2.common.data.daos.TaskDao
 import com.codinginflow.just10minutes2.common.data.entities.Task
+import com.codinginflow.just10minutes2.timer.TaskTimerManager
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.channels.Channel
+import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.launch
@@ -17,13 +19,25 @@ import javax.inject.Inject
 
 @HiltViewModel
 class TaskListViewModel @Inject constructor(
-    private val taskDao: TaskDao
-) : ViewModel() {
+    private val taskDao: TaskDao,
+    private val taskTimerManager: TaskTimerManager,
+
+    ) : ViewModel() {
 
     private val eventChannel = Channel<Event>()
     val events = eventChannel.receiveAsFlow()
 
     val tasks = taskDao.getAllTasks()
+
+    private val activeTask = taskTimerManager.activeTask
+    private val timerRunning = taskTimerManager.timerRunning
+    val runningTask = combine(activeTask, timerRunning) { task, running ->
+        if (running && task != null) {
+            task.id
+        } else {
+            null
+        }
+    }
 
     fun onAddNewTaskClicked() {
         viewModelScope.launch {

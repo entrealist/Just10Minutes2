@@ -11,6 +11,7 @@ import androidx.compose.runtime.*
 import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.tooling.preview.Preview
@@ -34,8 +35,10 @@ fun AddEditTaskScreen(
     val minutesGoalInputErrorMessage by viewModel.minutesGoalInputErrorMessage.observeAsState()
 
     val scaffoldState = rememberScaffoldState()
+    val context = LocalContext.current
 
     var showDeleteConfirmationDialog by rememberSaveable { mutableStateOf(false) }
+    var showResetDayConfirmationDialog by rememberSaveable { mutableStateOf(false) }
 
     LaunchedEffect(Unit) {
         viewModel.events.collectLatest { event ->
@@ -45,6 +48,10 @@ fun AddEditTaskScreen(
                 is AddEditTaskViewModel.Event.ShowDeleteConfirmationDialog ->
                     showDeleteConfirmationDialog = true
                 is AddEditTaskViewModel.Event.NavigateUp -> navigateUp()
+                AddEditTaskViewModel.Event.ShowResetDayConfirmationDialog ->
+                    showResetDayConfirmationDialog = true
+                AddEditTaskViewModel.Event.ShowResetDayCompletedMessage ->
+                    scaffoldState.snackbarHostState.showSnackbar(context.getString(R.string.task_day_reset_completed))
             }
         }
     }
@@ -57,12 +64,19 @@ fun AddEditTaskScreen(
         minutesGoalInput = minutesGoalInput,
         onMinutesGoalInputChanged = viewModel::onMinutesGoalInputChanged,
         minutesGoalInputErrorMessage = minutesGoalInputErrorMessage,
+        onNavigateUpClick = viewModel::onNavigateUpClicked,
         onSaveClicked = viewModel::onSaveClicked,
         onDeleteClicked = viewModel::onDeleteClicked,
-        onNavigateUpClick = viewModel::onNavigateUpClicked,
         showDeleteConfirmationDialog = showDeleteConfirmationDialog,
         onDismissDeleteConfirmationDialog = { showDeleteConfirmationDialog = false },
+        onDismissResetDayConfirmationDialog = { showResetDayConfirmationDialog = false },
         onDeleteConfirmed = viewModel::onDeletionConfirmed,
+        onResetDayClicked = viewModel::onResetDayClicked,
+        showResetDayConfirmationDialog = showResetDayConfirmationDialog,
+        onResetDayConfirmed = {
+            showResetDayConfirmationDialog = false
+            viewModel.onResetDayConfirmed()
+        },
         scaffoldState = scaffoldState
     )
 }
@@ -76,12 +90,16 @@ private fun AddEditTaskBody(
     minutesGoalInput: String?,
     onMinutesGoalInputChanged: (String) -> Unit,
     @StringRes minutesGoalInputErrorMessage: Int?,
+    onNavigateUpClick: () -> Unit,
     onSaveClicked: () -> Unit,
     onDeleteClicked: () -> Unit,
-    onNavigateUpClick: () -> Unit,
     showDeleteConfirmationDialog: Boolean,
     onDismissDeleteConfirmationDialog: () -> Unit,
     onDeleteConfirmed: () -> Unit,
+    onResetDayClicked: () -> Unit,
+    showResetDayConfirmationDialog: Boolean,
+    onDismissResetDayConfirmationDialog: () -> Unit,
+    onResetDayConfirmed: () -> Unit,
     modifier: Modifier = Modifier,
     scaffoldState: ScaffoldState = rememberScaffoldState(),
 ) {
@@ -122,6 +140,7 @@ private fun AddEditTaskBody(
             onMinutesGoalInputChanged = onMinutesGoalInputChanged,
             minutesGoalInputErrorMessage = minutesGoalInputErrorMessage,
             onDeleteClicked = onDeleteClicked,
+            onResetDayClicked = onResetDayClicked,
             modifier = Modifier.padding(innerPadding)
         )
 
@@ -142,6 +161,24 @@ private fun AddEditTaskBody(
                 },
             )
         }
+
+        if (showResetDayConfirmationDialog) {
+            AlertDialog(
+                onDismissRequest = onDismissResetDayConfirmationDialog,
+                title = { Text(stringResource(R.string.confirm_reset)) },
+                text = { Text(stringResource(R.string.confirm_task_reset_day_message)) },
+                confirmButton = {
+                    TextButton(onClick = onResetDayConfirmed) {
+                        Text(stringResource(R.string.reset))
+                    }
+                },
+                dismissButton = {
+                    TextButton(onClick = onDismissResetDayConfirmationDialog) {
+                        Text(stringResource(R.string.cancel))
+                    }
+                },
+            )
+        }
     }
 }
 
@@ -155,6 +192,7 @@ private fun BodyContent(
     onMinutesGoalInputChanged: (String) -> Unit,
     @StringRes minutesGoalInputErrorMessage: Int?,
     onDeleteClicked: () -> Unit,
+    onResetDayClicked: () -> Unit,
     modifier: Modifier = Modifier
 ) {
     Column(
@@ -196,7 +234,7 @@ private fun BodyContent(
         if (isEditMode) {
             Column {
                 OutlinedButton(
-                    onClick = {},
+                    onClick = onResetDayClicked,
                     modifier = Modifier.fillMaxWidth()
                 ) {
                     Icon(
@@ -256,11 +294,15 @@ private fun PreviewTaskListScreen() {
             onMinutesGoalInputChanged = {},
             minutesGoalInputErrorMessage = null,
             onSaveClicked = {},
-            onDeleteClicked = {},
             onNavigateUpClick = {},
+            showDeleteConfirmationDialog = false,
+            onDeleteClicked = {},
             onDismissDeleteConfirmationDialog = {},
             onDeleteConfirmed = {},
-            showDeleteConfirmationDialog = true
+            showResetDayConfirmationDialog = false,
+            onResetDayClicked = {},
+            onDismissResetDayConfirmationDialog = {},
+            onResetDayConfirmed = {}
         )
     }
 }

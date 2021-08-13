@@ -201,12 +201,12 @@ private fun BodyContent(
                 if (timerRunning) {
                     val infiniteTransition = rememberInfiniteTransition()
                     val animatedAlpha by infiniteTransition.animateFloat(
-                        initialValue = 0f,
+                        initialValue = 0.2f,
                         targetValue = 1f,
                         animationSpec = infiniteRepeatable(
                             animation = keyframes {
                                 durationMillis = 1500
-                                0.5f at 500
+                                0.6f at 500
                             },
                             repeatMode = RepeatMode.Reverse
                         )

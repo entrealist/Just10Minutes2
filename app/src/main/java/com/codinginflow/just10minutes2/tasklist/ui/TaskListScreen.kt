@@ -2,6 +2,7 @@ package com.codinginflow.just10minutes2.tasklist.ui
 
 import android.content.res.Configuration
 import androidx.compose.animation.animateContentSize
+import androidx.compose.animation.core.*
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -15,7 +16,6 @@ import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
@@ -42,6 +42,7 @@ fun TaskListScreen(
     navigateToTimer: () -> Unit
 ) {
     val tasks by viewModel.tasks.collectAsState(emptyList())
+    val runningTaskId by viewModel.runningTask.collectAsState(null)
 
     val lazyListState = rememberLazyListState()
     val scaffoldState = rememberScaffoldState()
@@ -73,6 +74,7 @@ fun TaskListScreen(
 
     TaskListBody(
         tasks = tasks,
+        runningTaskId = runningTaskId,
         onAddNewTaskClicked = viewModel::onAddNewTaskClicked,
         onOpenTimerForTaskClicked = viewModel::onOpenTimerForTaskClicked,
         onEditTaskClicked = viewModel::onEditTaskClicked,
@@ -84,6 +86,7 @@ fun TaskListScreen(
 @Composable
 private fun TaskListBody(
     tasks: List<Task>,
+    runningTaskId: Long?,
     onAddNewTaskClicked: () -> Unit,
     onEditTaskClicked: (Task) -> Unit,
     onOpenTimerForTaskClicked: (Task) -> Unit,
@@ -110,6 +113,7 @@ private fun TaskListBody(
     ) { innerPadding ->
         BodyContent(
             tasks = tasks,
+            runningTaskId = runningTaskId,
             onEditTaskClicked = onEditTaskClicked,
             onOpenTimerForTaskClicked = onOpenTimerForTaskClicked,
             lazyListState = lazyListState,
@@ -121,6 +125,7 @@ private fun TaskListBody(
 @Composable
 private fun BodyContent(
     tasks: List<Task>,
+    runningTaskId: Long?,
     onEditTaskClicked: (Task) -> Unit,
     onOpenTimerForTaskClicked: (Task) -> Unit,
     lazyListState: LazyListState,
@@ -129,6 +134,7 @@ private fun BodyContent(
 ) {
     TaskList(
         tasks = tasks,
+        runningTaskId = runningTaskId,
         onEditTaskClicked = onEditTaskClicked,
         onOpenTimerForTaskClicked = onOpenTimerForTaskClicked,
         lazyListState = lazyListState,
@@ -139,6 +145,7 @@ private fun BodyContent(
 @Composable
 private fun TaskList(
     tasks: List<Task>,
+    runningTaskId: Long?,
     onEditTaskClicked: (Task) -> Unit,
     onOpenTimerForTaskClicked: (Task) -> Unit,
     lazyListState: LazyListState,
@@ -154,6 +161,7 @@ private fun TaskList(
         items(tasks) { task ->
             TaskItem(
                 task = task,
+                timerRunning = task.id == runningTaskId,
                 expanded = expandedItemId == task.id,
                 onTaskClicked = { clickedTask ->
                     expandedItemId = if (expandedItemId == clickedTask.id) {
@@ -173,6 +181,7 @@ private fun TaskList(
 @Composable
 private fun TaskItem(
     task: Task,
+    timerRunning: Boolean,
     expanded: Boolean,
     onTaskClicked: (Task) -> Unit,
     onEditTaskClicked: (Task) -> Unit,
@@ -191,7 +200,8 @@ private fun TaskItem(
                 Column(
                     Modifier
                         .weight(0.8f)
-                        .align(Alignment.CenterVertically)) {
+                        .align(Alignment.CenterVertically)
+                ) {
                     Text(
                         text = task.name,
                         style = MaterialTheme.typography.h6,
@@ -218,7 +228,25 @@ private fun TaskItem(
                     CircularProgressIndicatorWithBackground(
                         progress = progress,
                     )
-                    if (task.isCompletedToday) {
+                    if (timerRunning) {
+                        val infiniteTransition = rememberInfiniteTransition()
+                        val animatedAlpha by infiniteTransition.animateFloat(
+                            initialValue = 0.2f,
+                            targetValue = 1f,
+                            animationSpec = infiniteRepeatable(
+                                animation = keyframes {
+                                    durationMillis = 1500
+                                    0.6f at 500
+                                },
+                                repeatMode = RepeatMode.Reverse
+                            )
+                        )
+                        Icon(
+                            Icons.Default.Timer,
+                            contentDescription = stringResource(R.string.timer_running),
+                            tint = MaterialTheme.colors.primary.copy(alpha = animatedAlpha)
+                        )
+                    } else if (task.isCompletedToday) {
                         Icon(
                             Icons.Default.Check,
                             contentDescription = stringResource(R.string.task_completed),
@@ -228,8 +256,15 @@ private fun TaskItem(
                 }
             }
             if (expanded) {
-                Spacer(Modifier.height(8.dp))
                 Column {
+                    if (timerRunning) {
+                        Text(
+                            stringResource(R.string.timer_running),
+                            fontSize = 14.sp,
+                            color = MaterialTheme.colors.primary
+                        )
+                    }
+                    Spacer(Modifier.height(8.dp))
                     Row {
                         OutlinedButton(
                             onClick = { onEditTaskClicked(task) },
@@ -297,6 +332,7 @@ private fun PreviewTaskListScreen() {
                 Task("Example Task 2", millisCompletedToday = (3 * 60 * 1000).toLong()),
                 Task("Example Task 3", millisCompletedToday = (8 * 60 * 1000).toLong()),
             ),
+            runningTaskId = 1,
             onAddNewTaskClicked = {},
             onEditTaskClicked = {},
             onOpenTimerForTaskClicked = {},
@@ -320,6 +356,7 @@ private fun PreviewTaskItem() {
         Surface {
             TaskItem(
                 task = Task("Example Task", millisCompletedToday = (3 * 60 * 1000).toLong()),
+                timerRunning = true,
                 expanded = true,
                 onTaskClicked = {},
                 onEditTaskClicked = {},
