@@ -4,14 +4,12 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.annotation.StringRes
-import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.slideInVertically
-import androidx.compose.animation.slideOutVertically
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Assessment
 import androidx.compose.material.icons.filled.List
+import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.filled.Timer
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
@@ -181,19 +179,15 @@ private val bottomNavDestinations = listOf(
     BottomNavDestination.Statistics
 )
 
-private val fullScreenDestinations = listOf(
-    AppDestinations.AddEditTask
-)
-
 sealed class BottomNavDestination(
     val route: String,
     @StringRes val labelRes: Int,
     val icon: ImageVector
 ) {
-    object TaskList : BottomNavDestination("TaskList", R.string.title_task_list, Icons.Filled.List)
-    object Timer : BottomNavDestination("Timer", R.string.title_timer, Icons.Filled.Timer)
+    object TaskList : BottomNavDestination("TaskList", R.string.tasks, Icons.Default.List)
+    object Timer : BottomNavDestination("Timer", R.string.timer, Icons.Default.Timer)
     object Statistics :
-        BottomNavDestination("Statistics", R.string.title_statistics, Icons.Filled.Assessment)
+        BottomNavDestination("Statistics", R.string.statistics, Icons.Default.Assessment)
 }
 
 sealed class AppDestinations(

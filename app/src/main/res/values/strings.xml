@@ -5,11 +5,9 @@
     <string name="stop_timer">Stop timer</string>
     <string name="daily_minutes_goal_placeholder">Daily goal: %d min</string>
     <string name="minutes_goal_placeholder">Goal: %d min</string>
-    <string name="title_task_list">Tasks</string>
+    <string name="tasks">Tasks</string>
     <string name="select_task">Select task</string>
     <string name="no_task_selected">No task selected</string>
-    <string name="title_timer">Timer</string>
-    <string name="title_statistics">Statistics</string>
     <string name="completed">Completed</string>
     <string name="add_new_task">Add new task</string>
     <string name="add_task">Add task</string>
@@ -18,7 +16,8 @@
     <string name="minutes_completed_today_placeholder">Completed: %d min</string>
     <string name="task_completed">Task completed</string>
     <string name="task_completed_exclamation_mark">Task completed!</string>
-    <string name="task_name_with_minutes_goal">%s (%d min)</string>
+    <string name="task_name_with_completed_and_total_minutes">%1$s (%2$d\/%3$d min)</string>
+    <string name="completed_and_total_minutes">%1$d\/%2$d min</string>
     <string name="task_name_empty_error">Task name can\'t be empty!</string>
     <string name="navigate_back">Navigate back</string>
     <string name="task_name">Task name</string>
@@ -48,4 +47,11 @@
     <string name="confirm_switch_task_message">Do you want to switch to a different task? This will stop the currently running timer.</string>
     <string name="confirm">Confirm</string>
     <string name="confirm_switch">Switch</string>
+    <string name="title_settings">Settings</string>
+    <string name="edit">Edit</string>
+    <string name="timer">Timer</string>
+    <string name="statistics">Statistics</string>
+    <string name="show_statistics">Show statistics</string>
+    <string name="archive">Archive</string>
+    <string name="completed_today">completed today</string>
 </resources>

@@ -26,7 +26,7 @@ class TaskTimerManager @Inject constructor(
     val activeTask = timerPreferencesFlow.flatMapLatest { timerPreferences ->
         timerPreferences.activeTaskId?.let { taskId ->
             taskDao.getTaskById(taskId)
-        } ?: emptyFlow()
+        } ?: flowOf(null)
     }
 
     private val timerRunningFlow = MutableStateFlow(false)

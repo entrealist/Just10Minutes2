@@ -10,10 +10,7 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Add
-import androidx.compose.material.icons.filled.Check
-import androidx.compose.material.icons.filled.Edit
-import androidx.compose.material.icons.filled.Timer
+import androidx.compose.material.icons.filled.*
 import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
@@ -24,6 +21,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.codinginflow.just10minutes2.R
 import com.codinginflow.just10minutes2.addedittask.AddEditTaskViewModel
@@ -98,7 +96,7 @@ private fun TaskListBody(
         scaffoldState = scaffoldState,
         topBar = {
             TopAppBar(
-                title = { Text(stringResource(R.string.title_task_list)) },
+                title = { Text(stringResource(R.string.tasks)) },
                 actions = {
                     IconButton(onClick = onAddNewTaskClicked) {
                         Icon(
@@ -190,7 +188,10 @@ private fun TaskItem(
     ) {
         Column {
             Row {
-                Column(Modifier.weight(0.8f)) {
+                Column(
+                    Modifier
+                        .weight(0.8f)
+                        .align(Alignment.CenterVertically)) {
                     Text(
                         text = task.name,
                         style = MaterialTheme.typography.h6,
@@ -199,24 +200,18 @@ private fun TaskItem(
                     )
                     Text(
                         text = stringResource(
-                            R.string.daily_minutes_goal_placeholder,
+                            R.string.completed_and_total_minutes,
+                            task.timeCompletedTodayInMinutes,
                             task.dailyGoalInMinutes
-                        ),
-                        color = Color.Gray
-                    )
-                    Text(
-                        text = stringResource(
-                            R.string.minutes_completed_today_placeholder,
-                            task.timeCompletedTodayInMinutes
-                        ),
-                        color = MaterialTheme.colors.primary
+                        ) + " " + stringResource(R.string.completed_today),
+                        fontSize = 14.sp
                     )
                 }
                 Box(
                     contentAlignment = Alignment.Center,
                     modifier = Modifier
                         .weight(0.2f)
-                        .padding(16.dp)
+                        .padding(8.dp)
                 ) {
                     val progress =
                         1 - (task.timeLeftTodayInMilliseconds.toFloat() / task.dailyGoalInMilliseconds.toFloat())
@@ -234,30 +229,49 @@ private fun TaskItem(
             }
             if (expanded) {
                 Spacer(Modifier.height(8.dp))
-                Row {
-                    OutlinedButton(
-                        onClick = { onEditTaskClicked(task) },
-                        modifier = Modifier
-                            .weight(1f)
-                    ) {
-                        Icon(
-                            imageVector = Icons.Default.Edit,
-                            contentDescription = stringResource(R.string.edit_task),
-                        )
-                        Spacer(Modifier.size(ButtonDefaults.IconSpacing))
-                        Text(stringResource(R.string.edit_task))
+                Column {
+                    Row {
+                        OutlinedButton(
+                            onClick = { onEditTaskClicked(task) },
+                            modifier = Modifier
+                                .weight(1f)
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.Edit,
+                                contentDescription = stringResource(R.string.edit_task),
+                            )
+                            Spacer(Modifier.size(ButtonDefaults.IconSpacing))
+                            Text(stringResource(R.string.edit_task))
+                        }
+                        Spacer(Modifier.width(8.dp))
+                        OutlinedButton(
+                            onClick = { onOpenTimerForTaskClicked(task) },
+                            modifier = Modifier.weight(1f)
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.Timer,
+                                contentDescription = stringResource(R.string.open_timer),
+                            )
+                            Spacer(Modifier.size(ButtonDefaults.IconSpacing))
+                            Text(stringResource(R.string.open_timer))
+                        }
                     }
-                    Spacer(Modifier.width(8.dp))
-                    OutlinedButton(
-                        onClick = { onOpenTimerForTaskClicked(task) },
-                        modifier = Modifier.weight(1f)
-                    ) {
-                        Icon(
-                            imageVector = Icons.Default.Timer,
-                            contentDescription = stringResource(R.string.open_timer),
-                        )
-                        Spacer(Modifier.size(ButtonDefaults.IconSpacing))
-                        Text(stringResource(R.string.open_timer))
+                    Spacer(Modifier.height(8.dp))
+                    Row {
+                        OutlinedButton(
+                            onClick = { },
+                            modifier = Modifier
+                                .weight(1f)
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.Assessment,
+                                contentDescription = stringResource(R.string.statistics),
+                            )
+                            Spacer(Modifier.size(ButtonDefaults.IconSpacing))
+                            Text(stringResource(R.string.statistics))
+                        }
+                        Spacer(Modifier.width(8.dp))
+                        Spacer(Modifier.weight(1f))
                     }
                 }
             }
@@ -279,9 +293,9 @@ private fun PreviewTaskListScreen() {
     Just10Minutes2Theme {
         TaskListBody(
             tasks = listOf(
-                Task("Example Task 1"),
-                Task("Example Task 2"),
-                Task("Example Task 3"),
+                Task("Example Task 1", millisCompletedToday = (0 * 60 * 1000).toLong()),
+                Task("Example Task 2", millisCompletedToday = (3 * 60 * 1000).toLong()),
+                Task("Example Task 3", millisCompletedToday = (8 * 60 * 1000).toLong()),
             ),
             onAddNewTaskClicked = {},
             onEditTaskClicked = {},
@@ -303,12 +317,14 @@ private fun PreviewTaskListScreen() {
 @Composable
 private fun PreviewTaskItem() {
     Just10Minutes2Theme {
-        TaskItem(
-            task = Task("Example Task"),
-            expanded = true,
-            onTaskClicked = {},
-            onEditTaskClicked = {},
-            onOpenTimerForTaskClicked = {},
-        )
+        Surface {
+            TaskItem(
+                task = Task("Example Task", millisCompletedToday = (3 * 60 * 1000).toLong()),
+                expanded = true,
+                onTaskClicked = {},
+                onEditTaskClicked = {},
+                onOpenTimerForTaskClicked = {},
+            )
+        }
     }
 }

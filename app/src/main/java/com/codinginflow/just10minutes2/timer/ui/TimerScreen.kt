@@ -2,11 +2,17 @@ package com.codinginflow.just10minutes2.timer.ui
 
 import android.content.Intent
 import android.content.res.Configuration
+import androidx.compose.animation.core.*
+import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowDropDown
+import androidx.compose.material.icons.filled.Check
+import androidx.compose.material.icons.filled.Timer
 import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
@@ -15,6 +21,8 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
@@ -74,7 +82,7 @@ fun TimerScreen(
         timerRunning = timerRunning,
         onStartTimerClicked = viewModel::onStartTimerClicked,
         onStopTimerClicked = viewModel::onStopTimerClicked,
-        onNewTaskSelected = viewModel::onTaskSelected,
+        onTaskSelected = viewModel::onTaskSelected,
         showSelectNewTaskConfirmationDialog = showSelectNewTaskConfirmationDialog,
         onDismissSelectNewTaskConfirmationDialog = {
             viewModel.onSelectNewTaskCanceled()
@@ -96,7 +104,7 @@ private fun TimerBody(
     timerRunning: Boolean,
     onStartTimerClicked: () -> Unit,
     onStopTimerClicked: () -> Unit,
-    onNewTaskSelected: (Task) -> Unit,
+    onTaskSelected: (Task) -> Unit,
     showSelectNewTaskConfirmationDialog: Boolean,
     onDismissSelectNewTaskConfirmationDialog: () -> Unit,
     onSelectNewTaskConfirmed: () -> Unit,
@@ -108,15 +116,15 @@ private fun TimerBody(
         scaffoldState = scaffoldState,
         topBar = {
             TopAppBar(
-                title = { Text(stringResource(R.string.title_timer)) },
+                title = { Text(stringResource(R.string.timer)) },
             )
         },
     ) {
         BodyContent(
-            activeTask = activeTask,
+            task = activeTask,
             allTasks = allTasks,
             timerRunning = timerRunning,
-            onNewTaskSelected = onNewTaskSelected,
+            onTaskSelected = onTaskSelected,
             onStartTimerClicked = onStartTimerClicked,
             onStopTimerClicked = onStopTimerClicked
         )
@@ -142,75 +150,126 @@ private fun TimerBody(
 
 @Composable
 private fun BodyContent(
-    activeTask: Task?,
+    task: Task?,
     allTasks: List<Task>,
     timerRunning: Boolean,
     onStartTimerClicked: () -> Unit,
     onStopTimerClicked: () -> Unit,
-    onNewTaskSelected: (Task) -> Unit,
+    onTaskSelected: (Task) -> Unit,
 
     ) {
     Column(
-        modifier = Modifier.fillMaxSize(),
         horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.Center
+        verticalArrangement = Arrangement.Center,
+        modifier = Modifier
+            .fillMaxSize()
+        //.background(Color.Yellow)
     ) {
-        Text(stringResource(R.string.active_task_colon), color = Color.Gray)
-        DropdownSelector(
-            selectedTask = activeTask,
-            allTasks = allTasks,
-            onNewTaskSelected = onNewTaskSelected
-        )
-        CircularTextTimer(
-            timeLeftInMillis = activeTask?.timeLeftTodayInMilliseconds ?: 0,
-            timeGoalInMillis = activeTask?.dailyGoalInMilliseconds ?: 0
-        )
-        Spacer(Modifier.height(16.dp))
-
-        val buttonEnabled = activeTask != null && !activeTask.isCompletedToday
-        val buttonOnClick = if (timerRunning) onStopTimerClicked else onStartTimerClicked
-        val buttonTextRes = if (timerRunning) R.string.stop_timer else R.string.start_timer
-        Button(
-            onClick = buttonOnClick,
-            enabled = buttonEnabled
+        Column(
+            verticalArrangement = Arrangement.Center,
+            modifier = Modifier
+                .width(280.dp)
+            //  .background(Color.Green)
         ) {
-            Text(stringResource(buttonTextRes))
+            Text(stringResource(R.string.active_task_colon))
+            Spacer(Modifier.height(8.dp))
+            DropdownMenuWithSelector(
+                selectedTask = task,
+                allTasks = allTasks,
+                onTaskSelected = onTaskSelected,
+            )
+            Spacer(Modifier.height(8.dp))
+            Text(
+                stringResource(
+                    R.string.daily_minutes_goal_placeholder,
+                    task?.dailyGoalInMinutes ?: 0
+                )
+            )
+            Text(
+                stringResource(
+                    R.string.minutes_completed_today_placeholder,
+                    task?.timeCompletedTodayInMinutes ?: 0
+                )
+            )
+            Spacer(Modifier.height(16.dp))
+            Box(Modifier.align(Alignment.CenterHorizontally)) {
+                CircularTextTimer(
+                    timeLeftInMillis = task?.timeLeftTodayInMilliseconds ?: 0,
+                    timeGoalInMillis = task?.dailyGoalInMilliseconds ?: 0,
+                    running = timerRunning
+                )
+                if (timerRunning) {
+                    val infiniteTransition = rememberInfiniteTransition()
+                    val animatedAlpha by infiniteTransition.animateFloat(
+                        initialValue = 0f,
+                        targetValue = 1f,
+                        animationSpec = infiniteRepeatable(
+                            animation = keyframes {
+                                durationMillis = 1500
+                                0.5f at 500
+                            },
+                            repeatMode = RepeatMode.Reverse
+                        )
+                    )
+                    Icon(
+                        Icons.Default.Timer,
+                        contentDescription = stringResource(R.string.timer_running),
+                        modifier = Modifier
+                            .padding(bottom = 32.dp)
+                            .size(32.dp)
+                            .align(Alignment.BottomCenter),
+                        tint = MaterialTheme.colors.primary.copy(alpha = animatedAlpha)
+                    )
+                }
+            }
+            Spacer(Modifier.height(16.dp))
+            val buttonEnabled = task != null && !task.isCompletedToday
+            val buttonOnClick = if (timerRunning) onStopTimerClicked else onStartTimerClicked
+            val buttonTextRes = if (timerRunning) R.string.stop_timer else R.string.start_timer
+            Button(
+                onClick = buttonOnClick,
+                enabled = buttonEnabled,
+                modifier = Modifier.align(Alignment.CenterHorizontally)
+            ) {
+                Text(stringResource(buttonTextRes))
+            }
         }
     }
 }
 
 @Composable
-private fun DropdownSelector(
+private fun DropdownMenuWithSelector(
     selectedTask: Task?,
     allTasks: List<Task>,
-    onNewTaskSelected: (Task) -> Unit,
+    onTaskSelected: (Task) -> Unit,
+    modifier: Modifier = Modifier
 ) {
     var expanded by remember { mutableStateOf(false) }
 
-    val selectedText = if (selectedTask != null) {
-        stringResource(
-            R.string.task_name_with_minutes_goal,
-            selectedTask.name,
-            selectedTask.dailyGoalInMinutes
-        )
-    } else stringResource(id = R.string.no_task_selected)
+    val selectedText = selectedTask?.name ?: stringResource(id = R.string.no_task_selected)
 
-    Box {
-        Row(
+    Box(modifier) {
+        Box(
             modifier = Modifier
                 .clickable { expanded = !expanded }
-                .padding(16.dp)
+                .border(1.dp, Color.Gray, shape = RoundedCornerShape(4.dp))
+                .fillMaxWidth()
+                .padding(8.dp)
         ) {
             Text(
                 selectedText,
                 style = LocalTextStyle.current.copy(fontWeight = FontWeight.Bold),
-                color = MaterialTheme.colors.primary
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+                modifier = Modifier
+                    .width(220.dp)
+                    .align(Alignment.Center),
+                textAlign = TextAlign.Center
             )
-            Spacer(Modifier.width(2.dp))
             Icon(
                 Icons.Filled.ArrowDropDown,
                 contentDescription = stringResource(id = R.string.select_task),
-                tint = MaterialTheme.colors.primary
+                modifier = Modifier.align(Alignment.CenterEnd)
             )
         }
         DropdownMenu(
@@ -221,16 +280,28 @@ private fun DropdownSelector(
             allTasks.forEach { task ->
                 if (task != selectedTask) {
                     DropdownMenuItem(onClick = {
-                        onNewTaskSelected(task)
+                        onTaskSelected(task)
                         expanded = false
                     }) {
+                        val textColor =
+                            if (task.isCompletedToday) MaterialTheme.colors.primary else LocalContentColor.current
                         Text(
                             stringResource(
-                                R.string.task_name_with_minutes_goal,
+                                R.string.task_name_with_completed_and_total_minutes,
                                 task.name,
+                                task.timeCompletedTodayInMinutes,
                                 task.dailyGoalInMinutes
-                            )
+                            ),
+                            color = textColor
                         )
+                        Spacer(Modifier.width(ButtonDefaults.IconSpacing))
+                        if (task.isCompletedToday) {
+                            Icon(
+                                Icons.Default.Check,
+                                contentDescription = stringResource(R.string.task_completed),
+                                tint = MaterialTheme.colors.primary
+                            )
+                        }
                     }
                 }
             }
@@ -242,7 +313,8 @@ private fun DropdownSelector(
 private fun CircularTextTimer(
     timeLeftInMillis: Long,
     timeGoalInMillis: Long,
-    progressBarSize: Dp = 230.dp,
+    running: Boolean,
+    modifier: Modifier = Modifier,
     strokeWidth: Dp = 10.dp
 ) {
     val active = timeGoalInMillis > 0
@@ -250,13 +322,17 @@ private fun CircularTextTimer(
     val completed = timeLeftInMillis <= 0
 
     val timeText = formatTimeText(timeLeftInMillis)
-    val timeTextColor = if (!completed) LocalContentColor.current else Color.LightGray
+    val timeTextColor =
+        if (running) MaterialTheme.colors.primary else if (!completed) LocalContentColor.current else Color.LightGray
 
-    Box(contentAlignment = Alignment.Center) {
+    Box(
+        contentAlignment = Alignment.Center,
+        modifier = modifier.sizeIn(minWidth = 230.dp, minHeight = 230.dp)
+    ) {
         CircularProgressIndicatorWithBackground(
             progress = if (active) progress else 0f,
             strokeWidth = strokeWidth,
-            modifier = Modifier.size(progressBarSize),
+            modifier = Modifier.sizeIn(minWidth = 230.dp, minHeight = 230.dp)
         )
         if (active && completed) {
             Text(
@@ -288,7 +364,7 @@ private fun PreviewTimerScreen() {
             timerRunning = false,
             onStartTimerClicked = {},
             onStopTimerClicked = {},
-            onNewTaskSelected = {},
+            onTaskSelected = {},
             showSelectNewTaskConfirmationDialog = false,
             onSelectNewTaskConfirmed = {},
             onDismissSelectNewTaskConfirmationDialog = {}

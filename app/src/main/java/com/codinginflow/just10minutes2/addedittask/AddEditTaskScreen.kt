@@ -169,7 +169,7 @@ private fun BodyContent(
                 value = taskNameInput.orEmpty(),
                 onValueChange = onTaskNameInputChanged,
                 label = { Text(stringResource(R.string.task_name)) },
-                maxLines = 1,
+                singleLine = true,
                 modifier = Modifier.fillMaxWidth(),
                 isError = taskNameInputIsError
             )
@@ -182,7 +182,7 @@ private fun BodyContent(
                 value = minutesGoalInput.orEmpty(),
                 onValueChange = onMinutesGoalInputChanged,
                 label = { Text(stringResource(R.string.minutes_per_day)) },
-                maxLines = 1,
+                singleLine = true,
                 modifier = Modifier.fillMaxWidth(),
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                 isError = minutesGoalInputIsError
@@ -196,7 +196,7 @@ private fun BodyContent(
         if (isEditMode) {
             Column {
                 OutlinedButton(
-                    onClick = onDeleteClicked,
+                    onClick = {},
                     modifier = Modifier.fillMaxWidth()
                 ) {
                     Icon(
@@ -208,7 +208,7 @@ private fun BodyContent(
                 }
                 Spacer(Modifier.height(8.dp))
                 OutlinedButton(
-                    onClick = onDeleteClicked,
+                    onClick = {},
                     modifier = Modifier.fillMaxWidth()
                 ) {
                     Icon(

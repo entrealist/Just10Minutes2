@@ -28,6 +28,7 @@ fun CircularProgressIndicatorWithBackground(
         CircularProgressIndicator(
             progress = progress,
             strokeWidth = strokeWidth,
+            color = color,
             modifier = modifier
         )
     }
