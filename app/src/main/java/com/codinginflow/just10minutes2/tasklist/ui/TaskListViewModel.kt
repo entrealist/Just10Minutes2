@@ -1,8 +1,7 @@
 package com.codinginflow.just10minutes2.tasklist.ui
 
 import androidx.annotation.StringRes
-import androidx.lifecycle.ViewModel
-import androidx.lifecycle.viewModelScope
+import androidx.lifecycle.*
 import com.codinginflow.just10minutes2.R
 import com.codinginflow.just10minutes2.addedittask.AddEditTaskViewModel
 import com.codinginflow.just10minutes2.common.data.daos.TaskDao
@@ -19,13 +18,23 @@ import javax.inject.Inject
 class TaskListViewModel @Inject constructor(
     private val taskDao: TaskDao,
     private val taskTimerManager: TaskTimerManager,
-
-    ) : ViewModel() {
+    private val savedStateHandle: SavedStateHandle
+) : ViewModel() {
 
     private val eventChannel = Channel<Event>()
     val events = eventChannel.receiveAsFlow()
 
-    val tasks = taskDao.getAllNotArchivedTasks()
+    private val archiveViewActiveLiveData =
+        savedStateHandle.getLiveData<Boolean>("archiveViewActive", false)
+    val archiveViewActive: LiveData<Boolean> = archiveViewActiveLiveData
+
+    val tasks = archiveViewActive.switchMap { archiveViewActive ->
+        if (archiveViewActive) {
+            taskDao.getAllArchivedTasks().asLiveData()
+        } else {
+            taskDao.getAllNotArchivedTasks().asLiveData()
+        }
+    }
 
     private val activeTask = taskTimerManager.activeTask
     private val timerRunning = taskTimerManager.timerRunning
@@ -34,6 +43,17 @@ class TaskListViewModel @Inject constructor(
             task.id
         } else {
             null
+        }
+    }
+
+    private val expandedItemIdLiveData = savedStateHandle.getLiveData<Long>("expandedItemId")
+    val expandedItemId: LiveData<Long> = expandedItemIdLiveData
+
+    fun onTaskClicked(task: Task) {
+        if (expandedItemId.value == task.id) {
+            expandedItemIdLiveData.value = null
+        } else {
+            expandedItemIdLiveData.value = task.id
         }
     }
 
@@ -68,6 +88,12 @@ class TaskListViewModel @Inject constructor(
         viewModelScope.launch {
             eventChannel.send(Event.OpenTimerForTask(task))
         }
+    }
+
+    fun onToggleArchiveViewClicked() {
+        val archiveViewActive = archiveViewActive.value ?: false
+        archiveViewActiveLiveData.value = !archiveViewActive
+        expandedItemIdLiveData.value = null
     }
 
     sealed class Event {

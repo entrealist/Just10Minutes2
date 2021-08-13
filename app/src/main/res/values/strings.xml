@@ -61,4 +61,7 @@
     <string name="confirm_archiving">Confirm archiving</string>
     <string name="confirm_archive_task_message">Archiving a task will make it inactive but keep all its statistics and data. You can always revert this later. Continue?</string>
     <string name="task_archived">Task archived</string>
+    <string name="show_archived_tasks">Show archived tasks</string>
+    <string name="archive_explanation">This is your archive. Tasks in here are inactive and not shown in your timer. You can unarchive them to make them active again.</string>
+    <string name="unarchive">Unarchive</string>
 </resources>
