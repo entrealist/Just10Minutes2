@@ -8,7 +8,7 @@
     <string name="tasks">Tasks</string>
     <string name="select_task">Select task</string>
     <string name="no_task_selected">No task selected</string>
-    <string name="completed">Completed</string>
+    <string name="completed_today">Completed today</string>
     <string name="add_new_task">Add new task</string>
     <string name="add_task">Add task</string>
     <string name="active_task_colon">Active task:</string>
@@ -68,4 +68,6 @@
     <string name="confirm_unarchiving">Confirm unarchiving</string>
     <string name="confirm_unarchiving_task_message">Do you want to make this task active again?</string>
     <string name="task_unarchived">Task unarchived</string>
+    <string name="last_active">Last active: %s</string>
+    <string name="task_will_reset_at_midnight">This task will reset at midnight</string>
 </resources>

@@ -177,11 +177,6 @@ private fun JTMNavHost(
         }
         composable(
             route = AppDestination.Archive.route,
-            arguments = listOf(
-                navArgument(ARG_SHOW_BOTTOM_NAV) {
-                    defaultValue = true
-                }
-            )
         ) {
             ArchiveScreen(
                 navigateUp = {

@@ -14,12 +14,15 @@ import androidx.compose.material.icons.filled.*
 import androidx.compose.runtime.*
 import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.codinginflow.just10minutes2.R
 import com.codinginflow.just10minutes2.common.data.entities.Task
@@ -46,8 +49,8 @@ fun ArchiveScreen(
             when (event) {
                 is ArchiveViewModel.Event.NavigateUp ->
                     navigateUp()
-             is   ArchiveViewModel.Event.ShowUnarchivedConfirmationMessage ->
-                 scaffoldState.snackbarHostState.showSnackbar(context.getString(R.string.task_unarchived))
+                is ArchiveViewModel.Event.ShowUnarchivedConfirmationMessage ->
+                    scaffoldState.snackbarHostState.showSnackbar(context.getString(R.string.task_unarchived))
             }
         }
     }
@@ -108,7 +111,7 @@ private fun ArchiveBody(
             text = { Text(stringResource(R.string.confirm_unarchiving_task_message)) },
             confirmButton = {
                 TextButton(onClick = onUnarchiveTaskConfirmed) {
-                    Text(stringResource(R.string.archive))
+                    Text(stringResource(R.string.unarchive))
                 }
             },
             dismissButton = {
@@ -188,19 +191,34 @@ private fun TaskItemArchived(
     ) {
         Column {
             Row {
-                Text(
-                    text = task.name,
-                    style = MaterialTheme.typography.h6,
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis,
-                    modifier = Modifier.weight(0.9f)
-                )
+                Column(
+                    Modifier
+                        .weight(0.9f)
+                        .align(Alignment.CenterVertically)
+                ) {
+                    Text(
+                        text = task.name,
+                        style = MaterialTheme.typography.h6,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis,
+                    )
+                    Text(
+                        text = stringResource(
+                            R.string.last_active,
+                            "Insert date here", // TODO: 14.08.2021 Insert date
+                        ),
+                        fontSize = 14.sp,
+                        color = Color.Gray
+                    )
+                }
                 val dropdownIcon =
                     if (!expanded) Icons.Default.ArrowDropDown else Icons.Default.ArrowDropUp
                 Icon(
                     dropdownIcon,
                     contentDescription = stringResource(R.string.show_more),
-                    modifier = Modifier.weight(0.1f)
+                    modifier = Modifier
+                        .weight(0.1f)
+                        .align(Alignment.CenterVertically)
                 )
             }
             if (expanded) {

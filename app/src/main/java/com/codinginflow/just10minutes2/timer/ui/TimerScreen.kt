@@ -316,11 +316,31 @@ private fun CircularTextTimer(
             modifier = Modifier.sizeIn(minWidth = 230.dp, minHeight = 230.dp)
         )
         if (active && completed) {
-            Text(
-                text = stringResource(R.string.completed),
-                style = MaterialTheme.typography.h5.copy(fontWeight = FontWeight.Bold),
-                color = MaterialTheme.colors.primary
-            )
+            Column {
+                Icon(
+                    Icons.Default.Check,
+                    contentDescription = stringResource(R.string.task_completed),
+                    tint = MaterialTheme.colors.primary,
+                    modifier = Modifier.align(Alignment.CenterHorizontally)
+                )
+                Text(
+                    text = stringResource(R.string.completed_today),
+                    style = MaterialTheme.typography.h6.copy(fontWeight = FontWeight.Bold),
+                    color = MaterialTheme.colors.primary,
+                    textAlign = TextAlign.Center,
+                    modifier = Modifier
+                        .align(Alignment.CenterHorizontally)
+                        .padding(start = 45.dp, end = 45.dp),
+                )
+                Text(
+                    text = stringResource(R.string.task_will_reset_at_midnight),
+                    style = MaterialTheme.typography.body2,
+                    textAlign = TextAlign.Center,
+                    modifier = Modifier
+                        .align(Alignment.CenterHorizontally)
+                        .padding(start = 45.dp, end = 45.dp),
+                )
+            }
         } else {
             Text(text = timeText, style = MaterialTheme.typography.h3, color = timeTextColor)
         }
@@ -337,10 +357,36 @@ private fun CircularTextTimer(
     name = "Dark Mode"
 )
 @Composable
-private fun PreviewTimerScreen() {
+private fun PreviewTimerScreenNoTask() {
     Just10Minutes2Theme {
         TimerBody(
             activeTask = null,
+            allTasks = emptyList(),
+            timerRunning = false,
+            onStartTimerClicked = {},
+            onStopTimerClicked = {},
+            onTaskSelected = {},
+            showSelectNewTaskConfirmationDialog = false,
+            onSelectNewTaskConfirmed = {},
+            onDismissSelectNewTaskConfirmationDialog = {}
+        )
+    }
+}
+
+@Preview(
+    showBackground = true,
+    name = "Light Mode"
+)
+@Preview(
+    showBackground = true,
+    uiMode = Configuration.UI_MODE_NIGHT_YES,
+    name = "Dark Mode"
+)
+@Composable
+private fun PreviewTimerScreenCompleted() {
+    Just10Minutes2Theme {
+        TimerBody(
+            activeTask = Task("Example task", 10, 10 * 60 * 1000L),
             allTasks = emptyList(),
             timerRunning = false,
             onStartTimerClicked = {},
