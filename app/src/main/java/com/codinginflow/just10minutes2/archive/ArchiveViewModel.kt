@@ -29,5 +29,6 @@ class ArchiveViewModel @Inject constructor(
 
     sealed class Event {
         object NavigateUp : Event()
+        object ShowUnarchivedConfirmationMessage: Event()
     }
 }

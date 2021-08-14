@@ -1,9 +1,7 @@
 package com.codinginflow.just10minutes2.timer.ui
 
-import android.content.Intent
 import android.content.res.Configuration
 import androidx.compose.animation.core.*
-import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -14,7 +12,7 @@ import androidx.compose.material.icons.filled.ArrowDropDown
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Timer
 import androidx.compose.runtime.*
-import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -26,7 +24,6 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
-import androidx.core.content.ContextCompat
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.codinginflow.just10minutes2.R
 import com.codinginflow.just10minutes2.common.data.entities.Task
@@ -34,7 +31,6 @@ import com.codinginflow.just10minutes2.common.ui.CircularProgressIndicatorWithBa
 import com.codinginflow.just10minutes2.common.ui.SharedViewModel
 import com.codinginflow.just10minutes2.common.ui.theme.Just10Minutes2Theme
 import com.codinginflow.just10minutes2.common.util.formatTimeText
-import com.codinginflow.just10minutes2.timer.TimerService
 import kotlinx.coroutines.flow.collectLatest
 
 @Composable
@@ -49,7 +45,9 @@ fun TimerScreen(
     val scaffoldState = rememberScaffoldState()
     val context = LocalContext.current
 
-    var showSelectNewTaskConfirmationDialog by rememberSaveable { mutableStateOf(false) }
+    val showSelectNewTaskConfirmationDialog by viewModel.showSelectNewTaskConfirmationDialog.observeAsState(
+        false
+    )
 
     LaunchedEffect(Unit) {
         sharedViewModel.taskToOpenInTimer.collectLatest { task ->
@@ -60,8 +58,6 @@ fun TimerScreen(
     LaunchedEffect(Unit) {
         viewModel.events.collectLatest { event ->
             when (event) {
-                is TimerViewModel.Event.ShowNewTaskSelectionConfirmationDialog ->
-                    showSelectNewTaskConfirmationDialog = true
                 is TimerViewModel.Event.ShowTimerStoppedMessage ->
                     scaffoldState.snackbarHostState.showSnackbar(context.getString(R.string.timer_stopped))
             }
@@ -76,15 +72,8 @@ fun TimerScreen(
         onStopTimerClicked = viewModel::onStopTimerClicked,
         onTaskSelected = viewModel::onTaskSelected,
         showSelectNewTaskConfirmationDialog = showSelectNewTaskConfirmationDialog,
-        onDismissSelectNewTaskConfirmationDialog = {
-            viewModel.onSelectNewTaskCanceled()
-            showSelectNewTaskConfirmationDialog = false
-        },
-        onSelectNewTaskConfirmed = {
-            viewModel.onSelectNewTaskConfirmed()
-            showSelectNewTaskConfirmationDialog = false
-
-        },
+        onDismissSelectNewTaskConfirmationDialog = viewModel::onDismissSelectNewTaskConfirmationDialog,
+        onSelectNewTaskConfirmed = viewModel::onSelectNewTaskConfirmed,
         scaffoldState = scaffoldState,
     )
 }

@@ -1,5 +1,6 @@
 package com.codinginflow.just10minutes2.timer.ui
 
+import androidx.lifecycle.LiveData
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -37,6 +38,10 @@ class TimerViewModel @Inject constructor(
 
     val timerRunning = taskTimerManager.timerRunning
 
+    private val showSelectNewTaskConfirmationDialogLiveData =
+        savedState.getLiveData<Boolean>("showSelectNewTaskConfirmationDialog")
+    val showSelectNewTaskConfirmationDialog: LiveData<Boolean> = showSelectNewTaskConfirmationDialogLiveData
+
     fun onTaskSelected(newTask: Task) {
         viewModelScope.launch {
             val activeTask = activeTask.first()
@@ -47,12 +52,13 @@ class TimerViewModel @Inject constructor(
                 changeActiveTask(newTask)
             } else {
                 pendingNewTask = newTask
-                eventChannel.send(Event.ShowNewTaskSelectionConfirmationDialog)
+                showSelectNewTaskConfirmationDialogLiveData.value = true
             }
         }
     }
 
     fun onSelectNewTaskConfirmed() {
+        showSelectNewTaskConfirmationDialogLiveData.value = false
         pendingNewTask?.let {
             changeActiveTask(it)
             pendingNewTask = null
@@ -62,7 +68,8 @@ class TimerViewModel @Inject constructor(
         }
     }
 
-    fun onSelectNewTaskCanceled() {
+    fun onDismissSelectNewTaskConfirmationDialog() {
+        showSelectNewTaskConfirmationDialogLiveData.value = false
         pendingNewTask = null
     }
 
@@ -78,7 +85,6 @@ class TimerViewModel @Inject constructor(
     fun onStopTimerClicked() = taskTimerManager.stopTimer()
 
     sealed class Event {
-        object ShowNewTaskSelectionConfirmationDialog : Event()
         object ShowTimerStoppedMessage : Event()
     }
 }

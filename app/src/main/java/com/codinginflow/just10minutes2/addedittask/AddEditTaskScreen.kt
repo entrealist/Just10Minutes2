@@ -34,12 +34,18 @@ fun AddEditTaskScreen(
     val taskNameInputErrorMessage by viewModel.taskNameInputErrorMessage.observeAsState()
     val minutesGoalInputErrorMessage by viewModel.minutesGoalInputErrorMessage.observeAsState()
 
+    val showDeleteTaskConfirmationDialog by viewModel.showDeleteTaskConfirmationDialog.observeAsState(
+        false
+    )
+    val showResetDayConfirmationDialog by viewModel.showResetDayConfirmationDialog.observeAsState(
+        false
+    )
+    val showArchiveTaskConfirmationDialog by viewModel.showArchiveTaskConfirmationDialog.observeAsState(
+        false
+    )
+
     val scaffoldState = rememberScaffoldState()
     val context = LocalContext.current
-
-    var showDeleteTaskConfirmationDialog by rememberSaveable { mutableStateOf(false) }
-    var showResetDayConfirmationDialog by rememberSaveable { mutableStateOf(false) }
-    var showArchiveTaskConfirmationDialog by rememberSaveable { mutableStateOf(false) }
 
     LaunchedEffect(Unit) {
         viewModel.events.collectLatest { event ->
@@ -47,14 +53,8 @@ fun AddEditTaskScreen(
                 is AddEditTaskViewModel.Event.NavigateBackWithResult ->
                     navigateBackWithResult(event.result)
                 is AddEditTaskViewModel.Event.NavigateUp -> navigateUp()
-                is AddEditTaskViewModel.Event.ShowResetDayConfirmationDialog ->
-                    showResetDayConfirmationDialog = true
                 is AddEditTaskViewModel.Event.ShowResetDayCompletedMessage ->
                     scaffoldState.snackbarHostState.showSnackbar(context.getString(R.string.task_day_reset_completed))
-                is AddEditTaskViewModel.Event.ShowArchiveTaskConfirmationDialog ->
-                    showArchiveTaskConfirmationDialog = true
-                is AddEditTaskViewModel.Event.ShowDeleteTaskConfirmationDialog ->
-                    showDeleteTaskConfirmationDialog = true
             }
         }
     }
@@ -71,18 +71,15 @@ fun AddEditTaskScreen(
         onSaveClicked = viewModel::onSaveClicked,
         onResetDayClicked = viewModel::onResetDayClicked,
         showResetDayConfirmationDialog = showResetDayConfirmationDialog,
-        onDismissResetDayConfirmationDialog = { showResetDayConfirmationDialog = false },
-        onResetDayConfirmed = {
-            showResetDayConfirmationDialog = false
-            viewModel.onResetDayConfirmed()
-        },
+        onDismissResetDayConfirmationDialog = viewModel::onDismissResetDayConfirmationDialog,
+        onResetDayConfirmed = viewModel::onResetDayConfirmed,
         onArchiveTaskClicked = viewModel::onArchiveTaskClicked,
         showArchiveTaskConfirmationDialog = showArchiveTaskConfirmationDialog,
-        onDismissArchiveTaskConfirmationDialog = { showArchiveTaskConfirmationDialog = false },
+        onDismissArchiveTaskConfirmationDialog = viewModel::onDismissArchiveTaskConfirmationDialog,
         onArchiveTaskConfirmed = viewModel::onArchiveTaskConfirmed,
         onDeleteTaskClicked = viewModel::onDeleteTaskClicked,
         showDeleteTaskConfirmationDialog = showDeleteTaskConfirmationDialog,
-        onDismissDeleteTaskConfirmationDialog = { showDeleteTaskConfirmationDialog = false },
+        onDismissDeleteTaskConfirmationDialog = viewModel::onDismissDeleteTaskConfirmationDialog,
         onDeleteTaskConfirmed = viewModel::onDeleteTaskConfirmed,
         scaffoldState = scaffoldState,
     )

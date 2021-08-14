@@ -42,6 +42,20 @@ class AddEditTaskViewModel @Inject constructor(
         savedState.getLiveData<Int>("minutesGoalInputErrorMessage")
     val minutesGoalInputErrorMessage: LiveData<Int> = minutesGoalInputErrorMessageLiveData
 
+    private val showDeleteTaskConfirmationDialogLiveData =
+        savedState.getLiveData<Boolean>("showDeleteTaskConfirmationDialog")
+    val showDeleteTaskConfirmationDialog: LiveData<Boolean> =
+        showDeleteTaskConfirmationDialogLiveData
+
+    private val showResetDayConfirmationDialogLiveData =
+        savedState.getLiveData<Boolean>("showResetDayConfirmationDialog")
+    val showResetDayConfirmationDialog: LiveData<Boolean> = showResetDayConfirmationDialogLiveData
+
+    private val showArchiveTaskConfirmationDialogLiveData =
+        savedState.getLiveData<Boolean>("showArchiveTaskConfirmationDialog")
+    val showArchiveTaskConfirmationDialog: LiveData<Boolean> =
+        showArchiveTaskConfirmationDialogLiveData
+
     init {
         if (taskId != Task.NO_ID) {
             loadTaskFromId(taskId)
@@ -120,9 +134,7 @@ class AddEditTaskViewModel @Inject constructor(
     }
 
     fun onDeleteTaskClicked() {
-        viewModelScope.launch {
-            eventChannel.send(Event.ShowDeleteTaskConfirmationDialog)
-        }
+        showDeleteTaskConfirmationDialogLiveData.value = true
     }
 
     fun onDeleteTaskConfirmed() {
@@ -135,10 +147,12 @@ class AddEditTaskViewModel @Inject constructor(
         }
     }
 
+    fun onDismissDeleteTaskConfirmationDialog() {
+        showDeleteTaskConfirmationDialogLiveData.value = false
+    }
+
     fun onArchiveTaskClicked() {
-        viewModelScope.launch {
-            eventChannel.send(Event.ShowArchiveTaskConfirmationDialog)
-        }
+        showArchiveTaskConfirmationDialogLiveData.value = true
     }
 
     fun onArchiveTaskConfirmed() {
@@ -151,13 +165,16 @@ class AddEditTaskViewModel @Inject constructor(
         }
     }
 
+    fun onDismissArchiveTaskConfirmationDialog() {
+        showArchiveTaskConfirmationDialogLiveData.value = false
+    }
+
     fun onResetDayClicked() {
-        viewModelScope.launch {
-            eventChannel.send(Event.ShowResetDayConfirmationDialog)
-        }
+        showResetDayConfirmationDialogLiveData.value = true
     }
 
     fun onResetDayConfirmed() {
+        showResetDayConfirmationDialogLiveData.value = false
         viewModelScope.launch {
             task?.let { task ->
                 taskTimerManager.stopTimerIfTaskIsActive(task)
@@ -167,6 +184,10 @@ class AddEditTaskViewModel @Inject constructor(
         }
     }
 
+    fun onDismissResetDayConfirmationDialog() {
+        showResetDayConfirmationDialogLiveData.value = false
+    }
+
     fun onNavigateUpClicked() {
         viewModelScope.launch {
             eventChannel.send(Event.NavigateUp)
@@ -174,9 +195,6 @@ class AddEditTaskViewModel @Inject constructor(
     }
 
     sealed class Event {
-        object ShowDeleteTaskConfirmationDialog : Event()
-        object ShowArchiveTaskConfirmationDialog : Event()
-        object ShowResetDayConfirmationDialog : Event()
         object ShowResetDayCompletedMessage : Event()
         data class NavigateBackWithResult(val result: AddEditTaskResult) : Event()
         object NavigateUp : Event()
