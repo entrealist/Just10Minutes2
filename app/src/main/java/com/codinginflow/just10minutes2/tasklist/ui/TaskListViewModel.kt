@@ -2,6 +2,7 @@ package com.codinginflow.just10minutes2.tasklist.ui
 
 import androidx.annotation.StringRes
 import androidx.lifecycle.*
+import androidx.lifecycle.viewmodel.compose.viewModel
 import com.codinginflow.just10minutes2.R
 import com.codinginflow.just10minutes2.addedittask.AddEditTaskViewModel
 import com.codinginflow.just10minutes2.common.data.daos.TaskDao
@@ -24,17 +25,7 @@ class TaskListViewModel @Inject constructor(
     private val eventChannel = Channel<Event>()
     val events = eventChannel.receiveAsFlow()
 
-    private val archiveViewActiveLiveData =
-        savedStateHandle.getLiveData<Boolean>("archiveViewActive", false)
-    val archiveViewActive: LiveData<Boolean> = archiveViewActiveLiveData
-
-    val tasks = archiveViewActive.switchMap { archiveViewActive ->
-        if (archiveViewActive) {
-            taskDao.getAllArchivedTasks().asLiveData()
-        } else {
-            taskDao.getAllNotArchivedTasks().asLiveData()
-        }
-    }
+    val tasks = taskDao.getAllNotArchivedTasks()
 
     private val activeTask = taskTimerManager.activeTask
     private val timerRunning = taskTimerManager.timerRunning
@@ -43,17 +34,6 @@ class TaskListViewModel @Inject constructor(
             task.id
         } else {
             null
-        }
-    }
-
-    private val expandedItemIdLiveData = savedStateHandle.getLiveData<Long>("expandedItemId")
-    val expandedItemId: LiveData<Long> = expandedItemIdLiveData
-
-    fun onTaskClicked(task: Task) {
-        if (expandedItemId.value == task.id) {
-            expandedItemIdLiveData.value = null
-        } else {
-            expandedItemIdLiveData.value = task.id
         }
     }
 
@@ -90,10 +70,10 @@ class TaskListViewModel @Inject constructor(
         }
     }
 
-    fun onToggleArchiveViewClicked() {
-        val archiveViewActive = archiveViewActive.value ?: false
-        archiveViewActiveLiveData.value = !archiveViewActive
-        expandedItemIdLiveData.value = null
+    fun onNavigateToArchiveClicked() {
+        viewModelScope.launch {
+            eventChannel.send(Event.NavigateToArchive)
+        }
     }
 
     sealed class Event {
@@ -101,5 +81,6 @@ class TaskListViewModel @Inject constructor(
         data class EditTask(val taskId: Long) : Event()
         data class ShowAddEditScreenConfirmationMessage(@StringRes val msg: Int) : Event()
         data class OpenTimerForTask(val task: Task) : Event()
+        object NavigateToArchive: Event()
     }
 }

@@ -53,7 +53,7 @@
     <string name="statistics">Statistics</string>
     <string name="show_statistics">Show statistics</string>
     <string name="archive">Archive</string>
-    <string name="today">today</string>
+    <string name="completed_today_lowercase">completed today</string>
     <string name="task_day_reset_completed">Task has been reset</string>
     <string name="confirm_reset">Confirm reset</string>
     <string name="confirm_task_reset_day_message">Do you really want to reset the completed time for today?</string>
@@ -64,4 +64,5 @@
     <string name="show_archived_tasks">Show archived tasks</string>
     <string name="archive_explanation">This is your archive. Tasks in here are inactive and not shown in your timer. You can unarchive them to make them active again.</string>
     <string name="unarchive">Unarchive</string>
+    <string name="show_unarchived_tasks">Show unarchived tasks</string>
 </resources>

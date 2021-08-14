@@ -9,7 +9,6 @@ import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Assessment
 import androidx.compose.material.icons.filled.List
-import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.filled.Timer
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
@@ -25,6 +24,7 @@ import androidx.navigation.compose.*
 import androidx.navigation.navOptions
 import com.codinginflow.just10minutes2.addedittask.AddEditTaskScreen
 import com.codinginflow.just10minutes2.addedittask.AddEditTaskViewModel
+import com.codinginflow.just10minutes2.archive.ArchiveScreen
 import com.codinginflow.just10minutes2.common.data.entities.Task
 import com.codinginflow.just10minutes2.common.ui.SharedViewModel
 import com.codinginflow.just10minutes2.timer.ui.TimerScreen
@@ -119,10 +119,10 @@ private fun JTMNavHost(
             TaskListScreen(
                 sharedViewModel = sharedViewModel,
                 addNewTask = {
-                    navController.navigate(AppDestinations.AddEditTask.route)
+                    navController.navigate(AppDestination.AddEditTask.route)
                 },
                 editTask = { taskId ->
-                    navController.navigate(AppDestinations.AddEditTask.route + "?$ARG_TASK_ID=$taskId")
+                    navController.navigate(AppDestination.AddEditTask.route + "?$ARG_TASK_ID=$taskId")
                 },
                 addEditResult = navBackStackEntry.savedStateHandle.get<AddEditTaskViewModel.AddEditTaskResult>(
                     KEY_ADD_EDIT_RESULT
@@ -137,6 +137,11 @@ private fun JTMNavHost(
                         route = BottomNavDestination.Timer.route,
                         navOptions = createNavOptionsForBottomNavigation(navController)
                     )
+                },
+                navigateToArchive = {
+                    navController.navigate(
+                        route = AppDestination.Archive.route
+                    )
                 }
             )
         }
@@ -150,7 +155,7 @@ private fun JTMNavHost(
             Text("Statistics")
         }
         composable(
-            route = AppDestinations.AddEditTask.route + "?$ARG_TASK_ID={$ARG_TASK_ID}",
+            route = AppDestination.AddEditTask.route + "?$ARG_TASK_ID={$ARG_TASK_ID}",
             arguments = listOf(
                 navArgument(ARG_TASK_ID) {
                     type = NavType.LongType
@@ -169,6 +174,20 @@ private fun JTMNavHost(
                     )
                     navController.popBackStack()
                 })
+        }
+        composable(
+            route = AppDestination.Archive.route,
+            arguments = listOf(
+                navArgument(ARG_SHOW_BOTTOM_NAV) {
+                    defaultValue = true
+                }
+            )
+        ) {
+            ArchiveScreen(
+                navigateUp = {
+                    navController.popBackStack()
+                }
+            )
         }
     }
 }
@@ -190,10 +209,11 @@ sealed class BottomNavDestination(
         BottomNavDestination("Statistics", R.string.statistics, Icons.Default.Assessment)
 }
 
-sealed class AppDestinations(
+sealed class AppDestination(
     val route: String
 ) {
-    object AddEditTask : AppDestinations("AddEditTask")
+    object AddEditTask : AppDestination("AddEditTask")
+    object Archive : AppDestination("Archive")
 }
 
 private fun createNavOptionsForBottomNavigation(navController: NavHostController): NavOptions {

@@ -13,7 +13,6 @@ import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.runtime.*
-import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -32,7 +31,6 @@ import com.codinginflow.just10minutes2.common.ui.CircularProgressIndicatorWithBa
 import com.codinginflow.just10minutes2.common.ui.SharedViewModel
 import com.codinginflow.just10minutes2.common.ui.theme.Just10Minutes2Theme
 import kotlinx.coroutines.flow.collectLatest
-import kotlin.math.exp
 
 @Composable
 fun TaskListScreen(
@@ -42,15 +40,13 @@ fun TaskListScreen(
     editTask: (taskId: Long) -> Unit,
     addEditResult: AddEditTaskViewModel.AddEditTaskResult?,
     onAddEditResultProcessed: () -> Unit,
-    navigateToTimer: () -> Unit
+    navigateToTimer: () -> Unit,
+    navigateToArchive: () -> Unit
 ) {
-    val tasks by viewModel.tasks.observeAsState(emptyList())
+    val tasks by viewModel.tasks.collectAsState(emptyList())
     val runningTaskId by viewModel.runningTask.collectAsState(null)
-    val archiveViewActive by viewModel.archiveViewActive.observeAsState()
-    val expandedItemId by viewModel.expandedItemId.observeAsState()
 
-    val lazyListStateNonArchived = rememberLazyListState()
-    val lazyListStateArchived = rememberLazyListState()
+    val lazyListState = rememberLazyListState()
     val scaffoldState = rememberScaffoldState()
     val context = LocalContext.current
 
@@ -74,6 +70,8 @@ fun TaskListScreen(
                     sharedViewModel.setTaskIdToOpenInTimer(event.task)
                     navigateToTimer()
                 }
+                is TaskListViewModel.Event.NavigateToArchive ->
+                    navigateToArchive()
             }
         }
     }
@@ -81,15 +79,11 @@ fun TaskListScreen(
     TaskListBody(
         tasks = tasks,
         runningTaskId = runningTaskId,
-        expandedItemId = expandedItemId,
-        onTaskClicked = viewModel::onTaskClicked,
         onAddNewTaskClicked = viewModel::onAddNewTaskClicked,
         onOpenTimerForTaskClicked = viewModel::onOpenTimerForTaskClicked,
         onEditTaskClicked = viewModel::onEditTaskClicked,
-        archiveViewActive = archiveViewActive,
-        onToggleArchiveViewClicked = viewModel::onToggleArchiveViewClicked,
-        lazyListStateNonArchived = lazyListStateNonArchived,
-        lazyListStateArchived = lazyListStateArchived,
+        onNavigateToArchiveClicked = viewModel::onNavigateToArchiveClicked,
+        lazyListState = lazyListState,
         scaffoldState = scaffoldState
     )
 }
@@ -98,17 +92,13 @@ fun TaskListScreen(
 private fun TaskListBody(
     tasks: List<Task>,
     runningTaskId: Long?,
-    expandedItemId: Long?,
-    onTaskClicked: (Task) -> Unit,
     onAddNewTaskClicked: () -> Unit,
     onEditTaskClicked: (Task) -> Unit,
     onOpenTimerForTaskClicked: (Task) -> Unit,
-    archiveViewActive: Boolean?,
-    onToggleArchiveViewClicked: () -> Unit,
-    lazyListStateNonArchived: LazyListState,
-    lazyListStateArchived: LazyListState,
+    onNavigateToArchiveClicked: () -> Unit,
+    lazyListState: LazyListState,
+    scaffoldState: ScaffoldState,
     modifier: Modifier = Modifier,
-    scaffoldState: ScaffoldState = rememberScaffoldState(),
 ) {
     Scaffold(
         modifier = modifier,
@@ -117,23 +107,17 @@ private fun TaskListBody(
             TopAppBar(
                 title = { Text(stringResource(R.string.tasks)) },
                 actions = {
-                    if (archiveViewActive != null) { // nullable boolean to avoid seeing the wrong icon for a moment
-                        if (!archiveViewActive) {
-                            IconButton(onClick = onAddNewTaskClicked) {
-                                Icon(
-                                    imageVector = Icons.Default.Add,
-                                    contentDescription = stringResource(R.string.add_new_task)
-                                )
-                            }
-                        }
-                        val toggleArchiveIcon =
-                            if (archiveViewActive) Icons.Default.List else Icons.Default.Inventory2
-                        IconButton(onClick = onToggleArchiveViewClicked) {
-                            Icon(
-                                imageVector = toggleArchiveIcon,
-                                contentDescription = stringResource(R.string.show_archived_tasks)
-                            )
-                        }
+                    IconButton(onClick = onNavigateToArchiveClicked) {
+                        Icon(
+                            imageVector = Icons.Default.Inventory2,
+                            contentDescription = stringResource(R.string.show_archived_tasks)
+                        )
+                    }
+                    IconButton(onClick = onAddNewTaskClicked) {
+                        Icon(
+                            imageVector = Icons.Default.Add,
+                            contentDescription = stringResource(R.string.add_new_task)
+                        )
                     }
                 }
             )
@@ -142,13 +126,9 @@ private fun TaskListBody(
         BodyContent(
             tasks = tasks,
             runningTaskId = runningTaskId,
-            expandedItemId = expandedItemId,
-            onTaskClicked = onTaskClicked,
             onEditTaskClicked = onEditTaskClicked,
             onOpenTimerForTaskClicked = onOpenTimerForTaskClicked,
-            archiveViewActive = archiveViewActive,
-            lazyListStateNonArchived = lazyListStateNonArchived,
-            lazyListStateArchived = lazyListStateArchived,
+            lazyListState = lazyListState,
             modifier = Modifier.padding(innerPadding)
         )
     }
@@ -158,26 +138,18 @@ private fun TaskListBody(
 private fun BodyContent(
     tasks: List<Task>,
     runningTaskId: Long?,
-    expandedItemId: Long?,
-    onTaskClicked: (Task) -> Unit,
     onEditTaskClicked: (Task) -> Unit,
     onOpenTimerForTaskClicked: (Task) -> Unit,
-    archiveViewActive: Boolean?,
-    lazyListStateNonArchived: LazyListState,
-    lazyListStateArchived: LazyListState,
+    lazyListState: LazyListState,
     modifier: Modifier = Modifier
 
 ) {
     TaskList(
         tasks = tasks,
         runningTaskId = runningTaskId,
-        expandedItemId = expandedItemId,
-        onTaskClicked = onTaskClicked,
         onEditTaskClicked = onEditTaskClicked,
         onOpenTimerForTaskClicked = onOpenTimerForTaskClicked,
-        archiveViewActive = archiveViewActive,
-        lazyListStateNonArchived = lazyListStateNonArchived,
-        lazyListStateArchived = lazyListStateArchived,
+        lazyListState = lazyListState,
         modifier = modifier
     )
 }
@@ -186,51 +158,34 @@ private fun BodyContent(
 private fun TaskList(
     tasks: List<Task>,
     runningTaskId: Long?,
-    expandedItemId: Long?,
-    onTaskClicked: (Task) -> Unit,
     onEditTaskClicked: (Task) -> Unit,
     onOpenTimerForTaskClicked: (Task) -> Unit,
-    archiveViewActive: Boolean?,
-    lazyListStateNonArchived: LazyListState,
-    lazyListStateArchived: LazyListState,
+    lazyListState: LazyListState,
     modifier: Modifier = Modifier
 ) {
-    if (archiveViewActive == false) {
-        LazyColumn( // non-archived tasks
-            state = lazyListStateNonArchived,
-            modifier = modifier,
-            contentPadding = PaddingValues(bottom = 50.dp)
-        ) {
-            items(tasks) { task ->
-                TaskItem(
-                    task = task,
-                    timerRunning = task.id == runningTaskId,
-                    expanded = expandedItemId == task.id,
-                    onTaskClicked = onTaskClicked,
-                    onEditTaskClicked = onEditTaskClicked,
-                    onOpenTimerForTaskClicked = onOpenTimerForTaskClicked
-                )
-                Divider()
-            }
-        }
-    } else {
-        Column(modifier = modifier) {
-            LazyColumn( // archived tasks
-                state = lazyListStateArchived,
-                contentPadding = PaddingValues(bottom = 50.dp)
-            ) {
-                item {
-                    Text(stringResource(R.string.archive_explanation), Modifier.padding(8.dp))
-                }
-                items(tasks) { task ->
-                    TaskItemArchived(
-                        task = task,
-                        expanded = expandedItemId == task.id,
-                        onTaskClicked = onTaskClicked,
-                    )
-                    Divider()
-                }
-            }
+    var expandedItemId by rememberSaveable { mutableStateOf(-1L) }
+
+    LazyColumn(
+        state = lazyListState,
+        contentPadding = PaddingValues(bottom = 50.dp),
+        modifier = modifier
+    ) {
+        items(tasks) { task ->
+            TaskItem(
+                task = task,
+                timerRunning = task.id == runningTaskId,
+                expanded = expandedItemId == task.id,
+                onTaskClicked = { clickedTask ->
+                    expandedItemId = if (expandedItemId == clickedTask.id) {
+                        -1L
+                    } else {
+                        clickedTask.id
+                    }
+                },
+                onEditTaskClicked = onEditTaskClicked,
+                onOpenTimerForTaskClicked = onOpenTimerForTaskClicked
+            )
+            Divider()
         }
     }
 }
@@ -270,7 +225,7 @@ private fun TaskItem(
                             R.string.completed_and_total_minutes,
                             task.timeCompletedTodayInMinutes,
                             task.dailyGoalInMinutes
-                        ) + " " + stringResource(R.string.today),
+                        ) + " " + stringResource(R.string.completed_today_lowercase),
                         fontSize = 14.sp,
                         color = Color.Gray
                     )
@@ -372,73 +327,6 @@ private fun TaskItem(
     }
 }
 
-@Composable
-private fun TaskItemArchived(
-    task: Task,
-    expanded: Boolean,
-    onTaskClicked: (Task) -> Unit,
-    modifier: Modifier = Modifier
-) {
-    Row(
-        modifier = modifier
-            .fillMaxWidth()
-            .clickable { onTaskClicked(task) }
-            .animateContentSize()
-            .padding(8.dp)
-    ) {
-        Column {
-            Row {
-                Text(
-                    text = task.name,
-                    style = MaterialTheme.typography.h6,
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis,
-                    modifier = Modifier.weight(0.9f)
-                )
-                val dropdownIcon =
-                    if (!expanded) Icons.Default.ArrowDropDown else Icons.Default.ArrowDropUp
-                Icon(
-                    dropdownIcon,
-                    contentDescription = stringResource(R.string.show_more),
-                    modifier = Modifier.weight(0.1f)
-                )
-            }
-            if (expanded) {
-                Column {
-                    Spacer(Modifier.height(8.dp))
-                    Row {
-                        OutlinedButton(
-                            onClick = { },
-                            modifier = Modifier
-                                .weight(1f)
-                        ) {
-                            Icon(
-                                imageVector = Icons.Default.Assessment,
-                                contentDescription = stringResource(R.string.statistics),
-                            )
-                            Spacer(Modifier.size(ButtonDefaults.IconSpacing))
-                            Text(stringResource(R.string.statistics))
-                        }
-                        Spacer(Modifier.width(8.dp))
-                        OutlinedButton(
-                            onClick = { },
-                            modifier = Modifier
-                                .weight(1f)
-                        ) {
-                            Icon(
-                                imageVector = Icons.Default.Unarchive,
-                                contentDescription = stringResource(R.string.unarchive),
-                            )
-                            Spacer(Modifier.size(ButtonDefaults.IconSpacing))
-                            Text(stringResource(R.string.unarchive))
-                        }
-                    }
-                }
-            }
-        }
-    }
-}
-
 @Preview(
     showBackground = true,
     name = "Light Mode"
@@ -458,15 +346,12 @@ private fun PreviewTaskListScreen() {
                 Task("Example Task 3", millisCompletedToday = (8 * 60 * 1000).toLong()),
             ),
             runningTaskId = 1,
-            expandedItemId = 1,
-            onTaskClicked = {},
             onAddNewTaskClicked = {},
             onEditTaskClicked = {},
             onOpenTimerForTaskClicked = {},
-            archiveViewActive = false,
-            onToggleArchiveViewClicked = {},
-            lazyListStateNonArchived = rememberLazyListState(),
-            lazyListStateArchived = rememberLazyListState()
+            onNavigateToArchiveClicked = {},
+            lazyListState = rememberLazyListState(),
+            scaffoldState = rememberScaffoldState(),
         )
     }
 }
@@ -491,28 +376,6 @@ private fun PreviewTaskItem() {
                 onTaskClicked = {},
                 onEditTaskClicked = {},
                 onOpenTimerForTaskClicked = {},
-            )
-        }
-    }
-}
-
-@Preview(
-    showBackground = true,
-    name = "Light Mode"
-)
-@Preview(
-    showBackground = true,
-    uiMode = Configuration.UI_MODE_NIGHT_YES,
-    name = "Dark Mode"
-)
-@Composable
-private fun PreviewTaskItemArchived() {
-    Just10Minutes2Theme {
-        Surface {
-            TaskItemArchived(
-                task = Task("Example Task", millisCompletedToday = (3 * 60 * 1000).toLong()),
-                expanded = true,
-                onTaskClicked = {},
             )
         }
     }

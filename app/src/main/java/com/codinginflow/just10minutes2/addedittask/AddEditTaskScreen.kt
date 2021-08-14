@@ -67,7 +67,7 @@ fun AddEditTaskScreen(
         minutesGoalInput = minutesGoalInput,
         onMinutesGoalInputChanged = viewModel::onMinutesGoalInputChanged,
         minutesGoalInputErrorMessage = minutesGoalInputErrorMessage,
-        onNavigateUpClick = viewModel::onNavigateUpClicked,
+        onNavigateUpClicked = viewModel::onNavigateUpClicked,
         onSaveClicked = viewModel::onSaveClicked,
         onResetDayClicked = viewModel::onResetDayClicked,
         showResetDayConfirmationDialog = showResetDayConfirmationDialog,
@@ -97,7 +97,7 @@ private fun AddEditTaskBody(
     minutesGoalInput: String?,
     onMinutesGoalInputChanged: (String) -> Unit,
     @StringRes minutesGoalInputErrorMessage: Int?,
-    onNavigateUpClick: () -> Unit,
+    onNavigateUpClicked: () -> Unit,
     onSaveClicked: () -> Unit,
     onResetDayClicked: () -> Unit,
     showResetDayConfirmationDialog: Boolean,
@@ -132,7 +132,7 @@ private fun AddEditTaskBody(
                     }
                 },
                 navigationIcon = {
-                    IconButton(onClick = onNavigateUpClick) {
+                    IconButton(onClick = onNavigateUpClicked) {
                         Icon(
                             Icons.Default.Close,
                             contentDescription = stringResource(R.string.navigate_back)
@@ -325,7 +325,7 @@ private fun PreviewTaskListScreen() {
             onMinutesGoalInputChanged = {},
             minutesGoalInputErrorMessage = null,
             onSaveClicked = {},
-            onNavigateUpClick = {},
+            onNavigateUpClicked = {},
             showResetDayConfirmationDialog = false,
             onResetDayClicked = {},
             onDismissResetDayConfirmationDialog = {},
