@@ -271,9 +271,9 @@ private fun PreviewArchiveScreen() {
     Just10Minutes2Theme {
         ArchiveBody(
             archivedTasks = listOf(
-                Task("Example Task 1", millisCompletedToday = (0 * 60 * 1000).toLong()),
-                Task("Example Task 2", millisCompletedToday = (3 * 60 * 1000).toLong()),
-                Task("Example Task 3", millisCompletedToday = (8 * 60 * 1000).toLong()),
+                Task("Example Task 1", timeCompletedTodayInMilliseconds = (0 * 60 * 1000).toLong()),
+                Task("Example Task 2", timeCompletedTodayInMilliseconds = (3 * 60 * 1000).toLong()),
+                Task("Example Task 3", timeCompletedTodayInMilliseconds = (8 * 60 * 1000).toLong()),
             ),
             onNavigateUpClicked = {},
             onUnarchiveTaskClicked = {},
@@ -300,7 +300,7 @@ private fun PreviewTaskItemArchived() {
     Just10Minutes2Theme {
         Surface {
             TaskItemArchived(
-                task = Task("Example Task", millisCompletedToday = (3 * 60 * 1000).toLong()),
+                task = Task("Example Task", timeCompletedTodayInMilliseconds = (3 * 60 * 1000).toLong()),
                 expanded = true,
                 onTaskClicked = {},
                 onUnarchiveTaskClicked = {},

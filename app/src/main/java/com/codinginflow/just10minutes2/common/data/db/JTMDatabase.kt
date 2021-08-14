@@ -3,6 +3,7 @@ package com.codinginflow.just10minutes2.common.data.db
 import androidx.room.Database
 import androidx.room.RoomDatabase
 import androidx.sqlite.db.SupportSQLiteDatabase
+import com.codinginflow.just10minutes2.common.data.daos.DailyTaskStatisticsDao
 import com.codinginflow.just10minutes2.common.data.daos.TaskDao
 import com.codinginflow.just10minutes2.common.data.entities.DailyTaskStatistic
 import com.codinginflow.just10minutes2.common.data.entities.Task
@@ -16,6 +17,7 @@ import javax.inject.Provider
 abstract class JTMDatabase : RoomDatabase() {
 
     abstract fun taskDao(): TaskDao
+    abstract fun dailyTaskStatisticsDao(): DailyTaskStatisticsDao
 
     class Callback @Inject constructor(
         private val database: Provider<JTMDatabase>,

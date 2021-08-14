@@ -2,7 +2,6 @@ package com.codinginflow.just10minutes2.common.data.entities
 
 import androidx.room.Entity
 import androidx.room.ForeignKey
-import androidx.room.PrimaryKey
 
 @Entity(
     tableName = "daily_task_statistics",
@@ -11,16 +10,15 @@ import androidx.room.PrimaryKey
         parentColumns = ["id"],
         childColumns = ["taskId"],
         onDelete = ForeignKey.CASCADE
-    )]
+    )],
+    primaryKeys = ["taskId", "dayTimestamp"]
 )
 data class DailyTaskStatistic(
     val taskId: Long,
-    val timestamp: Long = System.currentTimeMillis(),
-    val minutesTarget: Int,
-    val minutesCompleted: Int,
-    @PrimaryKey(autoGenerate = true) val id: Long = 0
-
+    val dayTimestamp: Long,
+    val timeGoalInMinutes: Int,
+    val timeCompletedInMilliseconds: Long,
 ) {
     val taskCompleted: Boolean
-        get() = minutesCompleted >= minutesTarget
+        get() = timeCompletedInMilliseconds >= timeGoalInMinutes * 60 * 1000
 }

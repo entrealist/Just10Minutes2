@@ -26,7 +26,8 @@ import com.codinginflow.just10minutes2.addedittask.AddEditTaskScreen
 import com.codinginflow.just10minutes2.addedittask.AddEditTaskViewModel
 import com.codinginflow.just10minutes2.archive.ArchiveScreen
 import com.codinginflow.just10minutes2.common.data.entities.Task
-import com.codinginflow.just10minutes2.common.ui.SharedViewModel
+import com.codinginflow.just10minutes2.common.ui.DayCheckerSharedViewModel
+import com.codinginflow.just10minutes2.common.ui.TimerSharedViewModel
 import com.codinginflow.just10minutes2.timer.ui.TimerScreen
 import com.codinginflow.just10minutes2.tasklist.ui.TaskListScreen
 import com.codinginflow.just10minutes2.common.ui.theme.Just10Minutes2Theme
@@ -40,8 +41,9 @@ class MainActivity : ComponentActivity() {
             Just10Minutes2Theme {
                 // A surface container using the 'background' color from the theme
                 Surface(color = MaterialTheme.colors.background) {
-                    val sharedViewModel: SharedViewModel = hiltViewModel()
-                    JTMActivityBody(sharedViewModel)
+                    val timerSharedViewModel: TimerSharedViewModel = hiltViewModel()
+                    val dayCheckerSharedViewModel: DayCheckerSharedViewModel = hiltViewModel()
+                    JTMActivityBody(timerSharedViewModel)
                 }
             }
         }
@@ -50,7 +52,7 @@ class MainActivity : ComponentActivity() {
 
 @Composable
 private fun JTMActivityBody(
-    sharedViewModel: SharedViewModel
+    timerSharedViewModel: TimerSharedViewModel
 ) {
     val navController = rememberNavController()
     Scaffold(
@@ -84,14 +86,14 @@ private fun JTMActivityBody(
             }
         }
     ) { innerPadding ->
-        JTMNavHost(navController, sharedViewModel, Modifier.padding(innerPadding))
+        JTMNavHost(navController, timerSharedViewModel, Modifier.padding(innerPadding))
     }
 }
 
 @Composable
 private fun JTMNavHost(
     navController: NavHostController,
-    sharedViewModel: SharedViewModel,
+    timerSharedViewModel: TimerSharedViewModel,
     modifier: Modifier = Modifier
 ) {
     NavHost(
@@ -107,7 +109,7 @@ private fun JTMNavHost(
                 }
             )
         ) {
-            TimerScreen(sharedViewModel = sharedViewModel)
+            TimerScreen(timerSharedViewModel = timerSharedViewModel)
         }
         composable(
             route = BottomNavDestination.TaskList.route,
@@ -117,7 +119,7 @@ private fun JTMNavHost(
                 }
             )) { navBackStackEntry ->
             TaskListScreen(
-                sharedViewModel = sharedViewModel,
+                timerSharedViewModel = timerSharedViewModel,
                 addNewTask = {
                     navController.navigate(AppDestination.AddEditTask.route)
                 },

@@ -10,7 +10,7 @@ import kotlinx.parcelize.Parcelize
 data class Task(
     val name: String,
     val dailyGoalInMinutes: Int = 10,
-    val millisCompletedToday: Long = 0,
+    val timeCompletedTodayInMilliseconds: Long = 0,
     val archived: Boolean = false,
     @PrimaryKey(autoGenerate = true) val id: Long = 0
 ): Parcelable {
@@ -18,10 +18,10 @@ data class Task(
         get() = dailyGoalInMinutes * 60 * 1000L
 
     val timeCompletedTodayInMinutes: Int
-        get() = (millisCompletedToday / (60 * 1000)).toInt()
+        get() = (timeCompletedTodayInMilliseconds / (60 * 1000)).toInt()
 
     val timeLeftTodayInMilliseconds: Long
-        get() = dailyGoalInMilliseconds - millisCompletedToday
+        get() = dailyGoalInMilliseconds - timeCompletedTodayInMilliseconds
 
     val isCompletedToday: Boolean
         get() = timeLeftTodayInMilliseconds <= 0

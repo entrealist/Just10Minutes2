@@ -7,6 +7,7 @@ import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.emptyPreferences
 import androidx.datastore.preferences.core.longPreferencesKey
 import androidx.datastore.preferences.preferencesDataStore
+import com.codinginflow.just10minutes2.common.util.getDateWithoutTime
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.map
@@ -16,35 +17,34 @@ import java.util.*
 import javax.inject.Inject
 import javax.inject.Singleton
 
-data class TimerPreferences(val activeTaskId: Long?)
-
 @Singleton
-class TimerPreferencesManager @Inject constructor(@ApplicationContext context: Context) {
+class DayCheckPreferencesManager @Inject constructor(@ApplicationContext context: Context) {
 
-    private val Context.dataStore: DataStore<Preferences> by preferencesDataStore(name = "timer_preferences")
+    private val Context.dataStore: DataStore<Preferences> by preferencesDataStore(name = "day_check_preferences")
     private val dataStore = context.dataStore
 
-    val timerPreferencesFlow = context.dataStore.data
+    val activeDay = context.dataStore.data
         .catch { exception ->
             if (exception is IOException) {
-                Timber.e(exception, "Error reading timer preferences")
+                Timber.e(exception, "Error reading day check preferences")
                 emit(emptyPreferences())
             } else {
                 throw exception
             }
         }
         .map { preferences ->
-            val activeTaskId = preferences[PreferencesKeys.ACTIVE_TASK_ID]
-            TimerPreferences(activeTaskId)
+            val activeDayTimestamp = preferences[PreferencesKeys.ACTIVE_DAY_TIMESTAMP] ?: 0
+            Date(activeDayTimestamp)
         }
 
-    suspend fun updateActiveTaskId(id: Long) {
+    suspend fun updateActiveDay(date: Date) {
+        val timestamp = Calendar.getInstance().getDateWithoutTime(date).time
         dataStore.edit { preferences ->
-            preferences[PreferencesKeys.ACTIVE_TASK_ID] = id
+            preferences[PreferencesKeys.ACTIVE_DAY_TIMESTAMP] = timestamp
         }
     }
 
     private object PreferencesKeys {
-        val ACTIVE_TASK_ID = longPreferencesKey("active_task_id")
+        val ACTIVE_DAY_TIMESTAMP = longPreferencesKey("active_day")
     }
 }

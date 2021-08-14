@@ -28,6 +28,9 @@ object AppModule {
     @Provides
     fun provideTaskDao(db: JTMDatabase) = db.taskDao()
 
+    @Provides
+    fun provideDailyTaskStatisticsDao(db: JTMDatabase) = db.dailyTaskStatisticsDao()
+
     @ApplicationScope
     @Provides
     @Singleton

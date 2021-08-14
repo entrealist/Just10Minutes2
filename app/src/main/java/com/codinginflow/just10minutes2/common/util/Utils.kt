@@ -8,3 +8,12 @@ fun formatTimeText(timeInMillis: Long): String {
     val seconds = ((millisAdjusted / 1000) % 60).toInt()
     return String.format(Locale.getDefault(), "%02d:%02d", minutes, seconds)
 }
+
+fun Calendar.getDateWithoutTime(date: Date): Date {
+    time = date
+    set(Calendar.HOUR_OF_DAY, 0)
+    set(Calendar.MINUTE, 0)
+    set(Calendar.SECOND, 0)
+    set(Calendar.MILLISECOND, 0)
+    return time
+}

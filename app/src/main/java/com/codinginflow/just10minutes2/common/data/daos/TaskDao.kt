@@ -22,11 +22,14 @@ interface TaskDao {
     @Update
     suspend fun update(task: Task)
 
-    @Query("UPDATE tasks SET millisCompletedToday = millisCompletedToday + :amount WHERE id = :taskId")
+    @Query("UPDATE tasks SET timeCompletedTodayInMilliseconds = timeCompletedTodayInMilliseconds + :amount WHERE id = :taskId")
     suspend fun increaseMillisCompletedToday(taskId: Long, amount: Long)
 
-    @Query("UPDATE tasks SET millisCompletedToday = 0 WHERE id = :taskId")
+    @Query("UPDATE tasks SET timeCompletedTodayInMilliseconds = 0 WHERE id = :taskId")
     suspend fun resetMillisCompletedTodayForTask(taskId: Long)
+
+    @Query("UPDATE tasks SET timeCompletedTodayInMilliseconds = 0")
+    suspend fun resetMillisCompletedTodayForAllTasks()
 
     @Query("UPDATE tasks SET archived = :archived WHERE id = :taskId")
     suspend fun setArchivedState(taskId: Long, archived: Boolean)

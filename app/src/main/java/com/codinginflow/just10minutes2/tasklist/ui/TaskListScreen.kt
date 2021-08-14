@@ -27,15 +27,15 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import com.codinginflow.just10minutes2.R
 import com.codinginflow.just10minutes2.addedittask.AddEditTaskViewModel
 import com.codinginflow.just10minutes2.common.data.entities.Task
-import com.codinginflow.just10minutes2.common.ui.CircularProgressIndicatorWithBackground
-import com.codinginflow.just10minutes2.common.ui.SharedViewModel
+import com.codinginflow.just10minutes2.common.ui.composables.CircularProgressIndicatorWithBackground
+import com.codinginflow.just10minutes2.common.ui.TimerSharedViewModel
 import com.codinginflow.just10minutes2.common.ui.theme.Just10Minutes2Theme
 import kotlinx.coroutines.flow.collectLatest
 
 @Composable
 fun TaskListScreen(
     viewModel: TaskListViewModel = hiltViewModel(),
-    sharedViewModel: SharedViewModel,
+    timerSharedViewModel: TimerSharedViewModel,
     addNewTask: () -> Unit,
     editTask: (taskId: Long) -> Unit,
     addEditResult: AddEditTaskViewModel.AddEditTaskResult?,
@@ -67,7 +67,7 @@ fun TaskListScreen(
                 is TaskListViewModel.Event.ShowAddEditScreenConfirmationMessage ->
                     scaffoldState.snackbarHostState.showSnackbar(context.getString(event.msg))
                 is TaskListViewModel.Event.OpenTimerForTask -> {
-                    sharedViewModel.setTaskIdToOpenInTimer(event.task)
+                    timerSharedViewModel.setTaskIdToOpenInTimer(event.task)
                     navigateToTimer()
                 }
                 is TaskListViewModel.Event.NavigateToArchive ->
@@ -341,9 +341,9 @@ private fun PreviewTaskListScreen() {
     Just10Minutes2Theme {
         TaskListBody(
             tasks = listOf(
-                Task("Example Task 1", millisCompletedToday = (0 * 60 * 1000).toLong()),
-                Task("Example Task 2", millisCompletedToday = (3 * 60 * 1000).toLong()),
-                Task("Example Task 3", millisCompletedToday = (8 * 60 * 1000).toLong()),
+                Task("Example Task 1", timeCompletedTodayInMilliseconds = (0 * 60 * 1000).toLong()),
+                Task("Example Task 2", timeCompletedTodayInMilliseconds = (3 * 60 * 1000).toLong()),
+                Task("Example Task 3", timeCompletedTodayInMilliseconds = (8 * 60 * 1000).toLong()),
             ),
             runningTaskId = 1,
             onAddNewTaskClicked = {},
@@ -370,7 +370,7 @@ private fun PreviewTaskItem() {
     Just10Minutes2Theme {
         Surface {
             TaskItem(
-                task = Task("Example Task", millisCompletedToday = (3 * 60 * 1000).toLong()),
+                task = Task("Example Task", timeCompletedTodayInMilliseconds = (3 * 60 * 1000).toLong()),
                 timerRunning = true,
                 expanded = true,
                 onTaskClicked = {},
