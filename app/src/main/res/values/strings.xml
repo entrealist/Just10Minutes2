@@ -59,10 +59,13 @@
     <string name="confirm_task_reset_day_message">Do you really want to reset the completed time for today?</string>
     <string name="reset">Reset</string>
     <string name="confirm_archiving">Confirm archiving</string>
-    <string name="confirm_archive_task_message">Archiving a task will make it inactive but keep all its statistics and data. You can always revert this later. Continue?</string>
+    <string name="confirm_archiving_task_message">Archiving a task will make it inactive but keep all its statistics and data. You can always revert this later. Continue?</string>
     <string name="task_archived">Task archived</string>
     <string name="show_archived_tasks">Show archived tasks</string>
     <string name="archive_explanation">This is your archive. Tasks in here are inactive and not shown in the timer. You can unarchive them to make them active again.</string>
     <string name="unarchive">Unarchive</string>
     <string name="show_unarchived_tasks">Show unarchived tasks</string>
+    <string name="confirm_unarchiving">Confirm unarchiving</string>
+    <string name="confirm_unarchiving_task_message">Do you want to make this task active again?</string>
+    <string name="task_unarchived">Task unarchived</string>
 </resources>

@@ -20,7 +20,7 @@ class TimerViewModel @Inject constructor(
     private val taskDao: TaskDao,
     private val taskTimerManager: TaskTimerManager,
     private val timerPreferencesManager: TimerPreferencesManager,
-    private val savedState: SavedStateHandle
+    private val savedStateHandle: SavedStateHandle
 ) : ViewModel() {
 
     private val eventChannel = Channel<Event>()
@@ -30,16 +30,16 @@ class TimerViewModel @Inject constructor(
 
     val allTasks = taskDao.getAllNotArchivedTasks()
 
-    private var pendingNewTask = savedState.get<Task>("pendingNewTask")
+    private var pendingNewTask = savedStateHandle.get<Task>("pendingNewTask")
         set(value) {
             field = value
-            savedState.set("pendingNewTask", value)
+            savedStateHandle.set("pendingNewTask", value)
         }
 
     val timerRunning = taskTimerManager.timerRunning
 
     private val showSelectNewTaskConfirmationDialogLiveData =
-        savedState.getLiveData<Boolean>("showSelectNewTaskConfirmationDialog")
+        savedStateHandle.getLiveData<Boolean>("showSelectNewTaskConfirmationDialog")
     val showSelectNewTaskConfirmationDialog: LiveData<Boolean> = showSelectNewTaskConfirmationDialogLiveData
 
     fun onTaskSelected(newTask: Task) {

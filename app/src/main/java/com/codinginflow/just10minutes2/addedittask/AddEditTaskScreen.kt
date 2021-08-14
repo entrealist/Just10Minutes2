@@ -9,7 +9,6 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.runtime.*
 import androidx.compose.runtime.livedata.observeAsState
-import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
@@ -34,15 +33,14 @@ fun AddEditTaskScreen(
     val taskNameInputErrorMessage by viewModel.taskNameInputErrorMessage.observeAsState()
     val minutesGoalInputErrorMessage by viewModel.minutesGoalInputErrorMessage.observeAsState()
 
-    val showDeleteTaskConfirmationDialog by viewModel.showDeleteTaskConfirmationDialog.observeAsState(
-        false
-    )
-    val showResetDayConfirmationDialog by viewModel.showResetDayConfirmationDialog.observeAsState(
-        false
-    )
-    val showArchiveTaskConfirmationDialog by viewModel.showArchiveTaskConfirmationDialog.observeAsState(
-        false
-    )
+    val showDeleteTaskConfirmationDialog by
+    viewModel.showDeleteTaskConfirmationDialog.observeAsState(false)
+
+    val showResetDayConfirmationDialog by
+    viewModel.showResetDayConfirmationDialog.observeAsState(false)
+
+    val showArchiveTaskConfirmationDialog by
+    viewModel.showArchiveTaskConfirmationDialog.observeAsState(false)
 
     val scaffoldState = rememberScaffoldState()
     val context = LocalContext.current
@@ -175,7 +173,7 @@ private fun AddEditTaskBody(
             AlertDialog(
                 onDismissRequest = onDismissArchiveTaskConfirmationDialog,
                 title = { Text(stringResource(R.string.confirm_archiving)) },
-                text = { Text(stringResource(R.string.confirm_archive_task_message)) },
+                text = { Text(stringResource(R.string.confirm_archiving_task_message)) },
                 confirmButton = {
                     TextButton(onClick = onArchiveTaskConfirmed) {
                         Text(stringResource(R.string.archive))

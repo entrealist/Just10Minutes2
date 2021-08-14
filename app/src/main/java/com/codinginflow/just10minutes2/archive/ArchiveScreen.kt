@@ -12,6 +12,7 @@ import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.runtime.*
+import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
@@ -32,6 +33,10 @@ fun ArchiveScreen(
 ) {
     val archivedTasks by viewModel.archivedTasks.collectAsState(emptyList())
 
+    val showUnarchiveTaskConfirmationDialog by viewModel.showUnarchiveTaskConfirmationDialog.observeAsState(
+        false
+    )
+
     val lazyListState = rememberLazyListState()
     val scaffoldState = rememberScaffoldState()
     val context = LocalContext.current
@@ -41,6 +46,8 @@ fun ArchiveScreen(
             when (event) {
                 is ArchiveViewModel.Event.NavigateUp ->
                     navigateUp()
+             is   ArchiveViewModel.Event.ShowUnarchivedConfirmationMessage ->
+                 scaffoldState.snackbarHostState.showSnackbar(context.getString(R.string.task_unarchived))
             }
         }
     }
@@ -48,8 +55,12 @@ fun ArchiveScreen(
     ArchiveBody(
         archivedTasks = archivedTasks,
         onNavigateUpClicked = viewModel::onNavigateUpClicked,
-        lazyListState = lazyListState,
-        scaffoldState = scaffoldState
+        onUnarchiveTaskClicked = viewModel::onUnarchiveTaskClicked,
+        onDismissUnarchiveTaskConfirmationDialog = viewModel::onDismissArchiveTaskConfirmationDialog,
+        onUnarchiveTaskConfirmed = viewModel::onArchiveTaskConfirmed,
+        showUnarchiveTaskConfirmationDialog = showUnarchiveTaskConfirmationDialog,
+        scaffoldState = scaffoldState,
+        lazyListState = lazyListState
     )
 }
 
@@ -57,6 +68,10 @@ fun ArchiveScreen(
 private fun ArchiveBody(
     archivedTasks: List<Task>,
     onNavigateUpClicked: () -> Unit,
+    onUnarchiveTaskClicked: (Task) -> Unit,
+    showUnarchiveTaskConfirmationDialog: Boolean,
+    onDismissUnarchiveTaskConfirmationDialog: () -> Unit,
+    onUnarchiveTaskConfirmed: () -> Unit,
     lazyListState: LazyListState,
     scaffoldState: ScaffoldState,
     modifier: Modifier = Modifier
@@ -81,7 +96,26 @@ private fun ArchiveBody(
         BodyContent(
             archivedTasks = archivedTasks,
             lazyListState = lazyListState,
-            modifier = Modifier.padding(innerPadding)
+            modifier = Modifier.padding(innerPadding),
+            onUnarchiveTaskClicked = onUnarchiveTaskClicked
+        )
+    }
+
+    if (showUnarchiveTaskConfirmationDialog) {
+        AlertDialog(
+            onDismissRequest = onDismissUnarchiveTaskConfirmationDialog,
+            title = { Text(stringResource(R.string.confirm_unarchiving)) },
+            text = { Text(stringResource(R.string.confirm_unarchiving_task_message)) },
+            confirmButton = {
+                TextButton(onClick = onUnarchiveTaskConfirmed) {
+                    Text(stringResource(R.string.archive))
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = onDismissUnarchiveTaskConfirmationDialog) {
+                    Text(stringResource(R.string.cancel))
+                }
+            },
         )
     }
 }
@@ -89,11 +123,13 @@ private fun ArchiveBody(
 @Composable
 private fun BodyContent(
     archivedTasks: List<Task>,
+    onUnarchiveTaskClicked: (Task) -> Unit,
     lazyListState: LazyListState,
     modifier: Modifier = Modifier
 ) {
     ArchivedTaskList(
         archivedTasks = archivedTasks,
+        onUnarchiveTaskClicked = onUnarchiveTaskClicked,
         lazyListState = lazyListState,
         modifier = modifier
     )
@@ -102,6 +138,7 @@ private fun BodyContent(
 @Composable
 private fun ArchivedTaskList(
     archivedTasks: List<Task>,
+    onUnarchiveTaskClicked: (Task) -> Unit,
     lazyListState: LazyListState,
     modifier: Modifier = Modifier
 ) {
@@ -127,6 +164,7 @@ private fun ArchivedTaskList(
                         clickedTask.id
                     }
                 },
+                onUnarchiveTaskClicked = onUnarchiveTaskClicked,
             )
             Divider()
         }
@@ -138,6 +176,7 @@ private fun TaskItemArchived(
     task: Task,
     expanded: Boolean,
     onTaskClicked: (Task) -> Unit,
+    onUnarchiveTaskClicked: (Task) -> Unit,
     modifier: Modifier = Modifier
 ) {
     Row(
@@ -182,7 +221,7 @@ private fun TaskItemArchived(
                         }
                         Spacer(Modifier.width(8.dp))
                         OutlinedButton(
-                            onClick = { },
+                            onClick = { onUnarchiveTaskClicked(task) },
                             modifier = Modifier
                                 .weight(1f)
                         ) {
@@ -218,9 +257,13 @@ private fun PreviewArchiveScreen() {
                 Task("Example Task 2", millisCompletedToday = (3 * 60 * 1000).toLong()),
                 Task("Example Task 3", millisCompletedToday = (8 * 60 * 1000).toLong()),
             ),
+            onNavigateUpClicked = {},
+            onUnarchiveTaskClicked = {},
+            showUnarchiveTaskConfirmationDialog = false,
+            onDismissUnarchiveTaskConfirmationDialog = {},
+            onUnarchiveTaskConfirmed = {},
             lazyListState = rememberLazyListState(),
-            scaffoldState = rememberScaffoldState(),
-            onNavigateUpClicked = {}
+            scaffoldState = rememberScaffoldState()
         )
     }
 }
@@ -242,6 +285,7 @@ private fun PreviewTaskItemArchived() {
                 task = Task("Example Task", millisCompletedToday = (3 * 60 * 1000).toLong()),
                 expanded = true,
                 onTaskClicked = {},
+                onUnarchiveTaskClicked = {},
             )
         }
     }
