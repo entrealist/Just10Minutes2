@@ -1,4 +1,4 @@
-package com.codinginflow.just10minutes2.common
+package com.codinginflow.just10minutes2.application
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -42,9 +42,10 @@ class DayCheckerSharedViewModel @Inject constructor(
             while (true) {
                 delay(20000)
                 val currentDay = Calendar.getInstance().getDateWithoutTime(Date())
-                if (currentDay > activeDay.first()) {
+                val activeDay = activeDay.first()
+                if (currentDay > activeDay) {
                     // integrate further check for reset time after 0 am
-                    startNewDay(currentDay)
+                    startNewDay(previousDay = activeDay, newDay = currentDay)
                 }
 
                 Timber.d("current time: $currentDay")
@@ -54,11 +55,12 @@ class DayCheckerSharedViewModel @Inject constructor(
         }
     }
 
-    private suspend fun startNewDay(day: Date) {
+    private suspend fun startNewDay(previousDay: Date, newDay: Date) {
+        Timber.d("starting new day")
         taskTimerManager.stopTimer()
-        createDailyTaskStatistics(day)
+        createDailyTaskStatistics(previousDay)
         taskDao.resetMillisCompletedTodayForAllTasks()
-        dayCheckPreferencesManager.updateActiveDay(day)
+        dayCheckPreferencesManager.updateActiveDay(newDay)
     }
 
     private suspend fun createDailyTaskStatistics(day: Date) {

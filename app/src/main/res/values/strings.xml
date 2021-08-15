@@ -14,6 +14,7 @@
     <string name="active_task_colon">Active task:</string>
     <string name="edit_task">Edit task</string>
     <string name="minutes_completed_today_placeholder">Completed: %d min</string>
+    <string name="completed_colon">Completed:</string>
     <string name="task_completed">Task completed</string>
     <string name="task_completed_exclamation_mark">Task completed!</string>
     <string name="task_name_with_completed_and_total_minutes">%1$s (%2$d\/%3$d min)</string>
@@ -70,4 +71,8 @@
     <string name="task_unarchived">Task unarchived</string>
     <string name="last_active">Last active: %s</string>
     <string name="task_will_reset_at_midnight">This task will reset at midnight</string>
+    <string name="date_placeholder">Date: %s</string>
+    <string name="task_not_completed">Task not completed</string>
+    <string name="no_statistics_for_task_message">No statistics for this task yet</string>
+    <string name="details">Details</string>
 </resources>

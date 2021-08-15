@@ -24,13 +24,14 @@ import androidx.navigation.compose.*
 import androidx.navigation.navOptions
 import com.codinginflow.just10minutes2.addedittask.AddEditTaskScreen
 import com.codinginflow.just10minutes2.addedittask.ui.AddEditTaskViewModel
+import com.codinginflow.just10minutes2.application.DayCheckerSharedViewModel
+import com.codinginflow.just10minutes2.application.TimerSharedViewModel
 import com.codinginflow.just10minutes2.archive.ArchiveScreen
 import com.codinginflow.just10minutes2.common.data.entities.Task
-import com.codinginflow.just10minutes2.common.DayCheckerSharedViewModel
-import com.codinginflow.just10minutes2.common.TimerSharedViewModel
 import com.codinginflow.just10minutes2.timer.ui.TimerScreen
 import com.codinginflow.just10minutes2.tasklist.ui.TaskListScreen
 import com.codinginflow.just10minutes2.common.ui.theme.Just10Minutes2Theme
+import com.codinginflow.just10minutes2.statistics.ui.StatisticsScreen
 import dagger.hilt.android.AndroidEntryPoint
 
 @AndroidEntryPoint
@@ -154,7 +155,7 @@ private fun JTMNavHost(
                     defaultValue = true
                 }
             )) {
-            Text("Statistics")
+            StatisticsScreen()
         }
         composable(
             route = AppDestination.AddEditTask.route + "?$ARG_TASK_ID={$ARG_TASK_ID}",

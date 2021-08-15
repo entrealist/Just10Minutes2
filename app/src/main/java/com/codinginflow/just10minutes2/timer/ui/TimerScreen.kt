@@ -28,7 +28,7 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import com.codinginflow.just10minutes2.R
 import com.codinginflow.just10minutes2.common.data.entities.Task
 import com.codinginflow.just10minutes2.common.ui.composables.CircularProgressIndicatorWithBackground
-import com.codinginflow.just10minutes2.common.TimerSharedViewModel
+import com.codinginflow.just10minutes2.application.TimerSharedViewModel
 import com.codinginflow.just10minutes2.common.ui.theme.Just10Minutes2Theme
 import com.codinginflow.just10minutes2.common.util.formatTimeText
 import kotlinx.coroutines.flow.collectLatest
@@ -92,6 +92,7 @@ private fun TimerBody(
     modifier: Modifier = Modifier,
     scaffoldState: ScaffoldState = rememberScaffoldState(),
 ) {
+    // TODO: 15.08.2021 Add day reset menu item
     Scaffold(
         modifier = modifier,
         scaffoldState = scaffoldState,
@@ -316,29 +317,24 @@ private fun CircularTextTimer(
             modifier = Modifier.sizeIn(minWidth = 230.dp, minHeight = 230.dp)
         )
         if (active && completed) {
-            Column {
+            Column(horizontalAlignment = Alignment.CenterHorizontally) {
                 Icon(
                     Icons.Default.Check,
                     contentDescription = stringResource(R.string.task_completed),
-                    tint = MaterialTheme.colors.primary,
-                    modifier = Modifier.align(Alignment.CenterHorizontally)
+                    tint = MaterialTheme.colors.primary
                 )
                 Text(
                     text = stringResource(R.string.completed_today),
                     style = MaterialTheme.typography.h6.copy(fontWeight = FontWeight.Bold),
                     color = MaterialTheme.colors.primary,
                     textAlign = TextAlign.Center,
-                    modifier = Modifier
-                        .align(Alignment.CenterHorizontally)
-                        .padding(start = 45.dp, end = 45.dp),
+                    modifier = Modifier.padding(start = 45.dp, end = 45.dp),
                 )
                 Text(
                     text = stringResource(R.string.task_will_reset_at_midnight),
                     style = MaterialTheme.typography.body2,
                     textAlign = TextAlign.Center,
-                    modifier = Modifier
-                        .align(Alignment.CenterHorizontally)
-                        .padding(start = 45.dp, end = 45.dp),
+                    modifier = Modifier.padding(start = 45.dp, end = 45.dp),
                 )
             }
         } else {

@@ -28,7 +28,7 @@ import com.codinginflow.just10minutes2.R
 import com.codinginflow.just10minutes2.addedittask.ui.AddEditTaskViewModel
 import com.codinginflow.just10minutes2.common.data.entities.Task
 import com.codinginflow.just10minutes2.common.ui.composables.CircularProgressIndicatorWithBackground
-import com.codinginflow.just10minutes2.common.TimerSharedViewModel
+import com.codinginflow.just10minutes2.application.TimerSharedViewModel
 import com.codinginflow.just10minutes2.common.ui.theme.Just10Minutes2Theme
 import kotlinx.coroutines.flow.collectLatest
 

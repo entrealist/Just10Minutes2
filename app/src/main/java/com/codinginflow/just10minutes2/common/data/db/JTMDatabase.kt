@@ -26,6 +26,7 @@ abstract class JTMDatabase : RoomDatabase() {
         override fun onCreate(db: SupportSQLiteDatabase) {
             super.onCreate(db)
             val dao = database.get().taskDao()
+            val statisticsDao = database.get().dailyTaskStatisticsDao() // TODO: 15.08.2021 Remove this after testing
 
             applicationScope.launch {
                 dao.insert(Task("Read from a book", 1))
@@ -34,6 +35,33 @@ abstract class JTMDatabase : RoomDatabase() {
                 repeat(20) {
                     dao.insert(Task("Task #$it"))
                 }
+
+                statisticsDao.insert(DailyTaskStatistic(1, 1628892000000, 1, 1 * 60_000L))
+                statisticsDao.insert(DailyTaskStatistic(1, 1628805600000, 2, 2 * 60_000L))
+                statisticsDao.insert(DailyTaskStatistic(1, 1628719200000, 1, 0 * 60_000L))
+                statisticsDao.insert(DailyTaskStatistic(1, 1628632800000, 1, 1 * 60_000L))
+                statisticsDao.insert(DailyTaskStatistic(1, 1628546400000, 1, 1 * 60_000L))
+                statisticsDao.insert(DailyTaskStatistic(1, 1628460000000, 1, 0 * 60_000L))
+                statisticsDao.insert(DailyTaskStatistic(1, 1628373600000, 1, 1 * 60_000L))
+                statisticsDao.insert(DailyTaskStatistic(1, 1628287200000, 1, 1 * 60_000L))
+
+                statisticsDao.insert(DailyTaskStatistic(2, 1628892000000, 10, 10 * 60_000L))
+                statisticsDao.insert(DailyTaskStatistic(2, 1628805600000, 10, 0 * 60_000L))
+                statisticsDao.insert(DailyTaskStatistic(2, 1628719200000, 10, 7 * 60_000L))
+                statisticsDao.insert(DailyTaskStatistic(2, 1628632800000, 10, 10 * 60_000L))
+                statisticsDao.insert(DailyTaskStatistic(2, 1628546400000, 10, 10 * 60_000L))
+                statisticsDao.insert(DailyTaskStatistic(2, 1628460000000, 10, 10 * 60_000L))
+                statisticsDao.insert(DailyTaskStatistic(2, 1628373600000, 10, 15 * 60_000L))
+                statisticsDao.insert(DailyTaskStatistic(2, 1628287200000, 10, 12 * 60_000L))
+
+                statisticsDao.insert(DailyTaskStatistic(3, 1628892000000, 8, 8 * 60_000L))
+                statisticsDao.insert(DailyTaskStatistic(3, 1628805600000, 8, 8 * 60_000L))
+                statisticsDao.insert(DailyTaskStatistic(3, 1628719200000, 10, 7 * 60_000L))
+                statisticsDao.insert(DailyTaskStatistic(3, 1628632800000, 10, 10 * 60_000L))
+                statisticsDao.insert(DailyTaskStatistic(3, 1628546400000, 20, 20 * 60_000L))
+                statisticsDao.insert(DailyTaskStatistic(3, 1628460000000, 20, 15 * 60_000L))
+                statisticsDao.insert(DailyTaskStatistic(3, 1628373600000, 20, 15 * 60_000L))
+                statisticsDao.insert(DailyTaskStatistic(3, 1628287200000, 20, 20 * 60_000L))
             }
         }
     }
