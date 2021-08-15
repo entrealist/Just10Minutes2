@@ -13,12 +13,15 @@ import androidx.room.ForeignKey
     )],
     primaryKeys = ["taskId", "dayTimestamp"]
 )
-data class DailyTaskStatistic(
+data class TaskStatistic(
     val taskId: Long,
     val dayTimestamp: Long,
     val timeGoalInMinutes: Int,
     val timeCompletedInMilliseconds: Long,
 ) {
+    val timeGoalInMilliseconds: Long
+        get() = timeGoalInMinutes * 60 * 1000L
+
     val taskCompleted: Boolean
-        get() = timeCompletedInMilliseconds >= timeGoalInMinutes * 60 * 1000
+        get() = timeCompletedInMilliseconds >= timeGoalInMinutes * 60 * 1000L
 }

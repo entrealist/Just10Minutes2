@@ -151,60 +151,60 @@ private fun AddEditTaskBody(
             onDeleteTaskClicked = onDeleteTaskClicked,
             modifier = Modifier.padding(innerPadding)
         )
+    }
 
-        if (showResetDayConfirmationDialog) {
-            AlertDialog(
-                onDismissRequest = onDismissResetDayConfirmationDialog,
-                title = { Text(stringResource(R.string.confirm_reset)) },
-                text = { Text(stringResource(R.string.confirm_task_reset_day_message)) },
-                confirmButton = {
-                    TextButton(onClick = onResetDayConfirmed) {
-                        Text(stringResource(R.string.reset))
-                    }
-                },
-                dismissButton = {
-                    TextButton(onClick = onDismissResetDayConfirmationDialog) {
-                        Text(stringResource(R.string.cancel))
-                    }
-                },
-            )
-        }
+    if (showResetDayConfirmationDialog) {
+        AlertDialog(
+            onDismissRequest = onDismissResetDayConfirmationDialog,
+            title = { Text(stringResource(R.string.confirm_reset)) },
+            text = { Text(stringResource(R.string.confirm_task_reset_day_message)) },
+            confirmButton = {
+                TextButton(onClick = onResetDayConfirmed) {
+                    Text(stringResource(R.string.reset))
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = onDismissResetDayConfirmationDialog) {
+                    Text(stringResource(R.string.cancel))
+                }
+            },
+        )
+    }
 
-        if (showArchiveTaskConfirmationDialog) {
-            AlertDialog(
-                onDismissRequest = onDismissArchiveTaskConfirmationDialog,
-                title = { Text(stringResource(R.string.confirm_archiving)) },
-                text = { Text(stringResource(R.string.confirm_archiving_task_message)) },
-                confirmButton = {
-                    TextButton(onClick = onArchiveTaskConfirmed) {
-                        Text(stringResource(R.string.archive))
-                    }
-                },
-                dismissButton = {
-                    TextButton(onClick = onDismissArchiveTaskConfirmationDialog) {
-                        Text(stringResource(R.string.cancel))
-                    }
-                },
-            )
-        }
+    if (showArchiveTaskConfirmationDialog) {
+        AlertDialog(
+            onDismissRequest = onDismissArchiveTaskConfirmationDialog,
+            title = { Text(stringResource(R.string.confirm_archiving)) },
+            text = { Text(stringResource(R.string.confirm_archiving_task_message)) },
+            confirmButton = {
+                TextButton(onClick = onArchiveTaskConfirmed) {
+                    Text(stringResource(R.string.archive))
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = onDismissArchiveTaskConfirmationDialog) {
+                    Text(stringResource(R.string.cancel))
+                }
+            },
+        )
+    }
 
-        if (showDeleteTaskConfirmationDialog) {
-            AlertDialog(
-                onDismissRequest = onDismissDeleteTaskConfirmationDialog,
-                title = { Text(stringResource(R.string.confirm_deletion)) },
-                text = { Text(stringResource(R.string.confirm_delete_task_message)) },
-                confirmButton = {
-                    TextButton(onClick = onDeleteTaskConfirmed) {
-                        Text(stringResource(R.string.delete))
-                    }
-                },
-                dismissButton = {
-                    TextButton(onClick = onDismissDeleteTaskConfirmationDialog) {
-                        Text(stringResource(R.string.cancel))
-                    }
-                },
-            )
-        }
+    if (showDeleteTaskConfirmationDialog) {
+        AlertDialog(
+            onDismissRequest = onDismissDeleteTaskConfirmationDialog,
+            title = { Text(stringResource(R.string.confirm_deletion)) },
+            text = { Text(stringResource(R.string.confirm_delete_task_message)) },
+            confirmButton = {
+                TextButton(onClick = onDeleteTaskConfirmed) {
+                    Text(stringResource(R.string.delete))
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = onDismissDeleteTaskConfirmationDialog) {
+                    Text(stringResource(R.string.cancel))
+                }
+            },
+        )
     }
 }
 
@@ -310,7 +310,7 @@ private fun BodyContent(
     name = "Dark Mode"
 )
 @Composable
-private fun PreviewTaskListScreen() {
+private fun PreviewAddEditTaskScreen() {
     Just10Minutes2Theme {
         AddEditTaskBody(
             isEditMode = true,

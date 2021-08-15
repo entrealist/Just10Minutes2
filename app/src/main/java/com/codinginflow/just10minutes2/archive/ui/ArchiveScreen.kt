@@ -33,7 +33,8 @@ import kotlinx.coroutines.flow.collectLatest
 @Composable
 fun ArchiveScreen(
     viewModel: ArchiveViewModel = hiltViewModel(),
-    navigateUp: () -> Unit
+    navigateToTaskStatistics: (taskId: Long) -> Unit,
+    navigateUp: () -> Unit,
 ) {
     val archivedTasks by viewModel.archivedTasks.collectAsState(emptyList())
 
@@ -52,6 +53,8 @@ fun ArchiveScreen(
                     navigateUp()
                 is ArchiveViewModel.Event.ShowUnarchivedConfirmationMessage ->
                     scaffoldState.snackbarHostState.showSnackbar(context.getString(R.string.task_unarchived))
+                is ArchiveViewModel.Event.OpenTaskStatistics ->
+                    navigateToTaskStatistics(event.taskId)
             }
         }
     }
@@ -63,6 +66,7 @@ fun ArchiveScreen(
         onDismissUnarchiveTaskConfirmationDialog = viewModel::onDismissArchiveTaskConfirmationDialog,
         onUnarchiveTaskConfirmed = viewModel::onArchiveTaskConfirmed,
         showUnarchiveTaskConfirmationDialog = showUnarchiveTaskConfirmationDialog,
+        onOpenTaskStatisticsClicked = viewModel::onOpenTaskStatisticsClicked,
         scaffoldState = scaffoldState,
         lazyListState = lazyListState
     )
@@ -71,11 +75,12 @@ fun ArchiveScreen(
 @Composable
 private fun ArchiveBody(
     archivedTasks: List<Task>,
-    onNavigateUpClicked: () -> Unit,
     onUnarchiveTaskClicked: (Task) -> Unit,
     showUnarchiveTaskConfirmationDialog: Boolean,
     onDismissUnarchiveTaskConfirmationDialog: () -> Unit,
     onUnarchiveTaskConfirmed: () -> Unit,
+    onOpenTaskStatisticsClicked: (Task) -> Unit,
+    onNavigateUpClicked: () -> Unit,
     lazyListState: LazyListState,
     scaffoldState: ScaffoldState,
     modifier: Modifier = Modifier
@@ -99,9 +104,10 @@ private fun ArchiveBody(
     ) { innerPadding ->
         BodyContent(
             archivedTasks = archivedTasks,
-            lazyListState = lazyListState,
             modifier = Modifier.padding(innerPadding),
-            onUnarchiveTaskClicked = onUnarchiveTaskClicked
+            onUnarchiveTaskClicked = onUnarchiveTaskClicked,
+            onOpenTaskStatisticsClicked = onOpenTaskStatisticsClicked,
+            lazyListState = lazyListState
         )
     }
 
@@ -128,12 +134,14 @@ private fun ArchiveBody(
 private fun BodyContent(
     archivedTasks: List<Task>,
     onUnarchiveTaskClicked: (Task) -> Unit,
+    onOpenTaskStatisticsClicked: (Task) -> Unit,
     lazyListState: LazyListState,
     modifier: Modifier = Modifier
 ) {
     ArchivedTaskList(
         archivedTasks = archivedTasks,
         onUnarchiveTaskClicked = onUnarchiveTaskClicked,
+        onOpenTaskStatisticsClicked = onOpenTaskStatisticsClicked,
         lazyListState = lazyListState,
         modifier = modifier
     )
@@ -143,6 +151,7 @@ private fun BodyContent(
 private fun ArchivedTaskList(
     archivedTasks: List<Task>,
     onUnarchiveTaskClicked: (Task) -> Unit,
+    onOpenTaskStatisticsClicked: (Task) -> Unit,
     lazyListState: LazyListState,
     modifier: Modifier = Modifier
 ) {
@@ -169,6 +178,7 @@ private fun ArchivedTaskList(
                     }
                 },
                 onUnarchiveTaskClicked = onUnarchiveTaskClicked,
+                onOpenTaskStatisticsClicked = onOpenTaskStatisticsClicked
             )
             Divider()
         }
@@ -181,6 +191,7 @@ private fun TaskItemArchived(
     expanded: Boolean,
     onTaskClicked: (Task) -> Unit,
     onUnarchiveTaskClicked: (Task) -> Unit,
+    onOpenTaskStatisticsClicked: (Task) -> Unit,
     modifier: Modifier = Modifier
 ) {
     Row(
@@ -227,7 +238,7 @@ private fun TaskItemArchived(
                     Spacer(Modifier.height(8.dp))
                     Row {
                         OutlinedButton(
-                            onClick = { },
+                            onClick = { onOpenTaskStatisticsClicked(task) },
                             modifier = Modifier
                                 .weight(1f)
                         ) {
@@ -281,6 +292,7 @@ private fun PreviewArchiveScreen() {
             showUnarchiveTaskConfirmationDialog = false,
             onDismissUnarchiveTaskConfirmationDialog = {},
             onUnarchiveTaskConfirmed = {},
+            onOpenTaskStatisticsClicked = {},
             lazyListState = rememberLazyListState(),
             scaffoldState = rememberScaffoldState()
         )
@@ -301,10 +313,14 @@ private fun PreviewTaskItemArchived() {
     Just10Minutes2Theme {
         Surface {
             TaskItemArchived(
-                task = Task("Example Task", timeCompletedTodayInMilliseconds = (3 * 60 * 1000).toLong()),
+                task = Task(
+                    "Example Task",
+                    timeCompletedTodayInMilliseconds = (3 * 60 * 1000).toLong()
+                ),
                 expanded = true,
                 onTaskClicked = {},
                 onUnarchiveTaskClicked = {},
+                onOpenTaskStatisticsClicked = {},
             )
         }
     }

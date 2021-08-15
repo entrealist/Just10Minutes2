@@ -2,6 +2,7 @@ package com.codinginflow.just10minutes2.common.util
 
 import java.util.*
 
+// TODO: 15.08.2021 Stunden mit rein formatieren
 fun formatTimeText(timeInMillis: Long): String {
     val millisAdjusted = if (timeInMillis < 0) 0 else timeInMillis + 999
     val minutes = ((millisAdjusted / 1000) / 60).toInt()

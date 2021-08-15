@@ -32,6 +32,7 @@ import com.codinginflow.just10minutes2.timer.ui.TimerScreen
 import com.codinginflow.just10minutes2.tasklist.ui.TaskListScreen
 import com.codinginflow.just10minutes2.common.ui.theme.Just10Minutes2Theme
 import com.codinginflow.just10minutes2.statistics.ui.StatisticsScreen
+import com.codinginflow.just10minutes2.taskstatistics.ui.TaskStatisticsScreen
 import dagger.hilt.android.AndroidEntryPoint
 
 @AndroidEntryPoint
@@ -125,7 +126,9 @@ private fun JTMNavHost(
                     navController.navigate(AppDestination.AddEditTask.route)
                 },
                 editTask = { taskId ->
-                    navController.navigate(AppDestination.AddEditTask.route + "?$ARG_TASK_ID=$taskId")
+                    navController.navigate(
+                        route = AppDestination.AddEditTask.route + "?$ARG_TASK_ID=$taskId"
+                    )
                 },
                 addEditResult = navBackStackEntry.savedStateHandle.get<AddEditTaskViewModel.AddEditTaskResult>(
                     KEY_ADD_EDIT_RESULT
@@ -139,6 +142,11 @@ private fun JTMNavHost(
                     navController.navigate(
                         route = BottomNavDestination.Timer.route,
                         navOptions = createNavOptionsForBottomNavigation(navController)
+                    )
+                },
+                navigateToTaskStatistics = { taskId ->
+                    navController.navigate(
+                        route = AppDestination.TaskStatistics.route + "?$ARG_TASK_ID=$taskId",
                     )
                 },
                 navigateToArchive = {
@@ -155,7 +163,13 @@ private fun JTMNavHost(
                     defaultValue = true
                 }
             )) {
-            StatisticsScreen()
+            StatisticsScreen(
+                navigateToTaskStatistics = { taskId ->
+                    navController.navigate(
+                        route = AppDestination.TaskStatistics.route + "?$ARG_TASK_ID=$taskId",
+                    )
+                },
+            )
         }
         composable(
             route = AppDestination.AddEditTask.route + "?$ARG_TASK_ID={$ARG_TASK_ID}",
@@ -179,12 +193,32 @@ private fun JTMNavHost(
                 })
         }
         composable(
+            route = AppDestination.TaskStatistics.route + "?$ARG_TASK_ID={$ARG_TASK_ID}",
+            arguments = listOf(
+                navArgument(ARG_TASK_ID) {
+                    type = NavType.LongType
+                    defaultValue = Task.NO_ID
+                }
+            )
+        ) {
+            TaskStatisticsScreen(
+                navigateUp = {
+                    navController.popBackStack()
+                }
+            )
+        }
+        composable(
             route = AppDestination.Archive.route,
         ) {
             ArchiveScreen(
                 navigateUp = {
                     navController.popBackStack()
-                }
+                },
+                navigateToTaskStatistics = { taskId ->
+                    navController.navigate(
+                        route = AppDestination.TaskStatistics.route + "?$ARG_TASK_ID=$taskId",
+                    )
+                },
             )
         }
     }
@@ -212,6 +246,7 @@ sealed class AppDestination(
 ) {
     object AddEditTask : AppDestination("AddEditTask")
     object Archive : AppDestination("Archive")
+    object TaskStatistics : AppDestination("TaskStatistics")
 }
 
 private fun createNavOptionsForBottomNavigation(navController: NavHostController): NavOptions {

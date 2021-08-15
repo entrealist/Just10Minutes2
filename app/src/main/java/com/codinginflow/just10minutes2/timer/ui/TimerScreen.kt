@@ -42,6 +42,8 @@ fun TimerScreen(
     val allTasks by viewModel.allTasks.collectAsState(emptyList())
     val timerRunning by viewModel.timerRunning.collectAsState(false)
 
+    // TODO: 15.08.2021 So einbauen dass nicht zuerst "no task" screen angezeigt wird
+
     val scaffoldState = rememberScaffoldState()
     val context = LocalContext.current
 
@@ -169,7 +171,7 @@ private fun BodyContent(
             )
             Text(
                 stringResource(
-                    R.string.minutes_completed_today_placeholder,
+                    R.string.minutes_completed_placeholder,
                     task?.timeCompletedTodayInMinutes ?: 0
                 )
             )

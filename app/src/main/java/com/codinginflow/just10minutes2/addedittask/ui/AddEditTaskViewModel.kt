@@ -58,22 +58,22 @@ class AddEditTaskViewModel @Inject constructor(
 
     init {
         if (taskId != Task.NO_ID) {
-            loadTaskFromId(taskId)
+            viewModelScope.launch {
+                task = taskDao.getNotArchivedTaskById(taskId).first()
+                populateInputFieldsFromTask()
+            }
         }
     }
 
-    private fun loadTaskFromId(taskId: Long) {
-        viewModelScope.launch {
-            task = taskDao.getNotArchivedTaskById(taskId).first()
-            val titleInput = taskNameInputLiveData.value
-            if (titleInput == null) {
-                taskNameInputLiveData.value = task?.name
-            }
-            val minutesGoalInput = minutesGoalInputLiveData.value
-            if (minutesGoalInput == null) {
-                minutesGoalInputLiveData.value =
-                    task?.dailyGoalInMinutes?.toString()
-            }
+    private fun populateInputFieldsFromTask() {
+        val titleInput = taskNameInputLiveData.value
+        if (titleInput == null) {
+            taskNameInputLiveData.value = task?.name
+        }
+        val minutesGoalInput = minutesGoalInputLiveData.value
+        if (minutesGoalInput == null) {
+            minutesGoalInputLiveData.value =
+                task?.dailyGoalInMinutes?.toString()
         }
     }
 

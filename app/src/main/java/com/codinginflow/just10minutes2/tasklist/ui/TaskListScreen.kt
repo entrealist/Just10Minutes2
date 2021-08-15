@@ -41,6 +41,7 @@ fun TaskListScreen(
     addEditResult: AddEditTaskViewModel.AddEditTaskResult?,
     onAddEditResultProcessed: () -> Unit,
     navigateToTimer: () -> Unit,
+    navigateToTaskStatistics: (taskId: Long) -> Unit,
     navigateToArchive: () -> Unit
 ) {
     val tasks by viewModel.tasks.collectAsState(emptyList())
@@ -72,6 +73,8 @@ fun TaskListScreen(
                 }
                 is TaskListViewModel.Event.NavigateToArchive ->
                     navigateToArchive()
+                is TaskListViewModel.Event.OpenTaskStatistics ->
+                    navigateToTaskStatistics(event.taskId)
             }
         }
     }
@@ -80,8 +83,9 @@ fun TaskListScreen(
         tasks = tasks,
         runningTaskId = runningTaskId,
         onAddNewTaskClicked = viewModel::onAddNewTaskClicked,
-        onOpenTimerForTaskClicked = viewModel::onOpenTimerForTaskClicked,
         onEditTaskClicked = viewModel::onEditTaskClicked,
+        onOpenTimerForTaskClicked = viewModel::onOpenTimerForTaskClicked,
+        onOpenTaskStatisticsClicked = viewModel::onOpenTaskStatisticsClicked,
         onNavigateToArchiveClicked = viewModel::onNavigateToArchiveClicked,
         lazyListState = lazyListState,
         scaffoldState = scaffoldState
@@ -95,6 +99,7 @@ private fun TaskListBody(
     onAddNewTaskClicked: () -> Unit,
     onEditTaskClicked: (Task) -> Unit,
     onOpenTimerForTaskClicked: (Task) -> Unit,
+    onOpenTaskStatisticsClicked: (Task) -> Unit,
     onNavigateToArchiveClicked: () -> Unit,
     lazyListState: LazyListState,
     scaffoldState: ScaffoldState,
@@ -128,6 +133,7 @@ private fun TaskListBody(
             runningTaskId = runningTaskId,
             onEditTaskClicked = onEditTaskClicked,
             onOpenTimerForTaskClicked = onOpenTimerForTaskClicked,
+            onOpenTaskStatisticsClicked = onOpenTaskStatisticsClicked,
             lazyListState = lazyListState,
             modifier = Modifier.padding(innerPadding)
         )
@@ -140,6 +146,7 @@ private fun BodyContent(
     runningTaskId: Long?,
     onEditTaskClicked: (Task) -> Unit,
     onOpenTimerForTaskClicked: (Task) -> Unit,
+    onOpenTaskStatisticsClicked: (Task) -> Unit,
     lazyListState: LazyListState,
     modifier: Modifier = Modifier
 
@@ -149,6 +156,7 @@ private fun BodyContent(
         runningTaskId = runningTaskId,
         onEditTaskClicked = onEditTaskClicked,
         onOpenTimerForTaskClicked = onOpenTimerForTaskClicked,
+        onOpenTaskStatisticsClicked = onOpenTaskStatisticsClicked,
         lazyListState = lazyListState,
         modifier = modifier
     )
@@ -160,6 +168,7 @@ private fun TaskList(
     runningTaskId: Long?,
     onEditTaskClicked: (Task) -> Unit,
     onOpenTimerForTaskClicked: (Task) -> Unit,
+    onOpenTaskStatisticsClicked: (Task) -> Unit,
     lazyListState: LazyListState,
     modifier: Modifier = Modifier
 ) {
@@ -183,7 +192,8 @@ private fun TaskList(
                     }
                 },
                 onEditTaskClicked = onEditTaskClicked,
-                onOpenTimerForTaskClicked = onOpenTimerForTaskClicked
+                onOpenTimerForTaskClicked = onOpenTimerForTaskClicked,
+                onOpenTaskStatisticsClicked = onOpenTaskStatisticsClicked
             )
             Divider()
         }
@@ -198,6 +208,7 @@ private fun TaskItem(
     onTaskClicked: (Task) -> Unit,
     onEditTaskClicked: (Task) -> Unit,
     onOpenTimerForTaskClicked: (Task) -> Unit,
+    onOpenTaskStatisticsClicked: (Task) -> Unit,
     modifier: Modifier = Modifier
 ) {
     Row(
@@ -208,11 +219,9 @@ private fun TaskItem(
             .padding(8.dp)
     ) {
         Column {
-            Row {
+            Row(verticalAlignment = Alignment.CenterVertically) {
                 Column(
-                    Modifier
-                        .weight(0.8f)
-                        .align(Alignment.CenterVertically)
+                    Modifier.weight(0.85f)
                 ) {
                     Text(
                         text = task.name,
@@ -233,11 +242,11 @@ private fun TaskItem(
                 Box(
                     contentAlignment = Alignment.Center,
                     modifier = Modifier
-                        .weight(0.2f)
+                        .weight(0.15f)
                         .padding(8.dp)
                 ) {
                     val progress =
-                        1 - (task.timeLeftTodayInMilliseconds.toFloat() / task.dailyGoalInMilliseconds.toFloat())
+                        task.timeCompletedTodayInMilliseconds.toFloat() / task.dailyGoalInMilliseconds.toFloat()
                     CircularProgressIndicatorWithBackground(
                         progress = progress,
                     )
@@ -307,7 +316,7 @@ private fun TaskItem(
                     Spacer(Modifier.height(8.dp))
                     Row {
                         OutlinedButton(
-                            onClick = { },
+                            onClick = { onOpenTaskStatisticsClicked(task) },
                             modifier = Modifier
                                 .weight(1f)
                         ) {
@@ -349,9 +358,10 @@ private fun PreviewTaskListScreen() {
             onAddNewTaskClicked = {},
             onEditTaskClicked = {},
             onOpenTimerForTaskClicked = {},
+            onOpenTaskStatisticsClicked = {},
             onNavigateToArchiveClicked = {},
             lazyListState = rememberLazyListState(),
-            scaffoldState = rememberScaffoldState(),
+            scaffoldState = rememberScaffoldState()
         )
     }
 }
@@ -370,12 +380,16 @@ private fun PreviewTaskItem() {
     Just10Minutes2Theme {
         Surface {
             TaskItem(
-                task = Task("Example Task", timeCompletedTodayInMilliseconds = (3 * 60 * 1000).toLong()),
+                task = Task(
+                    "Example Task",
+                    timeCompletedTodayInMilliseconds = (3 * 60 * 1000).toLong()
+                ),
                 timerRunning = true,
                 expanded = true,
                 onTaskClicked = {},
                 onEditTaskClicked = {},
                 onOpenTimerForTaskClicked = {},
+                onOpenTaskStatisticsClicked = {}
             )
         }
     }

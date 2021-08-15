@@ -2,6 +2,7 @@ package com.codinginflow.just10minutes2.tasklist.ui
 
 import androidx.annotation.StringRes
 import androidx.lifecycle.*
+import androidx.lifecycle.viewmodel.compose.viewModel
 import com.codinginflow.just10minutes2.R
 import com.codinginflow.just10minutes2.addedittask.ui.AddEditTaskViewModel
 import com.codinginflow.just10minutes2.common.data.daos.TaskDao
@@ -69,6 +70,12 @@ class TaskListViewModel @Inject constructor(
         }
     }
 
+    fun onOpenTaskStatisticsClicked(task: Task) {
+        viewModelScope.launch {
+            eventChannel.send(Event.OpenTaskStatistics(task.id))
+        }
+    }
+
     fun onNavigateToArchiveClicked() {
         viewModelScope.launch {
             eventChannel.send(Event.NavigateToArchive)
@@ -80,6 +87,7 @@ class TaskListViewModel @Inject constructor(
         data class EditTask(val taskId: Long) : Event()
         data class ShowAddEditScreenConfirmationMessage(@StringRes val msg: Int) : Event()
         data class OpenTimerForTask(val task: Task) : Event()
-        object NavigateToArchive: Event()
+        data class OpenTaskStatistics(val taskId: Long) : Event()
+        object NavigateToArchive : Event()
     }
 }

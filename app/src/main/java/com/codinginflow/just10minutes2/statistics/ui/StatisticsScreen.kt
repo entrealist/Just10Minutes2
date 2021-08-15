@@ -1,7 +1,6 @@
 package com.codinginflow.just10minutes2.statistics.ui
 
 import android.content.res.Configuration
-import android.widget.Space
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -13,6 +12,7 @@ import androidx.compose.material.icons.filled.ArrowRight
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
@@ -25,41 +25,46 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.codinginflow.just10minutes2.R
-import com.codinginflow.just10minutes2.common.data.entities.DailyTaskStatistic
+import com.codinginflow.just10minutes2.common.data.entities.TaskStatistic
 import com.codinginflow.just10minutes2.common.data.entities.Task
 import com.codinginflow.just10minutes2.common.ui.theme.Just10Minutes2Theme
-import com.codinginflow.just10minutes2.common.util.formatTimeText
+import kotlinx.coroutines.flow.collectLatest
 import java.text.DateFormat
 import java.util.*
 
 @Composable
 fun StatisticsScreen(
-    viewModel: StatisticsViewModel = hiltViewModel()
+    viewModel: StatisticsViewModel = hiltViewModel(),
+    navigateToTaskStatistics: (taskId: Long) -> Unit,
 ) {
     val tasks by viewModel.tasks.collectAsState(emptyList())
     val taskStatistics by viewModel.taskStatistics.collectAsState(emptyList())
 
-    val scaffoldState = rememberScaffoldState()
+    LaunchedEffect(Unit) {
+        viewModel.events.collectLatest { event ->
+            when (event) {
+                is StatisticsViewModel.Event.OpenTaskStatistics ->
+                    navigateToTaskStatistics(event.taskId)
+            }
+        }
+    }
 
     StatisticsBody(
         tasks = tasks,
         taskStatistics = taskStatistics,
         onTaskDetailsClicked = viewModel::onTaskDetailsClicked,
-        scaffoldState = scaffoldState
     )
 }
 
 @Composable
 private fun StatisticsBody(
     tasks: List<Task>,
-    taskStatistics: List<DailyTaskStatistic>,
+    taskStatistics: List<TaskStatistic>,
     onTaskDetailsClicked: (Task) -> Unit,
-    scaffoldState: ScaffoldState,
     modifier: Modifier = Modifier
 ) {
     Scaffold(
         modifier = modifier,
-        scaffoldState = scaffoldState,
         topBar = {
             TopAppBar(
                 title = { Text(stringResource(R.string.statistics)) },
@@ -78,7 +83,7 @@ private fun StatisticsBody(
 @Composable
 private fun BodyContent(
     tasks: List<Task>,
-    taskStatistics: List<DailyTaskStatistic>,
+    taskStatistics: List<TaskStatistic>,
     onTaskDetailsClicked: (Task) -> Unit,
     modifier: Modifier = Modifier
 ) {
@@ -93,7 +98,7 @@ private fun BodyContent(
 @Composable
 private fun TaskWithStatisticsList(
     tasks: List<Task>,
-    taskStatistics: List<DailyTaskStatistic>,
+    taskStatistics: List<TaskStatistic>,
     onTaskDetailsClicked: (Task) -> Unit,
     modifier: Modifier = Modifier
 ) {
@@ -116,7 +121,7 @@ private fun TaskWithStatisticsList(
 @Composable
 private fun TaskWithStatisticsItem(
     task: Task,
-    statistics: List<DailyTaskStatistic>,
+    statistics: List<TaskStatistic>,
     onTaskDetailsClicked: (Task) -> Unit,
     modifier: Modifier = Modifier
 ) {
@@ -126,13 +131,13 @@ private fun TaskWithStatisticsItem(
                 .clickable { onTaskDetailsClicked(task) }
                 .fillMaxWidth()
                 .padding(8.dp),
-            horizontalArrangement = Arrangement.SpaceBetween
         ) {
             Text(
                 text = task.name,
                 style = LocalTextStyle.current.copy(fontWeight = FontWeight.Bold),
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis,
+                modifier = Modifier.weight(1f)
             )
             // TODO: 15.08.2021 Fix that this doesn't get pushed out of the screen
             if (statistics.isNotEmpty()) {
@@ -158,7 +163,7 @@ private fun TaskWithStatisticsItem(
                 modifier = Modifier.fillMaxWidth()
             ) {
                 items(statistics) { statistic ->
-                    DayStatisticItem(statistic)
+                    StatisticItem(statistic)
                     Spacer(Modifier.width(4.dp))
                 }
             }
@@ -168,8 +173,8 @@ private fun TaskWithStatisticsItem(
 }
 
 @Composable
-private fun DayStatisticItem(
-    statistic: DailyTaskStatistic,
+private fun StatisticItem(
+    statistic: TaskStatistic,
     modifier: Modifier = Modifier
 ) {
     val date = Date()
@@ -210,24 +215,23 @@ private fun PreviewStatisticsScreen() {
     Just10Minutes2Theme {
         StatisticsBody(
             tasks = listOf(
-                Task("Example task 1", id = 1),
+                Task("Example task 1 mmmmmmmmmmmmmmmmmmmmmmmmmmm", id = 1),
                 Task("Example task 2", id = 2),
                 Task("Example task 3", id = 3),
                 Task("Example task 4", id = 4),
             ),
             taskStatistics = listOf(
-                DailyTaskStatistic(1, 1628892000000, 10, 10 * 60_000L),
-                DailyTaskStatistic(1, 1628805600000, 10, 8 * 60_000L),
-                DailyTaskStatistic(1, 1628719200000, 15, 10 * 60_000L),
-                DailyTaskStatistic(2, 1628892000000, 10, 10 * 60_000L),
-                DailyTaskStatistic(2, 1628805600000, 10, 8 * 60_000L),
-                DailyTaskStatistic(2, 1628719200000, 15, 10 * 60_000L),
-                DailyTaskStatistic(3, 1628892000000, 10, 10 * 60_000L),
-                DailyTaskStatistic(3, 1628805600000, 10, 8 * 60_000L),
-                DailyTaskStatistic(3, 1628719200000, 15, 10 * 60_000L),
+                TaskStatistic(1, 1628892000000, 10, 10 * 60_000L),
+                TaskStatistic(1, 1628805600000, 10, 8 * 60_000L),
+                TaskStatistic(1, 1628719200000, 15, 10 * 60_000L),
+                TaskStatistic(2, 1628892000000, 10, 10 * 60_000L),
+                TaskStatistic(2, 1628805600000, 10, 8 * 60_000L),
+                TaskStatistic(2, 1628719200000, 15, 10 * 60_000L),
+                TaskStatistic(3, 1628892000000, 10, 10 * 60_000L),
+                TaskStatistic(3, 1628805600000, 10, 8 * 60_000L),
+                TaskStatistic(3, 1628719200000, 15, 10 * 60_000L),
             ),
             onTaskDetailsClicked = {},
-            scaffoldState = rememberScaffoldState()
         )
     }
 }
@@ -248,12 +252,12 @@ private fun PreviewTaskWithStatisticsItem() {
             TaskWithStatisticsItem(
                 task = Task("Example task mmmmmmmmmmmmmmmmmmmmmmmmmmmm", id = 1),
                 statistics = listOf(
-                    DailyTaskStatistic(1, 1628892000000, 10, 10 * 60_000L),
-                    DailyTaskStatistic(1, 1628805600000, 10, 8 * 60_000L),
-                    DailyTaskStatistic(1, 1628719200000, 15, 10 * 60_000L),
-                    DailyTaskStatistic(1, 1628632800000, 15, 17 * 60_000L),
-                    DailyTaskStatistic(1, 1628546400000, 15, 15 * 60_000L),
-                    DailyTaskStatistic(1, 1628460000000, 20, 18 * 60_000L),
+                    TaskStatistic(1, 1628892000000, 10, 10 * 60_000L),
+                    TaskStatistic(1, 1628805600000, 10, 8 * 60_000L),
+                    TaskStatistic(1, 1628719200000, 15, 10 * 60_000L),
+                    TaskStatistic(1, 1628632800000, 15, 17 * 60_000L),
+                    TaskStatistic(1, 1628546400000, 15, 15 * 60_000L),
+                    TaskStatistic(1, 1628460000000, 20, 18 * 60_000L),
                 ),
                 onTaskDetailsClicked = {}
             )
