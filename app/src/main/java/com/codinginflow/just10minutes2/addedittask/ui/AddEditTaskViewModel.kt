@@ -1,4 +1,4 @@
-package com.codinginflow.just10minutes2.addedittask
+package com.codinginflow.just10minutes2.addedittask.ui
 
 import android.os.Parcelable
 import androidx.lifecycle.*

@@ -23,11 +23,11 @@ import androidx.navigation.NavType
 import androidx.navigation.compose.*
 import androidx.navigation.navOptions
 import com.codinginflow.just10minutes2.addedittask.AddEditTaskScreen
-import com.codinginflow.just10minutes2.addedittask.AddEditTaskViewModel
+import com.codinginflow.just10minutes2.addedittask.ui.AddEditTaskViewModel
 import com.codinginflow.just10minutes2.archive.ArchiveScreen
 import com.codinginflow.just10minutes2.common.data.entities.Task
-import com.codinginflow.just10minutes2.common.ui.DayCheckerSharedViewModel
-import com.codinginflow.just10minutes2.common.ui.TimerSharedViewModel
+import com.codinginflow.just10minutes2.common.DayCheckerSharedViewModel
+import com.codinginflow.just10minutes2.common.TimerSharedViewModel
 import com.codinginflow.just10minutes2.timer.ui.TimerScreen
 import com.codinginflow.just10minutes2.tasklist.ui.TaskListScreen
 import com.codinginflow.just10minutes2.common.ui.theme.Just10Minutes2Theme

@@ -1,4 +1,4 @@
-package com.codinginflow.just10minutes2.common.ui
+package com.codinginflow.just10minutes2.common
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope

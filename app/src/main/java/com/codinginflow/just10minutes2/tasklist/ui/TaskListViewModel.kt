@@ -2,9 +2,8 @@ package com.codinginflow.just10minutes2.tasklist.ui
 
 import androidx.annotation.StringRes
 import androidx.lifecycle.*
-import androidx.lifecycle.viewmodel.compose.viewModel
 import com.codinginflow.just10minutes2.R
-import com.codinginflow.just10minutes2.addedittask.AddEditTaskViewModel
+import com.codinginflow.just10minutes2.addedittask.ui.AddEditTaskViewModel
 import com.codinginflow.just10minutes2.common.data.daos.TaskDao
 import com.codinginflow.just10minutes2.common.data.entities.Task
 import com.codinginflow.just10minutes2.timer.TaskTimerManager
