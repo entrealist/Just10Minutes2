@@ -10,7 +10,6 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Close
-import androidx.compose.material.icons.filled.Timer
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -26,6 +25,7 @@ import com.codinginflow.just10minutes2.R
 import com.codinginflow.just10minutes2.common.data.entities.Task
 import com.codinginflow.just10minutes2.common.data.entities.TaskStatistic
 import com.codinginflow.just10minutes2.common.ui.composables.CircularProgressIndicatorWithBackground
+import com.codinginflow.just10minutes2.common.ui.theme.Dimens
 import com.codinginflow.just10minutes2.common.ui.theme.Just10Minutes2Theme
 import com.codinginflow.just10minutes2.common.util.formatTimeText
 import kotlinx.coroutines.flow.collectLatest
@@ -111,7 +111,7 @@ private fun TaskStatisticsList(
     modifier: Modifier = Modifier
 ) {
     LazyColumn(
-        contentPadding = PaddingValues(bottom = 50.dp),
+        contentPadding = PaddingValues(bottom = Dimens.ListBottomPadding),
         modifier = modifier
     ) {
         items(taskStatistics) { taskStatistic ->

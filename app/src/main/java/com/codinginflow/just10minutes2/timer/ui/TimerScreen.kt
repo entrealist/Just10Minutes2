@@ -28,7 +28,6 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import com.codinginflow.just10minutes2.R
 import com.codinginflow.just10minutes2.common.data.entities.Task
 import com.codinginflow.just10minutes2.common.ui.composables.CircularProgressIndicatorWithBackground
-import com.codinginflow.just10minutes2.application.TimerSharedViewModel
 import com.codinginflow.just10minutes2.common.ui.theme.Just10Minutes2Theme
 import com.codinginflow.just10minutes2.common.util.formatTimeText
 import kotlinx.coroutines.flow.collectLatest
@@ -36,7 +35,6 @@ import kotlinx.coroutines.flow.collectLatest
 @Composable
 fun TimerScreen(
     viewModel: TimerViewModel = hiltViewModel(),
-    timerSharedViewModel: TimerSharedViewModel,
 ) {
     val activeTask by viewModel.activeTask.collectAsState(null)
     val allTasks by viewModel.allTasks.collectAsState(emptyList())
@@ -47,15 +45,8 @@ fun TimerScreen(
     val scaffoldState = rememberScaffoldState()
     val context = LocalContext.current
 
-    val showSelectNewTaskConfirmationDialog by viewModel.showSelectNewTaskConfirmationDialog.observeAsState(
-        false
-    )
-
-    LaunchedEffect(Unit) {
-        timerSharedViewModel.taskToOpenInTimer.collectLatest { task ->
-            viewModel.onTaskSelected(task)
-        }
-    }
+    val showSelectNewTaskConfirmationDialog
+            by viewModel.showSelectNewTaskConfirmationDialog.observeAsState(false)
 
     LaunchedEffect(Unit) {
         viewModel.events.collectLatest { event ->
@@ -112,23 +103,24 @@ private fun TimerBody(
             onStartTimerClicked = onStartTimerClicked,
             onStopTimerClicked = onStopTimerClicked
         )
+    }
 
-        if (showSelectNewTaskConfirmationDialog) {
-            AlertDialog(
-                onDismissRequest = onDismissSelectNewTaskConfirmationDialog,
-                text = { Text(stringResource(R.string.confirm_switch_task_message)) },
-                confirmButton = {
-                    TextButton(onClick = onSelectNewTaskConfirmed) {
-                        Text(stringResource(R.string.confirm_switch))
-                    }
-                },
-                dismissButton = {
-                    TextButton(onClick = onDismissSelectNewTaskConfirmationDialog) {
-                        Text(stringResource(R.string.cancel))
-                    }
-                },
-            )
-        }
+    if (showSelectNewTaskConfirmationDialog) {
+        AlertDialog(
+            title = { Text(stringResource(R.string.switch_task))},
+            text = { Text(stringResource(R.string.confirm_switch_task_message)) },
+            confirmButton = {
+                TextButton(onClick = onSelectNewTaskConfirmed) {
+                    Text(stringResource(R.string.confirm_switch))
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = onDismissSelectNewTaskConfirmationDialog) {
+                    Text(stringResource(R.string.cancel))
+                }
+            },
+            onDismissRequest = onDismissSelectNewTaskConfirmationDialog,
+        )
     }
 }
 
@@ -140,8 +132,7 @@ private fun BodyContent(
     onStartTimerClicked: () -> Unit,
     onStopTimerClicked: () -> Unit,
     onTaskSelected: (Task) -> Unit,
-
-    ) {
+) {
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center,
@@ -155,8 +146,6 @@ private fun BodyContent(
                 .width(280.dp)
             //  .background(Color.Green)
         ) {
-            Text(stringResource(R.string.active_task_colon))
-            Spacer(Modifier.height(8.dp))
             DropdownMenuWithSelector(
                 selectedTask = task,
                 allTasks = allTasks,

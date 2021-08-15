@@ -2,20 +2,22 @@ package com.codinginflow.just10minutes2.tasklist.ui
 
 import android.content.res.Configuration
 import androidx.compose.animation.animateContentSize
-import androidx.compose.animation.core.*
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.runtime.*
+import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
@@ -28,19 +30,17 @@ import com.codinginflow.just10minutes2.R
 import com.codinginflow.just10minutes2.addedittask.ui.AddEditTaskViewModel
 import com.codinginflow.just10minutes2.common.data.entities.Task
 import com.codinginflow.just10minutes2.common.ui.composables.CircularProgressIndicatorWithBackground
-import com.codinginflow.just10minutes2.application.TimerSharedViewModel
+import com.codinginflow.just10minutes2.common.ui.theme.Dimens
 import com.codinginflow.just10minutes2.common.ui.theme.Just10Minutes2Theme
 import kotlinx.coroutines.flow.collectLatest
 
 @Composable
 fun TaskListScreen(
     viewModel: TaskListViewModel = hiltViewModel(),
-    timerSharedViewModel: TimerSharedViewModel,
     addNewTask: () -> Unit,
     editTask: (taskId: Long) -> Unit,
     addEditResult: AddEditTaskViewModel.AddEditTaskResult?,
     onAddEditResultProcessed: () -> Unit,
-    navigateToTimer: () -> Unit,
     navigateToTaskStatistics: (taskId: Long) -> Unit,
     navigateToArchive: () -> Unit
 ) {
@@ -50,6 +50,9 @@ fun TaskListScreen(
     val lazyListState = rememberLazyListState()
     val scaffoldState = rememberScaffoldState()
     val context = LocalContext.current
+
+    val showStartTimerForNewTaskConfirmationDialog
+            by viewModel.showStartTimerForNewTaskConfirmationDialog.observeAsState(false)
 
     LaunchedEffect(addEditResult) {
         if (addEditResult != null) {
@@ -65,12 +68,8 @@ fun TaskListScreen(
                     addNewTask()
                 is TaskListViewModel.Event.EditTask ->
                     editTask(event.taskId)
-                is TaskListViewModel.Event.ShowAddEditScreenConfirmationMessage ->
+                is TaskListViewModel.Event.ShowAddEditResultMessage ->
                     scaffoldState.snackbarHostState.showSnackbar(context.getString(event.msg))
-                is TaskListViewModel.Event.OpenTimerForTask -> {
-                    timerSharedViewModel.setTaskIdToOpenInTimer(event.task)
-                    navigateToTimer()
-                }
                 is TaskListViewModel.Event.NavigateToArchive ->
                     navigateToArchive()
                 is TaskListViewModel.Event.OpenTaskStatistics ->
@@ -84,9 +83,13 @@ fun TaskListScreen(
         runningTaskId = runningTaskId,
         onAddNewTaskClicked = viewModel::onAddNewTaskClicked,
         onEditTaskClicked = viewModel::onEditTaskClicked,
-        onOpenTimerForTaskClicked = viewModel::onOpenTimerForTaskClicked,
         onOpenTaskStatisticsClicked = viewModel::onOpenTaskStatisticsClicked,
         onNavigateToArchiveClicked = viewModel::onNavigateToArchiveClicked,
+        onStartTimerClicked = viewModel::onStartTimerClicked,
+        showStartTimerForNewTaskConfirmationDialog = showStartTimerForNewTaskConfirmationDialog,
+        onDismissStartTimerForNewTaskConfirmationDialog = viewModel::onDismissStartTimerForNewTaskConfirmationDialog,
+        onStartTimerForNewTaskConfirmed = viewModel::onStartTimerForNewTaskConfirmed,
+        onStopTimerClicked = viewModel::onStopTimerClicked,
         lazyListState = lazyListState,
         scaffoldState = scaffoldState
     )
@@ -98,10 +101,13 @@ private fun TaskListBody(
     runningTaskId: Long?,
     onAddNewTaskClicked: () -> Unit,
     onEditTaskClicked: (Task) -> Unit,
-    onOpenTimerForTaskClicked: (Task) -> Unit,
     onOpenTaskStatisticsClicked: (Task) -> Unit,
     onNavigateToArchiveClicked: () -> Unit,
-    lazyListState: LazyListState,
+    onStartTimerClicked: (Task) -> Unit,
+    showStartTimerForNewTaskConfirmationDialog: Boolean,
+    onDismissStartTimerForNewTaskConfirmationDialog: () -> Unit,
+    onStartTimerForNewTaskConfirmed: () -> Unit,
+    onStopTimerClicked: () -> Unit, lazyListState: LazyListState,
     scaffoldState: ScaffoldState,
     modifier: Modifier = Modifier,
 ) {
@@ -132,10 +138,29 @@ private fun TaskListBody(
             tasks = tasks,
             runningTaskId = runningTaskId,
             onEditTaskClicked = onEditTaskClicked,
-            onOpenTimerForTaskClicked = onOpenTimerForTaskClicked,
             onOpenTaskStatisticsClicked = onOpenTaskStatisticsClicked,
+            onStartTimerClicked = onStartTimerClicked,
+            onStopTimerClicked = onStopTimerClicked,
             lazyListState = lazyListState,
             modifier = Modifier.padding(innerPadding)
+        )
+    }
+
+    if (showStartTimerForNewTaskConfirmationDialog) {
+        AlertDialog(
+            title = { Text(stringResource(R.string.switch_task))},
+            text = { Text(stringResource(R.string.confirm_switch_task_message)) },
+            confirmButton = {
+                TextButton(onClick = onStartTimerForNewTaskConfirmed) {
+                    Text(stringResource(R.string.confirm_switch))
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = onDismissStartTimerForNewTaskConfirmationDialog) {
+                    Text(stringResource(R.string.cancel))
+                }
+            },
+            onDismissRequest = onDismissStartTimerForNewTaskConfirmationDialog,
         )
     }
 }
@@ -145,9 +170,9 @@ private fun BodyContent(
     tasks: List<Task>,
     runningTaskId: Long?,
     onEditTaskClicked: (Task) -> Unit,
-    onOpenTimerForTaskClicked: (Task) -> Unit,
     onOpenTaskStatisticsClicked: (Task) -> Unit,
-    lazyListState: LazyListState,
+    onStartTimerClicked: (Task) -> Unit,
+    onStopTimerClicked: () -> Unit, lazyListState: LazyListState,
     modifier: Modifier = Modifier
 
 ) {
@@ -155,8 +180,9 @@ private fun BodyContent(
         tasks = tasks,
         runningTaskId = runningTaskId,
         onEditTaskClicked = onEditTaskClicked,
-        onOpenTimerForTaskClicked = onOpenTimerForTaskClicked,
         onOpenTaskStatisticsClicked = onOpenTaskStatisticsClicked,
+        onStartTimerClicked = onStartTimerClicked,
+        onStopTimerClicked = onStopTimerClicked,
         lazyListState = lazyListState,
         modifier = modifier
     )
@@ -167,8 +193,9 @@ private fun TaskList(
     tasks: List<Task>,
     runningTaskId: Long?,
     onEditTaskClicked: (Task) -> Unit,
-    onOpenTimerForTaskClicked: (Task) -> Unit,
     onOpenTaskStatisticsClicked: (Task) -> Unit,
+    onStartTimerClicked: (Task) -> Unit,
+    onStopTimerClicked: () -> Unit,
     lazyListState: LazyListState,
     modifier: Modifier = Modifier
 ) {
@@ -176,7 +203,7 @@ private fun TaskList(
 
     LazyColumn(
         state = lazyListState,
-        contentPadding = PaddingValues(bottom = 50.dp),
+        contentPadding = PaddingValues(bottom = Dimens.ListBottomPadding),
         modifier = modifier
     ) {
         items(tasks) { task ->
@@ -192,8 +219,9 @@ private fun TaskList(
                     }
                 },
                 onEditTaskClicked = onEditTaskClicked,
-                onOpenTimerForTaskClicked = onOpenTimerForTaskClicked,
-                onOpenTaskStatisticsClicked = onOpenTaskStatisticsClicked
+                onOpenTaskStatisticsClicked = onOpenTaskStatisticsClicked,
+                onStartTimerClicked = onStartTimerClicked,
+                onStopTimerClicked = onStopTimerClicked
             )
             Divider()
         }
@@ -207,8 +235,9 @@ private fun TaskItem(
     expanded: Boolean,
     onTaskClicked: (Task) -> Unit,
     onEditTaskClicked: (Task) -> Unit,
-    onOpenTimerForTaskClicked: (Task) -> Unit,
     onOpenTaskStatisticsClicked: (Task) -> Unit,
+    onStartTimerClicked: (Task) -> Unit,
+    onStopTimerClicked: () -> Unit,
     modifier: Modifier = Modifier
 ) {
     Row(
@@ -223,9 +252,12 @@ private fun TaskItem(
                 Column(
                     Modifier.weight(0.85f)
                 ) {
+                    val taskNameTextColor =
+                        if (timerRunning) MaterialTheme.colors.primary else LocalContentColor.current
                     Text(
                         text = task.name,
                         style = MaterialTheme.typography.h6,
+                        color = taskNameTextColor,
                         maxLines = 1,
                         overflow = TextOverflow.Ellipsis
                     )
@@ -238,6 +270,13 @@ private fun TaskItem(
                         fontSize = 14.sp,
                         color = Color.Gray
                     )
+                    if (timerRunning) {
+                        Text(
+                            stringResource(R.string.timer_running),
+                            fontSize = 14.sp,
+                            color = MaterialTheme.colors.primary
+                        )
+                    }
                 }
                 Box(
                     contentAlignment = Alignment.Center,
@@ -250,85 +289,64 @@ private fun TaskItem(
                     CircularProgressIndicatorWithBackground(
                         progress = progress,
                     )
-                    if (timerRunning) {
-                        val infiniteTransition = rememberInfiniteTransition()
-                        val animatedAlpha by infiniteTransition.animateFloat(
-                            initialValue = 0.2f,
-                            targetValue = 1f,
-                            animationSpec = infiniteRepeatable(
-                                animation = keyframes {
-                                    durationMillis = 1500
-                                    0.6f at 500
-                                },
-                                repeatMode = RepeatMode.Reverse
+                    when {
+                        task.isCompletedToday -> {
+                            Icon(
+                                Icons.Default.Check,
+                                contentDescription = stringResource(R.string.task_completed),
+                                tint = MaterialTheme.colors.primary
                             )
-                        )
-                        Icon(
-                            Icons.Default.Timer,
-                            contentDescription = stringResource(R.string.timer_running),
-                            tint = MaterialTheme.colors.primary.copy(alpha = animatedAlpha)
-                        )
-                    } else if (task.isCompletedToday) {
-                        Icon(
-                            Icons.Default.Check,
-                            contentDescription = stringResource(R.string.task_completed),
-                            tint = MaterialTheme.colors.primary
-                        )
+                        }
+                        timerRunning -> {
+                            Icon(
+                                Icons.Default.Stop,
+                                contentDescription = stringResource(R.string.timer_running),
+                                tint = MaterialTheme.colors.primary,
+                                modifier = Modifier
+                                    .clip(CircleShape)
+                                    .clickable { onStopTimerClicked() }
+                            )
+                        }
+                        else -> {
+                            Icon(
+                                Icons.Default.PlayArrow,
+                                contentDescription = stringResource(R.string.start_timer),
+                                tint = MaterialTheme.colors.primary,
+                                modifier = Modifier
+                                    .clip(CircleShape)
+                                    .clickable { onStartTimerClicked(task) }
+                            )
+                        }
                     }
                 }
             }
             if (expanded) {
-                Column {
-                    if (timerRunning) {
-                        Text(
-                            stringResource(R.string.timer_running),
-                            fontSize = 14.sp,
-                            color = MaterialTheme.colors.primary
+                Spacer(Modifier.height(8.dp))
+                Row {
+                    OutlinedButton(
+                        onClick = { onEditTaskClicked(task) },
+                        modifier = Modifier
+                            .weight(1f)
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Edit,
+                            contentDescription = stringResource(R.string.edit_task),
                         )
+                        Spacer(Modifier.size(ButtonDefaults.IconSpacing))
+                        Text(stringResource(R.string.edit_task))
                     }
-                    Spacer(Modifier.height(8.dp))
-                    Row {
-                        OutlinedButton(
-                            onClick = { onEditTaskClicked(task) },
-                            modifier = Modifier
-                                .weight(1f)
-                        ) {
-                            Icon(
-                                imageVector = Icons.Default.Edit,
-                                contentDescription = stringResource(R.string.edit_task),
-                            )
-                            Spacer(Modifier.size(ButtonDefaults.IconSpacing))
-                            Text(stringResource(R.string.edit_task))
-                        }
-                        Spacer(Modifier.width(8.dp))
-                        OutlinedButton(
-                            onClick = { onOpenTimerForTaskClicked(task) },
-                            modifier = Modifier.weight(1f)
-                        ) {
-                            Icon(
-                                imageVector = Icons.Default.Timer,
-                                contentDescription = stringResource(R.string.open_timer),
-                            )
-                            Spacer(Modifier.size(ButtonDefaults.IconSpacing))
-                            Text(stringResource(R.string.open_timer))
-                        }
-                    }
-                    Spacer(Modifier.height(8.dp))
-                    Row {
-                        OutlinedButton(
-                            onClick = { onOpenTaskStatisticsClicked(task) },
-                            modifier = Modifier
-                                .weight(1f)
-                        ) {
-                            Icon(
-                                imageVector = Icons.Default.Assessment,
-                                contentDescription = stringResource(R.string.statistics),
-                            )
-                            Spacer(Modifier.size(ButtonDefaults.IconSpacing))
-                            Text(stringResource(R.string.statistics))
-                        }
-                        Spacer(Modifier.width(8.dp))
-                        Spacer(Modifier.weight(1f))
+                    Spacer(Modifier.width(8.dp))
+                    OutlinedButton(
+                        onClick = { onOpenTaskStatisticsClicked(task) },
+                        modifier = Modifier
+                            .weight(1f)
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Assessment,
+                            contentDescription = stringResource(R.string.statistics),
+                        )
+                        Spacer(Modifier.size(ButtonDefaults.IconSpacing))
+                        Text(stringResource(R.string.statistics))
                     }
                 }
             }
@@ -357,11 +375,15 @@ private fun PreviewTaskListScreen() {
             runningTaskId = 1,
             onAddNewTaskClicked = {},
             onEditTaskClicked = {},
-            onOpenTimerForTaskClicked = {},
             onOpenTaskStatisticsClicked = {},
             onNavigateToArchiveClicked = {},
+            onStartTimerClicked = {},
+            onStopTimerClicked = {},
+            showStartTimerForNewTaskConfirmationDialog = false,
+            onDismissStartTimerForNewTaskConfirmationDialog = {},
+            onStartTimerForNewTaskConfirmed = {},
             lazyListState = rememberLazyListState(),
-            scaffoldState = rememberScaffoldState()
+            scaffoldState = rememberScaffoldState(),
         )
     }
 }
@@ -388,8 +410,9 @@ private fun PreviewTaskItem() {
                 expanded = true,
                 onTaskClicked = {},
                 onEditTaskClicked = {},
-                onOpenTimerForTaskClicked = {},
-                onOpenTaskStatisticsClicked = {}
+                onOpenTaskStatisticsClicked = {},
+                onStartTimerClicked = {},
+                onStopTimerClicked = {},
             )
         }
     }

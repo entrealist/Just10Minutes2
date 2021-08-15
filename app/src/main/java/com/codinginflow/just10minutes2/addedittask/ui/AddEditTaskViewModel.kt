@@ -28,6 +28,10 @@ class AddEditTaskViewModel @Inject constructor(
     val taskId = savedState.get<Long>(ARG_TASK_ID) ?: Task.NO_ID
     private var task: Task? = null
 
+    val isEditMode = taskId != Task.NO_ID
+    private val isArchivedTaskLivedata = MutableLiveData<Boolean?>(null)
+    val isArchivedTask: LiveData<Boolean?> = isArchivedTaskLivedata
+
     private val taskNameInputLiveData = savedState.getLiveData<String>("taskTitleInput")
     val taskNameInput: LiveData<String> = taskNameInputLiveData
 
@@ -56,10 +60,16 @@ class AddEditTaskViewModel @Inject constructor(
     val showArchiveTaskConfirmationDialog: LiveData<Boolean> =
         showArchiveTaskConfirmationDialogLiveData
 
+    private val showUnarchiveTaskConfirmationDialogLiveData =
+        savedState.getLiveData<Boolean>("showUnarchiveTaskConfirmationDialog")
+    val showUnarchiveTaskConfirmationDialog: LiveData<Boolean> =
+        showUnarchiveTaskConfirmationDialogLiveData
+
     init {
         if (taskId != Task.NO_ID) {
             viewModelScope.launch {
-                task = taskDao.getNotArchivedTaskById(taskId).first()
+                task = taskDao.getTaskById(taskId).first()
+                isArchivedTaskLivedata.value = task?.archived == true
                 populateInputFieldsFromTask()
             }
         }
@@ -169,6 +179,23 @@ class AddEditTaskViewModel @Inject constructor(
         showArchiveTaskConfirmationDialogLiveData.value = false
     }
 
+    fun onUnarchiveTaskClicked() {
+        showUnarchiveTaskConfirmationDialogLiveData.value = true
+    }
+
+    fun onUnarchiveTaskConfirmed() {
+        viewModelScope.launch {
+            task?.let { task ->
+                taskDao.setArchivedState(task.id, false)
+                eventChannel.send(Event.NavigateBackWithResult(AddEditTaskResult.TaskUnarchived))
+            }
+        }
+    }
+
+    fun onDismissUnarchiveTaskConfirmationDialog() {
+        showUnarchiveTaskConfirmationDialogLiveData.value = false
+    }
+
     fun onResetDayClicked() {
         showResetDayConfirmationDialogLiveData.value = true
     }
@@ -212,5 +239,8 @@ class AddEditTaskViewModel @Inject constructor(
 
         @Parcelize
         object TaskArchived : AddEditTaskResult()
+
+        @Parcelize
+        object TaskUnarchived: AddEditTaskResult()
     }
 }

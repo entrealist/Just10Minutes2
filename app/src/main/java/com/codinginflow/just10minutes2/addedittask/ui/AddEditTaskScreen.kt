@@ -1,4 +1,4 @@
-package com.codinginflow.just10minutes2.addedittask
+package com.codinginflow.just10minutes2.addedittask.ui
 
 import android.content.res.Configuration
 import androidx.annotation.StringRes
@@ -17,8 +17,6 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.codinginflow.just10minutes2.R
-import com.codinginflow.just10minutes2.addedittask.ui.AddEditTaskViewModel
-import com.codinginflow.just10minutes2.common.data.entities.Task
 import com.codinginflow.just10minutes2.common.ui.theme.Just10Minutes2Theme
 import kotlinx.coroutines.flow.collectLatest
 
@@ -34,6 +32,9 @@ fun AddEditTaskScreen(
     val taskNameInputErrorMessage by viewModel.taskNameInputErrorMessage.observeAsState()
     val minutesGoalInputErrorMessage by viewModel.minutesGoalInputErrorMessage.observeAsState()
 
+    val isEditMode = viewModel.isEditMode
+    val isArchivedTask by viewModel.isArchivedTask.observeAsState(null)
+
     val showDeleteTaskConfirmationDialog by
     viewModel.showDeleteTaskConfirmationDialog.observeAsState(false)
 
@@ -42,6 +43,9 @@ fun AddEditTaskScreen(
 
     val showArchiveTaskConfirmationDialog by
     viewModel.showArchiveTaskConfirmationDialog.observeAsState(false)
+
+    val showUnarchiveTaskConfirmationDialog by
+    viewModel.showUnarchiveTaskConfirmationDialog.observeAsState(false)
 
     val scaffoldState = rememberScaffoldState()
     val context = LocalContext.current
@@ -59,7 +63,8 @@ fun AddEditTaskScreen(
     }
 
     AddEditTaskBody(
-        isEditMode = viewModel.taskId != Task.NO_ID,
+        isEditMode = isEditMode,
+        isArchivedTask = isArchivedTask,
         taskNameInput = taskNameInput,
         onTaskNameInputChanged = viewModel::onTaskNameInputChanged,
         taskNameInputErrorMessage = taskNameInputErrorMessage,
@@ -76,17 +81,22 @@ fun AddEditTaskScreen(
         showArchiveTaskConfirmationDialog = showArchiveTaskConfirmationDialog,
         onDismissArchiveTaskConfirmationDialog = viewModel::onDismissArchiveTaskConfirmationDialog,
         onArchiveTaskConfirmed = viewModel::onArchiveTaskConfirmed,
+        onUnarchiveTaskClicked = viewModel::onUnarchiveTaskClicked,
+        showUnarchiveTaskConfirmationDialog = showUnarchiveTaskConfirmationDialog,
+        onDismissUnarchiveTaskConfirmationDialog = viewModel::onDismissUnarchiveTaskConfirmationDialog,
+        onUnarchiveTaskConfirmed = viewModel::onUnarchiveTaskConfirmed,
         onDeleteTaskClicked = viewModel::onDeleteTaskClicked,
         showDeleteTaskConfirmationDialog = showDeleteTaskConfirmationDialog,
         onDismissDeleteTaskConfirmationDialog = viewModel::onDismissDeleteTaskConfirmationDialog,
         onDeleteTaskConfirmed = viewModel::onDeleteTaskConfirmed,
-        scaffoldState = scaffoldState,
+        scaffoldState = scaffoldState
     )
 }
 
 @Composable
 private fun AddEditTaskBody(
     isEditMode: Boolean,
+    isArchivedTask: Boolean?,
     taskNameInput: String?,
     onTaskNameInputChanged: (String) -> Unit,
     @StringRes taskNameInputErrorMessage: Int?,
@@ -103,6 +113,10 @@ private fun AddEditTaskBody(
     showArchiveTaskConfirmationDialog: Boolean,
     onDismissArchiveTaskConfirmationDialog: () -> Unit,
     onArchiveTaskConfirmed: () -> Unit,
+    onUnarchiveTaskClicked: () -> Unit,
+    showUnarchiveTaskConfirmationDialog: Boolean,
+    onDismissUnarchiveTaskConfirmationDialog: () -> Unit,
+    onUnarchiveTaskConfirmed: () -> Unit,
     onDeleteTaskClicked: () -> Unit,
     showDeleteTaskConfirmationDialog: Boolean,
     onDismissDeleteTaskConfirmationDialog: () -> Unit,
@@ -140,6 +154,7 @@ private fun AddEditTaskBody(
     ) { innerPadding ->
         BodyContent(
             isEditMode = isEditMode,
+            isArchivedTask = isArchivedTask,
             taskNameInput = taskNameInput,
             onTaskNameInputChanged = onTaskNameInputChanged,
             taskNameInputErrorMessage = taskNameInputErrorMessage,
@@ -148,6 +163,7 @@ private fun AddEditTaskBody(
             minutesGoalInputErrorMessage = minutesGoalInputErrorMessage,
             onResetDayClicked = onResetDayClicked,
             onArchiveTaskClicked = onArchiveTaskClicked,
+            onUnarchiveTaskClicked = onUnarchiveTaskClicked,
             onDeleteTaskClicked = onDeleteTaskClicked,
             modifier = Modifier.padding(innerPadding)
         )
@@ -189,6 +205,24 @@ private fun AddEditTaskBody(
         )
     }
 
+    if (showUnarchiveTaskConfirmationDialog) {
+        AlertDialog(
+            onDismissRequest = onDismissUnarchiveTaskConfirmationDialog,
+            title = { Text(stringResource(R.string.confirm_unarchiving)) },
+            text = { Text(stringResource(R.string.confirm_unarchiving_task_message)) },
+            confirmButton = {
+                TextButton(onClick = onUnarchiveTaskConfirmed) {
+                    Text(stringResource(R.string.unarchive))
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = onDismissUnarchiveTaskConfirmationDialog) {
+                    Text(stringResource(R.string.cancel))
+                }
+            },
+        )
+    }
+
     if (showDeleteTaskConfirmationDialog) {
         AlertDialog(
             onDismissRequest = onDismissDeleteTaskConfirmationDialog,
@@ -211,6 +245,7 @@ private fun AddEditTaskBody(
 @Composable
 private fun BodyContent(
     isEditMode: Boolean,
+    isArchivedTask: Boolean?,
     taskNameInput: String?,
     onTaskNameInputChanged: (String) -> Unit,
     @StringRes taskNameInputErrorMessage: Int?,
@@ -219,6 +254,7 @@ private fun BodyContent(
     @StringRes minutesGoalInputErrorMessage: Int?,
     onResetDayClicked: () -> Unit,
     onArchiveTaskClicked: () -> Unit,
+    onUnarchiveTaskClicked: () -> Unit,
     onDeleteTaskClicked: () -> Unit,
     modifier: Modifier = Modifier
 ) {
@@ -260,28 +296,42 @@ private fun BodyContent(
         }
         if (isEditMode) {
             Column {
-                OutlinedButton(
-                    onClick = onResetDayClicked,
-                    modifier = Modifier.fillMaxWidth()
-                ) {
-                    Icon(
-                        imageVector = Icons.Default.Replay,
-                        contentDescription = stringResource(R.string.reset_day),
-                    )
-                    Spacer(Modifier.size(ButtonDefaults.IconSpacing))
-                    Text(stringResource(R.string.reset_day))
-                }
-                Spacer(Modifier.height(8.dp))
-                OutlinedButton(
-                    onClick = onArchiveTaskClicked,
-                    modifier = Modifier.fillMaxWidth()
-                ) {
-                    Icon(
-                        imageVector = Icons.Default.Archive,
-                        contentDescription = stringResource(R.string.archive_task),
-                    )
-                    Spacer(Modifier.size(ButtonDefaults.IconSpacing))
-                    Text(stringResource(R.string.archive_task))
+                if (isArchivedTask == true) {
+                    OutlinedButton(
+                        onClick = onUnarchiveTaskClicked,
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Unarchive,
+                            contentDescription = stringResource(R.string.unarchive_task),
+                        )
+                        Spacer(Modifier.size(ButtonDefaults.IconSpacing))
+                        Text(stringResource(R.string.unarchive_task))
+                    }
+                } else if (isArchivedTask == false) {
+                    OutlinedButton(
+                        onClick = onResetDayClicked,
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Replay,
+                            contentDescription = stringResource(R.string.reset_day),
+                        )
+                        Spacer(Modifier.size(ButtonDefaults.IconSpacing))
+                        Text(stringResource(R.string.reset_day))
+                    }
+                    Spacer(Modifier.height(8.dp))
+                    OutlinedButton(
+                        onClick = onArchiveTaskClicked,
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Archive,
+                            contentDescription = stringResource(R.string.archive_task),
+                        )
+                        Spacer(Modifier.size(ButtonDefaults.IconSpacing))
+                        Text(stringResource(R.string.archive_task))
+                    }
                 }
                 Spacer(Modifier.height(8.dp))
                 OutlinedButton(
@@ -314,6 +364,7 @@ private fun PreviewAddEditTaskScreen() {
     Just10Minutes2Theme {
         AddEditTaskBody(
             isEditMode = true,
+            isArchivedTask = false,
             taskNameInput = null,
             onTaskNameInputChanged = {},
             taskNameInputErrorMessage = null,
@@ -330,6 +381,10 @@ private fun PreviewAddEditTaskScreen() {
             onArchiveTaskClicked = {},
             onDismissArchiveTaskConfirmationDialog = {},
             onArchiveTaskConfirmed = {},
+            showUnarchiveTaskConfirmationDialog = false,
+            onUnarchiveTaskClicked = {},
+            onDismissUnarchiveTaskConfirmationDialog = {},
+            onUnarchiveTaskConfirmed = {},
             showDeleteTaskConfirmationDialog = false,
             onDeleteTaskClicked = {},
             onDismissDeleteTaskConfirmationDialog = {},

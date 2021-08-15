@@ -44,7 +44,7 @@
     <string name="minutes_left_placeholder">%d minutes left</string>
     <string name="timer_running">Timer running</string>
     <string name="timer_stopped">Timer stopped</string>
-    <string name="confirm_switch_task">Switch task?</string>
+    <string name="switch_task">Switch task</string>
     <string name="confirm_switch_task_message">Do you want to switch to a different task? This will stop the currently running timer.</string>
     <string name="confirm">Confirm</string>
     <string name="confirm_switch">Switch</string>
@@ -77,4 +77,5 @@
     <string name="task_statistics">Task statistics</string>
     <string name="date_colon">"Date:"</string>
     <string name="goal_colon">Goal:</string>
+    <string name="unarchive_task">Unarchive task</string>
 </resources>

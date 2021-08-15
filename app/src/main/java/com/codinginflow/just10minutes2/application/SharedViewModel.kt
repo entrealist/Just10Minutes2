@@ -18,7 +18,7 @@ import java.util.*
 import javax.inject.Inject
 
 @HiltViewModel
-class DayCheckerSharedViewModel @Inject constructor(
+class SharedViewModel @Inject constructor(
     private val dayCheckPreferencesManager: DayCheckPreferencesManager,
     private val taskTimerManager: TaskTimerManager,
     private val taskDao: TaskDao,

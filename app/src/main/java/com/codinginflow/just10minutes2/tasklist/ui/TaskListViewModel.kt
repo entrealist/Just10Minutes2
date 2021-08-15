@@ -2,15 +2,16 @@ package com.codinginflow.just10minutes2.tasklist.ui
 
 import androidx.annotation.StringRes
 import androidx.lifecycle.*
-import androidx.lifecycle.viewmodel.compose.viewModel
 import com.codinginflow.just10minutes2.R
 import com.codinginflow.just10minutes2.addedittask.ui.AddEditTaskViewModel
 import com.codinginflow.just10minutes2.common.data.daos.TaskDao
 import com.codinginflow.just10minutes2.common.data.entities.Task
+import com.codinginflow.just10minutes2.common.data.preferences.TimerPreferencesManager
 import com.codinginflow.just10minutes2.timer.TaskTimerManager
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.launch
 import javax.inject.Inject
@@ -19,6 +20,7 @@ import javax.inject.Inject
 class TaskListViewModel @Inject constructor(
     private val taskDao: TaskDao,
     private val taskTimerManager: TaskTimerManager,
+    private val timerPreferencesManager: TimerPreferencesManager,
     private val savedStateHandle: SavedStateHandle
 ) : ViewModel() {
 
@@ -28,7 +30,15 @@ class TaskListViewModel @Inject constructor(
     val tasks = taskDao.getAllNotArchivedTasks()
 
     private val activeTask = taskTimerManager.activeTask
+
     private val timerRunning = taskTimerManager.timerRunning
+
+    private var pendingNewTask = savedStateHandle.get<Task>("pendingNewTask")
+        set(value) {
+            field = value
+            savedStateHandle.set("pendingNewTask", value)
+        }
+
     val runningTask = combine(activeTask, timerRunning) { task, running ->
         if (running && task != null) {
             task.id
@@ -36,6 +46,11 @@ class TaskListViewModel @Inject constructor(
             null
         }
     }
+
+    private val showStartTimerForNewTaskConfirmationDialogLiveData =
+        savedStateHandle.getLiveData<Boolean>("showStartTimerForNewTaskConfirmationDialog")
+    val showStartTimerForNewTaskConfirmationDialog: LiveData<Boolean> =
+        showStartTimerForNewTaskConfirmationDialogLiveData
 
     fun onAddNewTaskClicked() {
         viewModelScope.launch {
@@ -53,20 +68,15 @@ class TaskListViewModel @Inject constructor(
         viewModelScope.launch {
             when (addEditResult) {
                 is AddEditTaskViewModel.AddEditTaskResult.TaskCreated ->
-                    eventChannel.send(Event.ShowAddEditScreenConfirmationMessage(R.string.task_created))
+                    eventChannel.send(Event.ShowAddEditResultMessage(R.string.task_created))
                 is AddEditTaskViewModel.AddEditTaskResult.TaskUpdated ->
-                    eventChannel.send(Event.ShowAddEditScreenConfirmationMessage(R.string.task_updated))
+                    eventChannel.send(Event.ShowAddEditResultMessage(R.string.task_updated))
                 is AddEditTaskViewModel.AddEditTaskResult.TaskDeleted ->
-                    eventChannel.send(Event.ShowAddEditScreenConfirmationMessage(R.string.task_deleted))
+                    eventChannel.send(Event.ShowAddEditResultMessage(R.string.task_deleted))
                 is AddEditTaskViewModel.AddEditTaskResult.TaskArchived ->
-                    eventChannel.send(Event.ShowAddEditScreenConfirmationMessage(R.string.task_archived))
+                    eventChannel.send(Event.ShowAddEditResultMessage(R.string.task_archived))
+                else -> {}
             }
-        }
-    }
-
-    fun onOpenTimerForTaskClicked(task: Task) {
-        viewModelScope.launch {
-            eventChannel.send(Event.OpenTimerForTask(task))
         }
     }
 
@@ -82,11 +92,51 @@ class TaskListViewModel @Inject constructor(
         }
     }
 
+    fun onStartTimerClicked(task: Task) {
+        viewModelScope.launch {
+            val activeTask = activeTask.first()
+            val timerRunning = timerRunning.first()
+
+            if (task == activeTask && timerRunning) return@launch
+
+            if (!timerRunning) {
+                startTimerForNewTask(task)
+            } else {
+                pendingNewTask = task
+                showStartTimerForNewTaskConfirmationDialogLiveData.value = true
+            }
+        }
+    }
+
+    fun onStartTimerForNewTaskConfirmed() {
+        showStartTimerForNewTaskConfirmationDialogLiveData.value = false
+        pendingNewTask?.let {
+            startTimerForNewTask(it)
+            pendingNewTask = null
+        }
+    }
+
+    fun onDismissStartTimerForNewTaskConfirmationDialog() {
+        showStartTimerForNewTaskConfirmationDialogLiveData.value = false
+        pendingNewTask = null
+    }
+
+    private fun startTimerForNewTask(task: Task) {
+        taskTimerManager.stopTimer()
+        viewModelScope.launch {
+            timerPreferencesManager.updateActiveTaskId(task.id)
+            taskTimerManager.startTimer()
+        }
+    }
+
+    fun onStopTimerClicked() {
+        taskTimerManager.stopTimer()
+    }
+
     sealed class Event {
         object AddNewTask : Event()
         data class EditTask(val taskId: Long) : Event()
-        data class ShowAddEditScreenConfirmationMessage(@StringRes val msg: Int) : Event()
-        data class OpenTimerForTask(val task: Task) : Event()
+        data class ShowAddEditResultMessage(@StringRes val msg: Int) : Event()
         data class OpenTaskStatistics(val taskId: Long) : Event()
         object NavigateToArchive : Event()
     }

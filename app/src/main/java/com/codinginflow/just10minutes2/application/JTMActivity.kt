@@ -22,10 +22,9 @@ import androidx.navigation.NavOptions
 import androidx.navigation.NavType
 import androidx.navigation.compose.*
 import androidx.navigation.navOptions
-import com.codinginflow.just10minutes2.addedittask.AddEditTaskScreen
+import com.codinginflow.just10minutes2.addedittask.ui.AddEditTaskScreen
 import com.codinginflow.just10minutes2.addedittask.ui.AddEditTaskViewModel
-import com.codinginflow.just10minutes2.application.DayCheckerSharedViewModel
-import com.codinginflow.just10minutes2.application.TimerSharedViewModel
+import com.codinginflow.just10minutes2.application.SharedViewModel
 import com.codinginflow.just10minutes2.archive.ArchiveScreen
 import com.codinginflow.just10minutes2.common.data.entities.Task
 import com.codinginflow.just10minutes2.timer.ui.TimerScreen
@@ -43,9 +42,8 @@ class MainActivity : ComponentActivity() {
             Just10Minutes2Theme {
                 // A surface container using the 'background' color from the theme
                 Surface(color = MaterialTheme.colors.background) {
-                    val timerSharedViewModel: TimerSharedViewModel = hiltViewModel()
-                    val dayCheckerSharedViewModel: DayCheckerSharedViewModel = hiltViewModel()
-                    JTMActivityBody(timerSharedViewModel)
+                    val dayCheckerSharedViewModel: SharedViewModel = hiltViewModel()
+                    JTMActivityBody()
                 }
             }
         }
@@ -53,9 +51,7 @@ class MainActivity : ComponentActivity() {
 }
 
 @Composable
-private fun JTMActivityBody(
-    timerSharedViewModel: TimerSharedViewModel
-) {
+private fun JTMActivityBody() {
     val navController = rememberNavController()
     Scaffold(
         bottomBar = {
@@ -88,14 +84,13 @@ private fun JTMActivityBody(
             }
         }
     ) { innerPadding ->
-        JTMNavHost(navController, timerSharedViewModel, Modifier.padding(innerPadding))
+        JTMNavHost(navController, Modifier.padding(innerPadding))
     }
 }
 
 @Composable
 private fun JTMNavHost(
     navController: NavHostController,
-    timerSharedViewModel: TimerSharedViewModel,
     modifier: Modifier = Modifier
 ) {
     NavHost(
@@ -111,7 +106,7 @@ private fun JTMNavHost(
                 }
             )
         ) {
-            TimerScreen(timerSharedViewModel = timerSharedViewModel)
+            TimerScreen()
         }
         composable(
             route = BottomNavDestination.TaskList.route,
@@ -121,7 +116,6 @@ private fun JTMNavHost(
                 }
             )) { navBackStackEntry ->
             TaskListScreen(
-                timerSharedViewModel = timerSharedViewModel,
                 addNewTask = {
                     navController.navigate(AppDestination.AddEditTask.route)
                 },
@@ -138,12 +132,6 @@ private fun JTMNavHost(
                         KEY_ADD_EDIT_RESULT
                     )
                 },
-                navigateToTimer = {
-                    navController.navigate(
-                        route = BottomNavDestination.Timer.route,
-                        navOptions = createNavOptionsForBottomNavigation(navController)
-                    )
-                },
                 navigateToTaskStatistics = { taskId ->
                     navController.navigate(
                         route = AppDestination.TaskStatistics.route + "?$ARG_TASK_ID=$taskId",
@@ -153,7 +141,7 @@ private fun JTMNavHost(
                     navController.navigate(
                         route = AppDestination.Archive.route
                     )
-                }
+                },
             )
         }
         composable(
@@ -209,7 +197,7 @@ private fun JTMNavHost(
         }
         composable(
             route = AppDestination.Archive.route,
-        ) {
+        ) { navBackStackEntry ->
             ArchiveScreen(
                 navigateUp = {
                     navController.popBackStack()
@@ -219,6 +207,19 @@ private fun JTMNavHost(
                         route = AppDestination.TaskStatistics.route + "?$ARG_TASK_ID=$taskId",
                     )
                 },
+                editTask = { taskId ->
+                    navController.navigate(
+                        route = AppDestination.AddEditTask.route + "?$ARG_TASK_ID=$taskId"
+                    )
+                },
+                editResult = navBackStackEntry.savedStateHandle.get<AddEditTaskViewModel.AddEditTaskResult>(
+                    KEY_ADD_EDIT_RESULT
+                ),
+                onEditResultProcessed = {
+                    navBackStackEntry.savedStateHandle.remove<AddEditTaskViewModel.AddEditTaskResult>(
+                        KEY_ADD_EDIT_RESULT
+                    )
+                }
             )
         }
     }

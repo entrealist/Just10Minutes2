@@ -11,10 +11,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowRight
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Close
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.getValue
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -27,6 +24,7 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import com.codinginflow.just10minutes2.R
 import com.codinginflow.just10minutes2.common.data.entities.TaskStatistic
 import com.codinginflow.just10minutes2.common.data.entities.Task
+import com.codinginflow.just10minutes2.common.ui.theme.Dimens
 import com.codinginflow.just10minutes2.common.ui.theme.Just10Minutes2Theme
 import kotlinx.coroutines.flow.collectLatest
 import java.text.DateFormat
@@ -103,11 +101,16 @@ private fun TaskWithStatisticsList(
     modifier: Modifier = Modifier
 ) {
     LazyColumn(
-        contentPadding = PaddingValues(bottom = 50.dp),
+        contentPadding = PaddingValues(bottom = Dimens.ListBottomPadding),
         modifier = modifier
     ) {
         items(tasks) { task ->
-            val statisticsForTask = taskStatistics.filter { it.taskId == task.id }
+            val statisticsForTask by remember(taskStatistics) {
+                derivedStateOf {
+                    // TODO: 15.08.2021 Put this filtering logic into the ViewModel
+                    taskStatistics.filter { it.taskId == task.id }
+                }
+            }
             TaskWithStatisticsItem(
                 task = task,
                 statistics = statisticsForTask,

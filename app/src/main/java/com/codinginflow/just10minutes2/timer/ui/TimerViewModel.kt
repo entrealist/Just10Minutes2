@@ -30,13 +30,13 @@ class TimerViewModel @Inject constructor(
 
     val allTasks = taskDao.getAllNotArchivedTasks()
 
+    val timerRunning = taskTimerManager.timerRunning
+
     private var pendingNewTask = savedStateHandle.get<Task>("pendingNewTask")
         set(value) {
             field = value
             savedStateHandle.set("pendingNewTask", value)
         }
-
-    val timerRunning = taskTimerManager.timerRunning
 
     private val showSelectNewTaskConfirmationDialogLiveData =
         savedStateHandle.getLiveData<Boolean>("showSelectNewTaskConfirmationDialog")
