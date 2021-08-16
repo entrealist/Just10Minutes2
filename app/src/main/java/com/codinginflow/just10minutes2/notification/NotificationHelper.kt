@@ -30,7 +30,7 @@ class NotificationHelper @Inject constructor(
     private val pendingIntentFlag =
         if (Build.VERSION.SDK_INT > 23) PendingIntent.FLAG_IMMUTABLE else 0
 
-    val openActivityPendingIntent: PendingIntent =
+    private val openActivityPendingIntent: PendingIntent =
         PendingIntent.getActivity(context, 0, intent, pendingIntentFlag)
 
     var timerServiceNotification = getNewTimerServiceNotification()
