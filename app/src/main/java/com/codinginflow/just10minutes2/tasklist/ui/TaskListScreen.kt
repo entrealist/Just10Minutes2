@@ -318,12 +318,12 @@ private fun TaskItem(
                         .weight(0.15f)
                         .padding(8.dp)
                 ) {
-                    val progress =
-                        task.timeCompletedTodayInMilliseconds.toFloat() / task.dailyGoalInMilliseconds.toFloat()
-                    CircularProgressIndicatorWithBackground(
-                        progress = progress,
-                    )
                     if (isActiveToday) {
+                        val progress =
+                            task.timeCompletedTodayInMilliseconds.toFloat() / task.dailyGoalInMilliseconds.toFloat()
+                        CircularProgressIndicatorWithBackground(
+                            progress = progress,
+                        )
                         when {
                             task.isCompletedToday -> {
                                 Icon(
