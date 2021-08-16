@@ -33,8 +33,11 @@ class DayCheckPreferencesManager @Inject constructor(@ApplicationContext context
             }
         }
         .map { preferences ->
-            val activeDayTimestamp = preferences[PreferencesKeys.ACTIVE_DAY_TIMESTAMP] ?: 0
-            Date(activeDayTimestamp)
+            preferences[PreferencesKeys.ACTIVE_DAY_TIMESTAMP]?.let { activeDayTimestamp ->
+                val calendar = Calendar.getInstance()
+                calendar.time = Date(activeDayTimestamp)
+                calendar
+            }
         }
 
     suspend fun updateActiveDay(date: Date) {

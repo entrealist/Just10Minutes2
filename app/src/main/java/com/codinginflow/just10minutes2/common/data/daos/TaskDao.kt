@@ -13,6 +13,9 @@ interface TaskDao {
     @Query("SELECT * FROM tasks WHERE archived = 1")
     fun getAllArchivedTasks(): Flow<List<Task>>
 
+    @Query("SELECT * FROM tasks WHERE archived = 1 AND timeCompletedTodayInMilliseconds > 0")
+    fun getAllArchivedTasksWithTimeProgressToday(): Flow<List<Task>>
+
     @Query("SELECT * FROM tasks")
     fun getAllTasks(): Flow<List<Task>>
 

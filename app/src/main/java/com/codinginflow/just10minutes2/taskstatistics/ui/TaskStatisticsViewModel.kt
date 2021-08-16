@@ -3,7 +3,7 @@ package com.codinginflow.just10minutes2.taskstatistics.ui
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.codinginflow.just10minutes2.ARG_TASK_ID
+import com.codinginflow.just10minutes2.application.ARG_TASK_ID
 import com.codinginflow.just10minutes2.common.data.daos.TaskDao
 import com.codinginflow.just10minutes2.common.data.daos.TaskStatisticsDao
 import com.codinginflow.just10minutes2.common.data.entities.Task

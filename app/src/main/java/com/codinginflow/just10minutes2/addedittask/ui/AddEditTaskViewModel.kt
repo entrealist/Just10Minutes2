@@ -2,10 +2,11 @@ package com.codinginflow.just10minutes2.addedittask.ui
 
 import android.os.Parcelable
 import androidx.lifecycle.*
-import com.codinginflow.just10minutes2.ARG_TASK_ID
+import com.codinginflow.just10minutes2.application.ARG_TASK_ID
 import com.codinginflow.just10minutes2.R
 import com.codinginflow.just10minutes2.common.data.daos.TaskDao
 import com.codinginflow.just10minutes2.common.data.entities.Task
+import com.codinginflow.just10minutes2.common.data.entities.WeekdaySelection
 import com.codinginflow.just10minutes2.timer.TaskTimerManager
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.channels.Channel
@@ -37,6 +38,10 @@ class AddEditTaskViewModel @Inject constructor(
 
     private val minutesGoalInputLiveData = savedState.getLiveData<String>("minutesGoalInput")
     val minutesGoalInput: LiveData<String> = minutesGoalInputLiveData
+
+    private val weekdaysSelectionInputLiveData =
+        savedState.getLiveData<WeekdaySelection>("weekdaySelection")
+    val weekdaysSelectionInput: LiveData<WeekdaySelection> = weekdaysSelectionInputLiveData
 
     private val taskNameInputErrorMessageLiveData =
         savedState.getLiveData<Int>("taskNameInputErrorMessage")
@@ -72,6 +77,8 @@ class AddEditTaskViewModel @Inject constructor(
                 isArchivedTaskLivedata.value = task?.archived == true
                 populateInputFieldsFromTask()
             }
+        } else {
+            weekdaysSelectionInputLiveData.value = WeekdaySelection(allDays = true)
         }
     }
 
@@ -84,6 +91,11 @@ class AddEditTaskViewModel @Inject constructor(
         if (minutesGoalInput == null) {
             minutesGoalInputLiveData.value =
                 task?.dailyGoalInMinutes?.toString()
+        }
+        val weekdaysInput = weekdaysSelectionInputLiveData.value
+        if (weekdaysInput == null) {
+            weekdaysSelectionInputLiveData.value =
+                task?.weekdays
         }
     }
 
@@ -98,22 +110,35 @@ class AddEditTaskViewModel @Inject constructor(
         }
     }
 
+    fun onWeekdaysSelectionInputChanged(input: WeekdaySelection) {
+        weekdaysSelectionInputLiveData.value = input
+    }
+
     fun onSaveClicked() {
         val taskNameInput = taskNameInput.value
         val minutesGoalInput = minutesGoalInput.value?.toIntOrNull()
+        val weekdaysSelectionInput = weekdaysSelectionInput.value
 
         taskNameInputErrorMessageLiveData.value = null
         minutesGoalInputErrorMessageLiveData.value = null
 
-        if (!taskNameInput.isNullOrEmpty() && minutesGoalInput != null && minutesGoalInput > 0) {
+        if (!taskNameInput.isNullOrEmpty() && minutesGoalInput != null && minutesGoalInput > 0 && weekdaysSelectionInput != null) {
             if (taskId == Task.NO_ID) {
-                val newTask = Task(name = taskNameInput, dailyGoalInMinutes = minutesGoalInput)
+                val newTask = Task(
+                    name = taskNameInput,
+                    dailyGoalInMinutes = minutesGoalInput,
+                    weekdays = weekdaysSelectionInput
+                )
                 createTask(newTask)
             } else {
                 val task = task
                 if (task != null) {
                     val updatedTask =
-                        task.copy(name = taskNameInput, dailyGoalInMinutes = minutesGoalInput)
+                        task.copy(
+                            name = taskNameInput,
+                            dailyGoalInMinutes = minutesGoalInput,
+                            weekdays = weekdaysSelectionInput
+                        )
                     updateTask(updatedTask)
                 }
             }
@@ -241,6 +266,6 @@ class AddEditTaskViewModel @Inject constructor(
         object TaskArchived : AddEditTaskResult()
 
         @Parcelize
-        object TaskUnarchived: AddEditTaskResult()
+        object TaskUnarchived : AddEditTaskResult()
     }
 }

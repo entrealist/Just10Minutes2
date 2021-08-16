@@ -6,6 +6,8 @@ import androidx.core.content.ContextCompat
 import com.codinginflow.just10minutes2.common.data.preferences.TimerPreferencesManager
 import com.codinginflow.just10minutes2.common.data.daos.TaskDao
 import com.codinginflow.just10minutes2.common.data.entities.Task
+import com.codinginflow.just10minutes2.common.data.entities.containsDate
+import com.codinginflow.just10minutes2.common.data.preferences.DayCheckPreferencesManager
 import com.codinginflow.just10minutes2.common.di.ApplicationScope
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.CoroutineScope
@@ -14,6 +16,7 @@ import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
+import timber.log.Timber
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -24,6 +27,7 @@ class TaskTimerManager @Inject constructor(
     @ApplicationContext private val context: Context,
     @ApplicationScope private val applicationScope: CoroutineScope,
     private val timerPreferencesManager: TimerPreferencesManager,
+    private val dayCheckPreferencesManager: DayCheckPreferencesManager,
     private val taskDao: TaskDao
 ) {
     private val timerPreferencesFlow = timerPreferencesManager.timerPreferencesFlow
@@ -33,6 +37,8 @@ class TaskTimerManager @Inject constructor(
             taskDao.getNotArchivedTaskById(taskId)
         } ?: flowOf(null)
     }
+
+    private val activeDay = dayCheckPreferencesManager.activeDay
 
     private val timerRunningFlow = MutableStateFlow(false)
     val timerRunning: Flow<Boolean> = timerRunningFlow
@@ -45,10 +51,19 @@ class TaskTimerManager @Inject constructor(
     init {
         applicationScope.launch {
             activeTask.collect { task ->
-                // Task has just finished
-                if (task != null && task.isCompletedToday && timerRunning.first()) {
-                    timerFinishedChannel.send(task)
-                    stopTimer()
+                if (task != null) {
+                    // Task has just finished
+                    if (task.isCompletedToday && timerRunning.first()) {
+                        timerFinishedChannel.send(task)
+                        stopTimer()
+                    }
+
+                    // stop timer if active day not in task weekdays (e.g. after a Task update)
+                    val activeDay = activeDay.first()
+                    if (activeDay != null && !task.weekdays.containsDate(activeDay)) {
+                        Timber.d("activeDay = $activeDay")
+                        stopTimer()
+                    }
                 }
             }
         }

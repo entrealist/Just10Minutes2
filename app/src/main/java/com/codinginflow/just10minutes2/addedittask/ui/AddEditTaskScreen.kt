@@ -2,14 +2,20 @@ package com.codinginflow.just10minutes2.addedittask.ui
 
 import android.content.res.Configuration
 import androidx.annotation.StringRes
+import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.runtime.*
 import androidx.compose.runtime.livedata.observeAsState
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.KeyboardType
@@ -17,8 +23,11 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.codinginflow.just10minutes2.R
+import com.codinginflow.just10minutes2.common.data.entities.WeekdaySelection
 import com.codinginflow.just10minutes2.common.ui.theme.Just10Minutes2Theme
 import kotlinx.coroutines.flow.collectLatest
+
+// TODO: 15.08.2021 Add option to pick weekdays
 
 @Composable
 fun AddEditTaskScreen(
@@ -28,6 +37,7 @@ fun AddEditTaskScreen(
 ) {
     val taskNameInput by viewModel.taskNameInput.observeAsState()
     val minutesGoalInput by viewModel.minutesGoalInput.observeAsState()
+    val weekdaysSelectionInput by viewModel.weekdaysSelectionInput.observeAsState()
 
     val taskNameInputErrorMessage by viewModel.taskNameInputErrorMessage.observeAsState()
     val minutesGoalInputErrorMessage by viewModel.minutesGoalInputErrorMessage.observeAsState()
@@ -71,6 +81,8 @@ fun AddEditTaskScreen(
         minutesGoalInput = minutesGoalInput,
         onMinutesGoalInputChanged = viewModel::onMinutesGoalInputChanged,
         minutesGoalInputErrorMessage = minutesGoalInputErrorMessage,
+        weekdaysSelectionInput = weekdaysSelectionInput,
+        onWeekdaySelectionChanged = viewModel::onWeekdaysSelectionInputChanged,
         onNavigateUpClicked = viewModel::onNavigateUpClicked,
         onSaveClicked = viewModel::onSaveClicked,
         onResetDayClicked = viewModel::onResetDayClicked,
@@ -103,6 +115,8 @@ private fun AddEditTaskBody(
     minutesGoalInput: String?,
     onMinutesGoalInputChanged: (String) -> Unit,
     @StringRes minutesGoalInputErrorMessage: Int?,
+    weekdaysSelectionInput: WeekdaySelection?,
+    onWeekdaySelectionChanged: (WeekdaySelection) -> Unit,
     onNavigateUpClicked: () -> Unit,
     onSaveClicked: () -> Unit,
     onResetDayClicked: () -> Unit,
@@ -161,6 +175,8 @@ private fun AddEditTaskBody(
             minutesGoalInput = minutesGoalInput,
             onMinutesGoalInputChanged = onMinutesGoalInputChanged,
             minutesGoalInputErrorMessage = minutesGoalInputErrorMessage,
+            weekdaysSelectionInput = weekdaysSelectionInput,
+            onWeekdaySelectionChanged = onWeekdaySelectionChanged,
             onResetDayClicked = onResetDayClicked,
             onArchiveTaskClicked = onArchiveTaskClicked,
             onUnarchiveTaskClicked = onUnarchiveTaskClicked,
@@ -252,7 +268,8 @@ private fun BodyContent(
     minutesGoalInput: String?,
     onMinutesGoalInputChanged: (String) -> Unit,
     @StringRes minutesGoalInputErrorMessage: Int?,
-    onResetDayClicked: () -> Unit,
+    weekdaysSelectionInput: WeekdaySelection?,
+    onWeekdaySelectionChanged: (WeekdaySelection) -> Unit, onResetDayClicked: () -> Unit,
     onArchiveTaskClicked: () -> Unit,
     onUnarchiveTaskClicked: () -> Unit,
     onDeleteTaskClicked: () -> Unit,
@@ -278,21 +295,31 @@ private fun BodyContent(
                 val errorMessage = taskNameInputErrorMessage?.let { stringResource(it) } ?: ""
                 Text(errorMessage, color = MaterialTheme.colors.error)
             }
-            Spacer(Modifier.height(8.dp))
-            OutlinedTextField(
-                value = minutesGoalInput.orEmpty(),
-                onValueChange = onMinutesGoalInputChanged,
-                label = { Text(stringResource(R.string.minutes_per_day)) },
-                singleLine = true,
-                modifier = Modifier.fillMaxWidth(),
-                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-                isError = minutesGoalInputIsError
-            )
-            if (minutesGoalInputIsError) {
-                val errorMessage = minutesGoalInputErrorMessage?.let { stringResource(it) } ?: ""
-                Text(errorMessage, color = MaterialTheme.colors.error)
+            if (!isEditMode || isArchivedTask == false) {
+                Spacer(Modifier.height(8.dp))
+                OutlinedTextField(
+                    value = minutesGoalInput.orEmpty(),
+                    onValueChange = onMinutesGoalInputChanged,
+                    label = { Text(stringResource(R.string.minutes_per_day)) },
+                    singleLine = true,
+                    modifier = Modifier.fillMaxWidth(),
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                    isError = minutesGoalInputIsError
+                )
+                if (minutesGoalInputIsError) {
+                    val errorMessage = minutesGoalInputErrorMessage?.let { stringResource(it) } ?: ""
+                    Text(errorMessage, color = MaterialTheme.colors.error)
+                }
+                Spacer(Modifier.height(8.dp))
+                if (weekdaysSelectionInput != null) {
+                    Text(stringResource(R.string.active_weekdays) + ":")
+                    Spacer(Modifier.height(8.dp))
+                    WeekDaySelectorRow(
+                        weekdaySelection = weekdaysSelectionInput,
+                        onWeekdaySelectionChanged = onWeekdaySelectionChanged
+                    )
+                }
             }
-            Spacer(Modifier.height(8.dp))
         }
         if (isEditMode) {
             Column {
@@ -350,6 +377,96 @@ private fun BodyContent(
     }
 }
 
+@Composable
+private fun WeekDaySelectorRow(
+    weekdaySelection: WeekdaySelection,
+    onWeekdaySelectionChanged: (WeekdaySelection) -> Unit,
+    modifier: Modifier = Modifier
+) {
+    Row(modifier = modifier) {
+        WeekDaySelectorItem(
+            text = stringResource(R.string.monday_abbrev),
+            active = weekdaySelection.mondayActive,
+            onActiveStateChanged = { checked ->
+                onWeekdaySelectionChanged(weekdaySelection.copy(mondayActive = checked))
+            }
+        )
+        Spacer(Modifier.width(4.dp))
+        WeekDaySelectorItem(
+            text = stringResource(R.string.tuesday_abbrev),
+            active = weekdaySelection.tuesdayActive,
+            onActiveStateChanged = { checked ->
+                onWeekdaySelectionChanged(weekdaySelection.copy(tuesdayActive = checked))
+            }
+        )
+        Spacer(Modifier.width(4.dp))
+        WeekDaySelectorItem(
+            text = stringResource(R.string.wednesday_abbrev),
+            active = weekdaySelection.wednesdayActive,
+            onActiveStateChanged = { checked ->
+                onWeekdaySelectionChanged(weekdaySelection.copy(wednesdayActive = checked))
+            }
+        )
+        Spacer(Modifier.width(4.dp))
+        WeekDaySelectorItem(
+            text = stringResource(R.string.thursday_abbrev),
+            active = weekdaySelection.thursdayActive,
+            onActiveStateChanged = { checked ->
+                onWeekdaySelectionChanged(weekdaySelection.copy(thursdayActive = checked))
+            }
+        )
+        Spacer(Modifier.width(4.dp))
+        WeekDaySelectorItem(
+            text = stringResource(R.string.friday_abbrev),
+            active = weekdaySelection.fridayActive,
+            onActiveStateChanged = { checked ->
+                onWeekdaySelectionChanged(weekdaySelection.copy(fridayActive = checked))
+            }
+        )
+        Spacer(Modifier.width(4.dp))
+        WeekDaySelectorItem(
+            text = stringResource(R.string.saturday_abbrev),
+            active = weekdaySelection.saturdayActive,
+            onActiveStateChanged = { checked ->
+                onWeekdaySelectionChanged(weekdaySelection.copy(saturdayActive = checked))
+            }
+        )
+        Spacer(Modifier.width(4.dp))
+        WeekDaySelectorItem(
+            text = stringResource(R.string.sunday_abbrev),
+            active = weekdaySelection.sundayActive,
+            onActiveStateChanged = { checked ->
+                onWeekdaySelectionChanged(weekdaySelection.copy(sundayActive = checked))
+            }
+        )
+    }
+}
+
+@Composable
+private fun WeekDaySelectorItem(
+    text: String,
+    active: Boolean,
+    onActiveStateChanged: (Boolean) -> Unit,
+    modifier: Modifier = Modifier
+) {
+    val background = if (!active) Color.LightGray else MaterialTheme.colors.primary
+    val textColor = if (!active) LocalContentColor.current else MaterialTheme.colors.onPrimary
+    Box(
+        contentAlignment = Alignment.Center,
+        modifier = modifier
+            .padding(2.dp)
+            .size(40.dp)
+            .clip(CircleShape)
+            .background(background)
+            .clickable { onActiveStateChanged(!active) }
+    ) {
+        Text(
+            text = text,
+            color = textColor,
+        )
+    }
+}
+
 @Preview(
     showBackground = true,
     name = "Light Mode"
@@ -371,6 +488,8 @@ private fun PreviewAddEditTaskScreen() {
             minutesGoalInput = "10",
             onMinutesGoalInputChanged = {},
             minutesGoalInputErrorMessage = null,
+            weekdaysSelectionInput = WeekdaySelection(false, true, true, false, true, false, true),
+            onWeekdaySelectionChanged = {},
             onSaveClicked = {},
             onNavigateUpClicked = {},
             showResetDayConfirmationDialog = false,
@@ -388,7 +507,7 @@ private fun PreviewAddEditTaskScreen() {
             showDeleteTaskConfirmationDialog = false,
             onDeleteTaskClicked = {},
             onDismissDeleteTaskConfirmationDialog = {},
-            onDeleteTaskConfirmed = {},
+            onDeleteTaskConfirmed = {}
         )
     }
 }

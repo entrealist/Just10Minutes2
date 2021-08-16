@@ -17,8 +17,10 @@ import timber.log.Timber
 import java.util.*
 import javax.inject.Inject
 
+private const val DAY_CHECK_INTERVAL = 10_000L
+
 @HiltViewModel
-class SharedViewModel @Inject constructor(
+class DayCheckerViewModel @Inject constructor(
     private val dayCheckPreferencesManager: DayCheckPreferencesManager,
     private val taskTimerManager: TaskTimerManager,
     private val taskDao: TaskDao,
@@ -40,25 +42,27 @@ class SharedViewModel @Inject constructor(
 
         viewModelScope.launch {
             while (true) {
-                delay(20000)
                 val currentDay = Calendar.getInstance().getDateWithoutTime(Date())
-                val activeDay = activeDay.first()
-                if (currentDay > activeDay) {
+                val activeDay = activeDay.first()?.time
+                if (activeDay == null || currentDay != activeDay) {
                     // integrate further check for reset time after 0 am
                     startNewDay(previousDay = activeDay, newDay = currentDay)
                 }
 
                 Timber.d("current time: $currentDay")
                 Timber.d("current time: ${currentDay.time}")
-                delay(10_000)
+                delay(DAY_CHECK_INTERVAL)
             }
         }
     }
 
-    private suspend fun startNewDay(previousDay: Date, newDay: Date) {
+    // TODO: 15.08.2021 Add new day begin notification
+    private suspend fun startNewDay(previousDay: Date?, newDay: Date) {
         Timber.d("starting new day")
         taskTimerManager.stopTimer()
-        createDailyTaskStatistics(previousDay)
+        if (previousDay != null && newDay > previousDay) {
+            createDailyTaskStatistics(previousDay)
+        }
         taskDao.resetMillisCompletedTodayForAllTasks()
         dayCheckPreferencesManager.updateActiveDay(newDay)
     }
@@ -66,7 +70,9 @@ class SharedViewModel @Inject constructor(
     private suspend fun createDailyTaskStatistics(day: Date) {
         val timestamp = day.time
         val allNotArchivedTasks = taskDao.getAllNotArchivedTasks().first()
-        allNotArchivedTasks.forEach { task ->
+        val archivedTasksWithTimeProgressToday = taskDao.getAllArchivedTasksWithTimeProgressToday().first()
+        val activeTasksToday = allNotArchivedTasks + archivedTasksWithTimeProgressToday
+        activeTasksToday.forEach { task ->
             val dailyTaskStatistic = TaskStatistic(
                 task.id,
                 timestamp,

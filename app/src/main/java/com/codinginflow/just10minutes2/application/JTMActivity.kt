@@ -1,4 +1,4 @@
-package com.codinginflow.just10minutes2
+package com.codinginflow.just10minutes2.application
 
 import android.os.Bundle
 import androidx.activity.ComponentActivity
@@ -22,9 +22,9 @@ import androidx.navigation.NavOptions
 import androidx.navigation.NavType
 import androidx.navigation.compose.*
 import androidx.navigation.navOptions
+import com.codinginflow.just10minutes2.R
 import com.codinginflow.just10minutes2.addedittask.ui.AddEditTaskScreen
 import com.codinginflow.just10minutes2.addedittask.ui.AddEditTaskViewModel
-import com.codinginflow.just10minutes2.application.SharedViewModel
 import com.codinginflow.just10minutes2.archive.ArchiveScreen
 import com.codinginflow.just10minutes2.common.data.entities.Task
 import com.codinginflow.just10minutes2.timer.ui.TimerScreen
@@ -42,7 +42,7 @@ class MainActivity : ComponentActivity() {
             Just10Minutes2Theme {
                 // A surface container using the 'background' color from the theme
                 Surface(color = MaterialTheme.colors.background) {
-                    val dayCheckerSharedViewModel: SharedViewModel = hiltViewModel()
+                    val dayCheckerSharedViewModel: DayCheckerViewModel = hiltViewModel()
                     JTMActivityBody()
                 }
             }
@@ -142,6 +142,12 @@ private fun JTMNavHost(
                         route = AppDestination.Archive.route
                     )
                 },
+                navigateToTimer = {
+                    navController.navigate(
+                        route = BottomNavDestination.Timer.route,
+                        navOptions = createNavOptionsForBottomNavigation(navController)
+                    )
+                }
             )
         }
         composable(

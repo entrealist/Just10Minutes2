@@ -7,6 +7,7 @@ import androidx.lifecycle.viewModelScope
 import com.codinginflow.just10minutes2.common.data.preferences.TimerPreferencesManager
 import com.codinginflow.just10minutes2.common.data.daos.TaskDao
 import com.codinginflow.just10minutes2.common.data.entities.Task
+import com.codinginflow.just10minutes2.common.data.preferences.DayCheckPreferencesManager
 import com.codinginflow.just10minutes2.timer.TaskTimerManager
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.channels.Channel
@@ -20,6 +21,7 @@ class TimerViewModel @Inject constructor(
     private val taskDao: TaskDao,
     private val taskTimerManager: TaskTimerManager,
     private val timerPreferencesManager: TimerPreferencesManager,
+    private val dayCheckPreferencesManager: DayCheckPreferencesManager,
     private val savedStateHandle: SavedStateHandle
 ) : ViewModel() {
 
@@ -31,6 +33,8 @@ class TimerViewModel @Inject constructor(
     val allTasks = taskDao.getAllNotArchivedTasks()
 
     val timerRunning = taskTimerManager.timerRunning
+
+    val activeDay = dayCheckPreferencesManager.activeDay
 
     private var pendingNewTask = savedStateHandle.get<Task>("pendingNewTask")
         set(value) {

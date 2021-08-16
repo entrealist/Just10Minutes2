@@ -29,10 +29,13 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import com.codinginflow.just10minutes2.R
 import com.codinginflow.just10minutes2.addedittask.ui.AddEditTaskViewModel
 import com.codinginflow.just10minutes2.common.data.entities.Task
+import com.codinginflow.just10minutes2.common.data.entities.containsDate
+import com.codinginflow.just10minutes2.common.data.entities.toLocalizedString
 import com.codinginflow.just10minutes2.common.ui.composables.CircularProgressIndicatorWithBackground
 import com.codinginflow.just10minutes2.common.ui.theme.Dimens
 import com.codinginflow.just10minutes2.common.ui.theme.Just10Minutes2Theme
 import kotlinx.coroutines.flow.collectLatest
+import java.util.*
 
 @Composable
 fun TaskListScreen(
@@ -42,10 +45,13 @@ fun TaskListScreen(
     addEditResult: AddEditTaskViewModel.AddEditTaskResult?,
     onAddEditResultProcessed: () -> Unit,
     navigateToTaskStatistics: (taskId: Long) -> Unit,
-    navigateToArchive: () -> Unit
+    navigateToArchive: () -> Unit,
+    navigateToTimer: () -> Unit
 ) {
     val tasks by viewModel.tasks.collectAsState(emptyList())
     val runningTaskId by viewModel.runningTask.collectAsState(null)
+
+    val activeDay by viewModel.activeDay.collectAsState(null)
 
     val lazyListState = rememberLazyListState()
     val scaffoldState = rememberScaffoldState()
@@ -70,10 +76,12 @@ fun TaskListScreen(
                     editTask(event.taskId)
                 is TaskListViewModel.Event.ShowAddEditResultMessage ->
                     scaffoldState.snackbarHostState.showSnackbar(context.getString(event.msg))
-                is TaskListViewModel.Event.NavigateToArchive ->
-                    navigateToArchive()
                 is TaskListViewModel.Event.OpenTaskStatistics ->
                     navigateToTaskStatistics(event.taskId)
+                is TaskListViewModel.Event.NavigateToArchive ->
+                    navigateToArchive()
+                TaskListViewModel.Event.NavigateToTimer ->
+                    navigateToTimer()
             }
         }
     }
@@ -81,6 +89,7 @@ fun TaskListScreen(
     TaskListBody(
         tasks = tasks,
         runningTaskId = runningTaskId,
+        activeDay = activeDay,
         onAddNewTaskClicked = viewModel::onAddNewTaskClicked,
         onEditTaskClicked = viewModel::onEditTaskClicked,
         onOpenTaskStatisticsClicked = viewModel::onOpenTaskStatisticsClicked,
@@ -99,6 +108,7 @@ fun TaskListScreen(
 private fun TaskListBody(
     tasks: List<Task>,
     runningTaskId: Long?,
+    activeDay: Calendar?,
     onAddNewTaskClicked: () -> Unit,
     onEditTaskClicked: (Task) -> Unit,
     onOpenTaskStatisticsClicked: (Task) -> Unit,
@@ -137,6 +147,7 @@ private fun TaskListBody(
         BodyContent(
             tasks = tasks,
             runningTaskId = runningTaskId,
+            activeDay = activeDay,
             onEditTaskClicked = onEditTaskClicked,
             onOpenTaskStatisticsClicked = onOpenTaskStatisticsClicked,
             onStartTimerClicked = onStartTimerClicked,
@@ -148,7 +159,7 @@ private fun TaskListBody(
 
     if (showStartTimerForNewTaskConfirmationDialog) {
         AlertDialog(
-            title = { Text(stringResource(R.string.switch_task))},
+            title = { Text(stringResource(R.string.switch_task)) },
             text = { Text(stringResource(R.string.confirm_switch_task_message)) },
             confirmButton = {
                 TextButton(onClick = onStartTimerForNewTaskConfirmed) {
@@ -169,6 +180,7 @@ private fun TaskListBody(
 private fun BodyContent(
     tasks: List<Task>,
     runningTaskId: Long?,
+    activeDay: Calendar?,
     onEditTaskClicked: (Task) -> Unit,
     onOpenTaskStatisticsClicked: (Task) -> Unit,
     onStartTimerClicked: (Task) -> Unit,
@@ -179,6 +191,7 @@ private fun BodyContent(
     TaskList(
         tasks = tasks,
         runningTaskId = runningTaskId,
+        activeDay = activeDay,
         onEditTaskClicked = onEditTaskClicked,
         onOpenTaskStatisticsClicked = onOpenTaskStatisticsClicked,
         onStartTimerClicked = onStartTimerClicked,
@@ -192,6 +205,7 @@ private fun BodyContent(
 private fun TaskList(
     tasks: List<Task>,
     runningTaskId: Long?,
+    activeDay: Calendar?,
     onEditTaskClicked: (Task) -> Unit,
     onOpenTaskStatisticsClicked: (Task) -> Unit,
     onStartTimerClicked: (Task) -> Unit,
@@ -201,14 +215,19 @@ private fun TaskList(
 ) {
     var expandedItemId by rememberSaveable { mutableStateOf(-1L) }
 
+    // TODO: 15.08.2021 Implement empty views for all screens
+    // TODO: 15.08.2021 Implement congratulations message when all tasks are done
+
     LazyColumn(
         state = lazyListState,
         contentPadding = PaddingValues(bottom = Dimens.ListBottomPadding),
         modifier = modifier
     ) {
         items(tasks) { task ->
+            val isActiveToday = activeDay != null && task.weekdays.containsDate(activeDay)
             TaskItem(
                 task = task,
+                isActiveToday = isActiveToday,
                 timerRunning = task.id == runningTaskId,
                 expanded = expandedItemId == task.id,
                 onTaskClicked = { clickedTask ->
@@ -231,6 +250,7 @@ private fun TaskList(
 @Composable
 private fun TaskItem(
     task: Task,
+    isActiveToday: Boolean,
     timerRunning: Boolean,
     expanded: Boolean,
     onTaskClicked: (Task) -> Unit,
@@ -247,13 +267,19 @@ private fun TaskItem(
             .animateContentSize()
             .padding(8.dp)
     ) {
+        // TODO: 16.08.2021 Change the appearance on inactive days
+
         Column {
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Column(
                     Modifier.weight(0.85f)
                 ) {
                     val taskNameTextColor =
-                        if (timerRunning) MaterialTheme.colors.primary else LocalContentColor.current
+                        when {
+                            !isActiveToday -> Color.Gray
+                            timerRunning -> MaterialTheme.colors.primary
+                            else -> LocalContentColor.current
+                        }
                     Text(
                         text = task.name,
                         style = MaterialTheme.typography.h6,
@@ -261,12 +287,20 @@ private fun TaskItem(
                         maxLines = 1,
                         overflow = TextOverflow.Ellipsis
                     )
+                    if (isActiveToday) {
+                        Text(
+                            text = stringResource(
+                                R.string.completed_and_total_minutes,
+                                task.timeCompletedTodayInMinutes,
+                                task.dailyGoalInMinutes
+                            ) + " " + stringResource(R.string.completed_today_lowercase),
+                            fontSize = 14.sp,
+                        )
+                    }
                     Text(
-                        text = stringResource(
-                            R.string.completed_and_total_minutes,
-                            task.timeCompletedTodayInMinutes,
-                            task.dailyGoalInMinutes
-                        ) + " " + stringResource(R.string.completed_today_lowercase),
+                        text = stringResource(R.string.active_on) + ": " + task.weekdays.toLocalizedString(
+                            LocalContext.current
+                        ),
                         fontSize = 14.sp,
                         color = Color.Gray
                     )
@@ -289,33 +323,36 @@ private fun TaskItem(
                     CircularProgressIndicatorWithBackground(
                         progress = progress,
                     )
-                    when {
-                        task.isCompletedToday -> {
-                            Icon(
-                                Icons.Default.Check,
-                                contentDescription = stringResource(R.string.task_completed),
-                                tint = MaterialTheme.colors.primary
-                            )
-                        }
-                        timerRunning -> {
-                            Icon(
-                                Icons.Default.Stop,
-                                contentDescription = stringResource(R.string.timer_running),
-                                tint = MaterialTheme.colors.primary,
-                                modifier = Modifier
-                                    .clip(CircleShape)
-                                    .clickable { onStopTimerClicked() }
-                            )
-                        }
-                        else -> {
-                            Icon(
-                                Icons.Default.PlayArrow,
-                                contentDescription = stringResource(R.string.start_timer),
-                                tint = MaterialTheme.colors.primary,
-                                modifier = Modifier
-                                    .clip(CircleShape)
-                                    .clickable { onStartTimerClicked(task) }
-                            )
+                    if (isActiveToday) {
+                        when {
+                            task.isCompletedToday -> {
+                                Icon(
+                                    Icons.Default.Check,
+                                    contentDescription = stringResource(R.string.task_completed),
+                                    tint = MaterialTheme.colors.primary
+                                )
+                            }
+                            timerRunning -> {
+                                Icon(
+                                    Icons.Default.Stop,
+                                    contentDescription = stringResource(R.string.timer_running),
+                                    tint = MaterialTheme.colors.primary,
+                                    modifier = Modifier
+                                        .clip(CircleShape)
+                                        .clickable { onStopTimerClicked() }
+                                )
+                            }
+                            else -> {
+                                // TODO: 16.08.2021 Click target too small -> move to whole progress circle
+                                Icon(
+                                    Icons.Default.PlayArrow,
+                                    contentDescription = stringResource(R.string.start_timer),
+                                    tint = MaterialTheme.colors.primary,
+                                    modifier = Modifier
+                                        .clip(CircleShape)
+                                        .clickable { onStartTimerClicked(task) }
+                                )
+                            }
                         }
                     }
                 }
@@ -373,6 +410,7 @@ private fun PreviewTaskListScreen() {
                 Task("Example Task 3", timeCompletedTodayInMilliseconds = (8 * 60 * 1000).toLong()),
             ),
             runningTaskId = 1,
+            activeDay = Calendar.getInstance(),
             onAddNewTaskClicked = {},
             onEditTaskClicked = {},
             onOpenTaskStatisticsClicked = {},
@@ -383,7 +421,7 @@ private fun PreviewTaskListScreen() {
             onDismissStartTimerForNewTaskConfirmationDialog = {},
             onStartTimerForNewTaskConfirmed = {},
             lazyListState = rememberLazyListState(),
-            scaffoldState = rememberScaffoldState(),
+            scaffoldState = rememberScaffoldState()
         )
     }
 }
@@ -406,13 +444,14 @@ private fun PreviewTaskItem() {
                     "Example Task",
                     timeCompletedTodayInMilliseconds = (3 * 60 * 1000).toLong()
                 ),
+                isActiveToday = true,
                 timerRunning = true,
                 expanded = true,
                 onTaskClicked = {},
                 onEditTaskClicked = {},
                 onOpenTaskStatisticsClicked = {},
                 onStartTimerClicked = {},
-                onStopTimerClicked = {},
+                onStopTimerClicked = {}
             )
         }
     }

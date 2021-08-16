@@ -10,7 +10,7 @@ import android.os.IBinder
 import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationManagerCompat
 import androidx.core.content.ContextCompat
-import com.codinginflow.just10minutes2.MainActivity
+import com.codinginflow.just10minutes2.application.MainActivity
 import com.codinginflow.just10minutes2.R
 import com.codinginflow.just10minutes2.common.data.entities.Task
 import com.codinginflow.just10minutes2.common.util.formatTimeText
@@ -47,6 +47,8 @@ class TimerService : Service() {
         val pendingIntentFlag = if (Build.VERSION.SDK_INT > 23) PendingIntent.FLAG_IMMUTABLE else 0
         openActivityPendingIntent =
             PendingIntent.getActivity(this, 0, intent, pendingIntentFlag)
+
+        // TODO: 16.08.2021 Add Stop button to notification
 
         notification = NotificationCompat.Builder(this, NOTIFICATION_CHANNEL_ID)
             .setSmallIcon(R.drawable.ic_timer)

@@ -105,11 +105,9 @@ private fun TaskWithStatisticsList(
         modifier = modifier
     ) {
         items(tasks) { task ->
-            val statisticsForTask by remember(taskStatistics) {
-                derivedStateOf {
-                    // TODO: 15.08.2021 Put this filtering logic into the ViewModel
-                    taskStatistics.filter { it.taskId == task.id }
-                }
+            val statisticsForTask = remember(taskStatistics) {
+                // TODO: 15.08.2021 Put this filtering logic into the ViewModel
+                taskStatistics.filter { it.taskId == task.id }
             }
             TaskWithStatisticsItem(
                 task = task,
@@ -121,6 +119,8 @@ private fun TaskWithStatisticsList(
     }
 }
 
+// TODO: 16.08.2021 Put archived indicator on items
+
 @Composable
 private fun TaskWithStatisticsItem(
     task: Task,
@@ -131,9 +131,9 @@ private fun TaskWithStatisticsItem(
     Column(modifier) {
         Row(
             modifier = Modifier
-                .clickable { onTaskDetailsClicked(task) }
                 .fillMaxWidth()
-                .padding(8.dp),
+                .clickable(enabled = statistics.isNotEmpty()) { onTaskDetailsClicked(task) }
+                .padding(8.dp)
         ) {
             Text(
                 text = task.name,

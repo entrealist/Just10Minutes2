@@ -70,12 +70,23 @@
     <string name="confirm_unarchiving_task_message">Do you want to make this task active again?</string>
     <string name="task_unarchived">Task unarchived</string>
     <string name="last_active">Last active: %s</string>
-    <string name="task_will_reset_at_midnight">This task will reset at midnight</string>
+    <string name="timers_will_reset_at_midnight">Timers will reset at midnight</string>
     <string name="task_not_completed">Task not completed</string>
-    <string name="no_statistics_for_task_message">No statistics for this task yet</string>
+    <string name="no_statistics_for_task_message">No statistics for this task yet.</string>
     <string name="details">Details</string>
     <string name="task_statistics">Task statistics</string>
     <string name="date_colon">"Date:"</string>
     <string name="goal_colon">Goal:</string>
     <string name="unarchive_task">Unarchive task</string>
+    <string name="active_weekdays">Active weekdays</string>
+    <string name="monday_abbrev">Mo</string>
+    <string name="tuesday_abbrev">Tu</string>
+    <string name="wednesday_abbrev">We</string>
+    <string name="thursday_abbrev">Th</string>
+    <string name="friday_abbrev">Fr</string>
+    <string name="saturday_abbrev">Sa</string>
+    <string name="sunday_abbrev">Su</string>
+    <string name="active_on">Active on</string>
+    <string name="all_weekdays">all weekdays</string>
+    <string name="never">never</string>
 </resources>

@@ -6,14 +6,17 @@ import com.codinginflow.just10minutes2.R
 import com.codinginflow.just10minutes2.addedittask.ui.AddEditTaskViewModel
 import com.codinginflow.just10minutes2.common.data.daos.TaskDao
 import com.codinginflow.just10minutes2.common.data.entities.Task
+import com.codinginflow.just10minutes2.common.data.preferences.DayCheckPreferencesManager
 import com.codinginflow.just10minutes2.common.data.preferences.TimerPreferencesManager
 import com.codinginflow.just10minutes2.timer.TaskTimerManager
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.launch
+import java.util.*
 import javax.inject.Inject
 
 @HiltViewModel
@@ -21,6 +24,7 @@ class TaskListViewModel @Inject constructor(
     private val taskDao: TaskDao,
     private val taskTimerManager: TaskTimerManager,
     private val timerPreferencesManager: TimerPreferencesManager,
+    private val dayCheckPreferencesManager: DayCheckPreferencesManager,
     private val savedStateHandle: SavedStateHandle
 ) : ViewModel() {
 
@@ -32,6 +36,8 @@ class TaskListViewModel @Inject constructor(
     private val activeTask = taskTimerManager.activeTask
 
     private val timerRunning = taskTimerManager.timerRunning
+
+    val activeDay = dayCheckPreferencesManager.activeDay
 
     private var pendingNewTask = savedStateHandle.get<Task>("pendingNewTask")
         set(value) {
@@ -126,6 +132,7 @@ class TaskListViewModel @Inject constructor(
         viewModelScope.launch {
             timerPreferencesManager.updateActiveTaskId(task.id)
             taskTimerManager.startTimer()
+            eventChannel.send(Event.NavigateToTimer)
         }
     }
 
@@ -139,5 +146,6 @@ class TaskListViewModel @Inject constructor(
         data class ShowAddEditResultMessage(@StringRes val msg: Int) : Event()
         data class OpenTaskStatistics(val taskId: Long) : Event()
         object NavigateToArchive : Event()
+        object NavigateToTimer : Event()
     }
 }
