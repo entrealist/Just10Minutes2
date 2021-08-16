@@ -27,8 +27,6 @@ import com.codinginflow.just10minutes2.common.data.entities.WeekdaySelection
 import com.codinginflow.just10minutes2.common.ui.theme.Just10Minutes2Theme
 import kotlinx.coroutines.flow.collectLatest
 
-// TODO: 15.08.2021 Add option to pick weekdays
-
 @Composable
 fun AddEditTaskScreen(
     viewModel: AddEditTaskViewModel = hiltViewModel(),
