@@ -5,6 +5,7 @@ import androidx.lifecycle.viewModelScope
 import com.codinginflow.just10minutes2.common.data.daos.TaskStatisticsDao
 import com.codinginflow.just10minutes2.common.data.daos.TaskDao
 import com.codinginflow.just10minutes2.common.data.entities.TaskStatistic
+import com.codinginflow.just10minutes2.common.data.entities.containsWeekdayOfDate
 import com.codinginflow.just10minutes2.common.data.preferences.DayCheckPreferencesManager
 import com.codinginflow.just10minutes2.common.util.getDateWithoutTime
 import com.codinginflow.just10minutes2.timer.TaskTimerManager
@@ -69,9 +70,10 @@ class DayCheckerViewModel @Inject constructor(
 
     private suspend fun createDailyTaskStatistics(day: Date) {
         val timestamp = day.time
+        val cal = Calendar.getInstance().apply { time = day }
         val allNotArchivedTasks = taskDao.getAllNotArchivedTasks().first()
         val archivedTasksWithTimeProgressToday = taskDao.getAllArchivedTasksWithTimeProgressToday().first()
-        val activeTasksToday = allNotArchivedTasks + archivedTasksWithTimeProgressToday
+        val activeTasksToday = (allNotArchivedTasks + archivedTasksWithTimeProgressToday).filter { it.weekdays.containsWeekdayOfDate(cal) }
         activeTasksToday.forEach { task ->
             val dailyTaskStatistic = TaskStatistic(
                 task.id,

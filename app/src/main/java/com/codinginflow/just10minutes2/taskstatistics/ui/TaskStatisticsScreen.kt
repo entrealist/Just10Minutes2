@@ -137,8 +137,8 @@ private fun StatisticItem(
                 .weight(0.85f)
         ) {
             Text(dateString)
-            Text(stringResource(R.string.goal_colon) + " " + formatTimeText(statistic.timeGoalInMilliseconds))
-            Text(stringResource(R.string.completed_colon) + " " + formatTimeText(statistic.timeCompletedInMilliseconds))
+            Text(stringResource(R.string.goal) + ": " + formatTimeText(statistic.timeGoalInMilliseconds))
+            Text(stringResource(R.string.completed) + ": " + formatTimeText(statistic.timeCompletedInMilliseconds))
         }
         Box(
             contentAlignment = Alignment.Center,

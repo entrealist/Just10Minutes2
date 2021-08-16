@@ -1,20 +1,27 @@
 package com.codinginflow.just10minutes2.timer.ui
 
-import androidx.lifecycle.LiveData
-import androidx.lifecycle.SavedStateHandle
-import androidx.lifecycle.ViewModel
-import androidx.lifecycle.viewModelScope
+import androidx.lifecycle.*
 import com.codinginflow.just10minutes2.common.data.preferences.TimerPreferencesManager
 import com.codinginflow.just10minutes2.common.data.daos.TaskDao
 import com.codinginflow.just10minutes2.common.data.entities.Task
+import com.codinginflow.just10minutes2.common.data.entities.containsWeekdayOfDate
 import com.codinginflow.just10minutes2.common.data.preferences.DayCheckPreferencesManager
 import com.codinginflow.just10minutes2.timer.TaskTimerManager
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.channels.Channel
+import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.launch
 import javax.inject.Inject
+
+data class TimerUiState(
+    val activeTask: Task?,
+    val taskActiveToday: Boolean,
+    val allTasks: List<Task>,
+    val timerRunning: Boolean,
+    val showSelectNewTaskConfirmationDialog: Boolean
+)
 
 @HiltViewModel
 class TimerViewModel @Inject constructor(
@@ -28,13 +35,31 @@ class TimerViewModel @Inject constructor(
     private val eventChannel = Channel<Event>()
     val events = eventChannel.receiveAsFlow()
 
-    val activeTask = taskTimerManager.activeTask
+    private val activeTask = taskTimerManager.activeTask
+    private val activeDay = dayCheckPreferencesManager.activeDay
+    private val allTasks = taskDao.getAllNotArchivedTasks()
+    private val timerRunning = taskTimerManager.timerRunning
 
-    val allTasks = taskDao.getAllNotArchivedTasks()
+    private val showSelectNewTaskConfirmationDialog =
+        savedStateHandle.getLiveData<Boolean>("showSelectNewTaskConfirmationDialog", false)
 
-    val timerRunning = taskTimerManager.timerRunning
-
-    val activeDay = dayCheckPreferencesManager.activeDay
+    val uiState = combine(
+        activeTask,
+        activeDay,
+        allTasks,
+        timerRunning,
+        showSelectNewTaskConfirmationDialog.asFlow()
+    ) { activeTask, activeDay, allTasks, timerRunning, showSelectNewTaskConfirmationDialog ->
+        TimerUiState(
+            activeTask = activeTask,
+            taskActiveToday = activeTask != null && activeDay != null && activeTask.weekdays.containsWeekdayOfDate(
+                activeDay
+            ),
+            allTasks = allTasks,
+            timerRunning = timerRunning,
+            showSelectNewTaskConfirmationDialog = showSelectNewTaskConfirmationDialog
+        )
+    }
 
     private var pendingNewTask = savedStateHandle.get<Task>("pendingNewTask")
         set(value) {
@@ -42,9 +67,6 @@ class TimerViewModel @Inject constructor(
             savedStateHandle.set("pendingNewTask", value)
         }
 
-    private val showSelectNewTaskConfirmationDialogLiveData =
-        savedStateHandle.getLiveData<Boolean>("showSelectNewTaskConfirmationDialog")
-    val showSelectNewTaskConfirmationDialog: LiveData<Boolean> = showSelectNewTaskConfirmationDialogLiveData
 
     fun onTaskSelected(newTask: Task) {
         viewModelScope.launch {
@@ -56,13 +78,13 @@ class TimerViewModel @Inject constructor(
                 changeActiveTask(newTask)
             } else {
                 pendingNewTask = newTask
-                showSelectNewTaskConfirmationDialogLiveData.value = true
+                showSelectNewTaskConfirmationDialog.value = true
             }
         }
     }
 
     fun onSelectNewTaskConfirmed() {
-        showSelectNewTaskConfirmationDialogLiveData.value = false
+        showSelectNewTaskConfirmationDialog.value = false
         pendingNewTask?.let {
             changeActiveTask(it)
             pendingNewTask = null
@@ -73,7 +95,7 @@ class TimerViewModel @Inject constructor(
     }
 
     fun onDismissSelectNewTaskConfirmationDialog() {
-        showSelectNewTaskConfirmationDialogLiveData.value = false
+        showSelectNewTaskConfirmationDialog.value = false
         pendingNewTask = null
     }
 

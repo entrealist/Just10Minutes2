@@ -12,7 +12,6 @@ import androidx.compose.material.icons.filled.ArrowDropDown
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Timer
 import androidx.compose.runtime.*
-import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -24,7 +23,6 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.codinginflow.just10minutes2.R
 import com.codinginflow.just10minutes2.common.data.entities.Task
@@ -34,27 +32,15 @@ import com.codinginflow.just10minutes2.common.ui.composables.CircularProgressInd
 import com.codinginflow.just10minutes2.common.ui.theme.Just10Minutes2Theme
 import com.codinginflow.just10minutes2.common.util.formatTimeText
 import kotlinx.coroutines.flow.collectLatest
-import java.util.*
 
 @Composable
 fun TimerScreen(
     viewModel: TimerViewModel = hiltViewModel(),
 ) {
-    val activeTask by viewModel.activeTask.collectAsState(null)
-    val allTasks by viewModel.allTasks.collectAsState(emptyList())
-    val timerRunning by viewModel.timerRunning.collectAsState(false)
-
-    val activeDay by viewModel.activeDay.collectAsState(null)
-
-    // TODO: 15.08.2021 So einbauen dass nicht zuerst "no task" screen angezeigt wird
-
-    // TODO: 16.08.2021 Implement "not active today" view
+    val uiState by viewModel.uiState.collectAsState(null)
 
     val scaffoldState = rememberScaffoldState()
     val context = LocalContext.current
-
-    val showSelectNewTaskConfirmationDialog
-            by viewModel.showSelectNewTaskConfirmationDialog.observeAsState(false)
 
     LaunchedEffect(Unit) {
         viewModel.events.collectLatest { event ->
@@ -66,13 +52,10 @@ fun TimerScreen(
     }
 
     TimerBody(
-        activeTask = activeTask,
-        allTasks = allTasks,
-        timerRunning = timerRunning,
+        uiState = uiState,
         onStartTimerClicked = viewModel::onStartTimerClicked,
         onStopTimerClicked = viewModel::onStopTimerClicked,
         onTaskSelected = viewModel::onTaskSelected,
-        showSelectNewTaskConfirmationDialog = showSelectNewTaskConfirmationDialog,
         onDismissSelectNewTaskConfirmationDialog = viewModel::onDismissSelectNewTaskConfirmationDialog,
         onSelectNewTaskConfirmed = viewModel::onSelectNewTaskConfirmed,
         scaffoldState = scaffoldState,
@@ -81,13 +64,10 @@ fun TimerScreen(
 
 @Composable
 private fun TimerBody(
-    activeTask: Task?,
-    allTasks: List<Task>,
-    timerRunning: Boolean,
+    uiState: TimerUiState?,
     onStartTimerClicked: () -> Unit,
     onStopTimerClicked: () -> Unit,
     onTaskSelected: (Task) -> Unit,
-    showSelectNewTaskConfirmationDialog: Boolean,
     onDismissSelectNewTaskConfirmationDialog: () -> Unit,
     onSelectNewTaskConfirmed: () -> Unit,
     modifier: Modifier = Modifier,
@@ -103,32 +83,35 @@ private fun TimerBody(
             )
         },
     ) {
-        BodyContent(
-            task = activeTask,
-            allTasks = allTasks,
-            timerRunning = timerRunning,
-            onTaskSelected = onTaskSelected,
-            onStartTimerClicked = onStartTimerClicked,
-            onStopTimerClicked = onStopTimerClicked
-        )
-    }
+        if (uiState != null) {
+            BodyContent(
+                task = uiState.activeTask,
+                allTasks = uiState.allTasks,
+                timerRunning = uiState.timerRunning,
+                taskActiveToday = uiState.taskActiveToday,
+                onTaskSelected = onTaskSelected,
+                onStartTimerClicked = onStartTimerClicked,
+                onStopTimerClicked = onStopTimerClicked
+            )
 
-    if (showSelectNewTaskConfirmationDialog) {
-        AlertDialog(
-            title = { Text(stringResource(R.string.switch_task)) },
-            text = { Text(stringResource(R.string.confirm_switch_task_message)) },
-            confirmButton = {
-                TextButton(onClick = onSelectNewTaskConfirmed) {
-                    Text(stringResource(R.string.confirm_switch))
-                }
-            },
-            dismissButton = {
-                TextButton(onClick = onDismissSelectNewTaskConfirmationDialog) {
-                    Text(stringResource(R.string.cancel))
-                }
-            },
-            onDismissRequest = onDismissSelectNewTaskConfirmationDialog,
-        )
+            if (uiState.showSelectNewTaskConfirmationDialog) {
+                AlertDialog(
+                    title = { Text(stringResource(R.string.switch_task)) },
+                    text = { Text(stringResource(R.string.confirm_switch_task_message)) },
+                    confirmButton = {
+                        TextButton(onClick = onSelectNewTaskConfirmed) {
+                            Text(stringResource(R.string.confirm_switch))
+                        }
+                    },
+                    dismissButton = {
+                        TextButton(onClick = onDismissSelectNewTaskConfirmationDialog) {
+                            Text(stringResource(R.string.cancel))
+                        }
+                    },
+                    onDismissRequest = onDismissSelectNewTaskConfirmationDialog,
+                )
+            }
+        }
     }
 }
 
@@ -136,6 +119,7 @@ private fun TimerBody(
 private fun BodyContent(
     task: Task?,
     allTasks: List<Task>,
+    taskActiveToday: Boolean,
     timerRunning: Boolean,
     onStartTimerClicked: () -> Unit,
     onStopTimerClicked: () -> Unit,
@@ -160,30 +144,33 @@ private fun BodyContent(
                 onTaskSelected = onTaskSelected,
             )
             Spacer(Modifier.height(8.dp))
-            if (task != null) {
-                Text(
-                    stringResource(
-                        R.string.daily_minutes_goal_placeholder,
-                        task?.dailyGoalInMinutes ?: 0
-                    )
-                )
-                Text(
-                    stringResource(
-                        R.string.minutes_completed_placeholder,
-                        task?.timeCompletedTodayInMinutes ?: 0
-                    )
-                )
-                Text(
-                    text = stringResource(R.string.active_on) + ": " + task.weekdays.toLocalizedString(
-                        LocalContext.current
-                    )
-                )
-            }
+            val dailyGoalText = stringResource(R.string.daily_goal) + ": " +
+                    if (task == null) {
+                        "-"
+                    } else {
+                        stringResource(R.string.minutes_placeholder, task.dailyGoalInMinutes)
+                    }
+            val completedTodayText = stringResource(R.string.completed) + ": " +
+                    if (task == null || !taskActiveToday) {
+                        "-"
+                    } else {
+                        stringResource(R.string.minutes_placeholder, task.timeCompletedTodayInMinutes)
+                    }
+            val activeWeekdaysText = stringResource(R.string.active_on) + ": " +
+                    if (task == null ) {
+                        "-"
+                    } else {
+                        task.weekdays.toLocalizedString(LocalContext.current)
+                    }
+            Text(dailyGoalText)
+            Text(completedTodayText )
+            Text(activeWeekdaysText)
             Spacer(Modifier.height(16.dp))
             Box(Modifier.align(Alignment.CenterHorizontally)) {
-                CircularTextTimer(
+                TaskTimer(
                     timeLeftInMillis = task?.timeLeftTodayInMilliseconds ?: 0,
                     timeGoalInMillis = task?.dailyGoalInMilliseconds ?: 0,
+                    taskActiveToday = taskActiveToday,
                     running = timerRunning
                 )
                 if (timerRunning) {
@@ -212,7 +199,7 @@ private fun BodyContent(
             }
             Spacer(Modifier.height(16.dp))
             // TODO: 16.08.2021 Replace for Play/Stop Icon
-            val buttonEnabled = task != null && !task.isCompletedToday
+            val buttonEnabled = task != null && taskActiveToday && !task.isCompletedToday
             val buttonOnClick = if (timerRunning) onStopTimerClicked else onStartTimerClicked
             val buttonTextRes = if (timerRunning) R.string.stop_timer else R.string.start_timer
             Button(
@@ -299,14 +286,14 @@ private fun DropdownMenuWithSelector(
 }
 
 @Composable
-private fun CircularTextTimer(
+private fun TaskTimer(
     timeLeftInMillis: Long,
     timeGoalInMillis: Long,
+    taskActiveToday: Boolean,
     running: Boolean,
     modifier: Modifier = Modifier,
     strokeWidth: Dp = 10.dp
 ) {
-    val active = timeGoalInMillis > 0
     val progress = 1 - (timeLeftInMillis.toFloat() / timeGoalInMillis.toFloat())
     val completed = timeLeftInMillis <= 0
 
@@ -319,33 +306,40 @@ private fun CircularTextTimer(
         modifier = modifier.sizeIn(minWidth = 230.dp, minHeight = 230.dp)
     ) {
         CircularProgressIndicatorWithBackground(
-            progress = if (active) progress else 0f,
+            progress = if (taskActiveToday) progress else 0f,
             strokeWidth = strokeWidth,
             modifier = Modifier.sizeIn(minWidth = 230.dp, minHeight = 230.dp)
         )
-        if (active && completed) {
-            Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                Icon(
-                    Icons.Default.Check,
-                    contentDescription = stringResource(R.string.task_completed),
-                    tint = MaterialTheme.colors.primary,
-                )
+        when {
+            !taskActiveToday -> {
                 Text(
-                    text = stringResource(R.string.completed_today),
+                    text = stringResource(R.string.task_not_active_today),
                     style = MaterialTheme.typography.h6.copy(fontWeight = FontWeight.Bold),
-                    color = MaterialTheme.colors.primary,
-                    textAlign = TextAlign.Center,
-                    modifier = Modifier.padding(start = 45.dp, end = 45.dp),
-                )
-                Text(
-                    text = stringResource(R.string.timers_will_reset_at_midnight),
-                    style = MaterialTheme.typography.body2,
+                    color = Color.Gray,
                     textAlign = TextAlign.Center,
                     modifier = Modifier.padding(start = 45.dp, end = 45.dp),
                 )
             }
-        } else {
-            Text(text = timeText, style = MaterialTheme.typography.h3, color = timeTextColor)
+            taskActiveToday && completed -> {
+                Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                    Text(
+                        text = stringResource(R.string.completed_today),
+                        style = MaterialTheme.typography.h6.copy(fontWeight = FontWeight.Bold),
+                        color = MaterialTheme.colors.primary,
+                        textAlign = TextAlign.Center,
+                        modifier = Modifier.padding(start = 45.dp, end = 45.dp),
+                    )
+                    Text(
+                        text = stringResource(R.string.timers_will_reset_at_midnight),
+                        style = MaterialTheme.typography.body2,
+                        textAlign = TextAlign.Center,
+                        modifier = Modifier.padding(start = 45.dp, end = 45.dp),
+                    )
+                }
+            }
+            else -> {
+                Text(text = timeText, style = MaterialTheme.typography.h3, color = timeTextColor)
+            }
         }
     }
 }
@@ -363,13 +357,16 @@ private fun CircularTextTimer(
 private fun PreviewTimerScreenNoTask() {
     Just10Minutes2Theme {
         TimerBody(
-            activeTask = null,
-            allTasks = emptyList(),
-            timerRunning = false,
+            uiState = TimerUiState(
+                activeTask = null,
+                taskActiveToday = true,
+                allTasks = emptyList(),
+                timerRunning = false,
+                showSelectNewTaskConfirmationDialog = false
+            ),
             onStartTimerClicked = {},
             onStopTimerClicked = {},
             onTaskSelected = {},
-            showSelectNewTaskConfirmationDialog = false,
             onSelectNewTaskConfirmed = {},
             onDismissSelectNewTaskConfirmationDialog = {}
         )
@@ -389,18 +386,21 @@ private fun PreviewTimerScreenNoTask() {
 private fun PreviewTimerScreenCompleted() {
     Just10Minutes2Theme {
         TimerBody(
-            activeTask = Task(
-                "Example task",
-                WeekdaySelection(allDays = true),
-                10,
-                10 * 60 * 1000L
+            uiState = TimerUiState(
+                activeTask = Task(
+                    "Example task",
+                    WeekdaySelection(allDays = true),
+                    10,
+                    10 * 60 * 1000L
+                ),
+                taskActiveToday = true,
+                allTasks = emptyList(),
+                timerRunning = false,
+                showSelectNewTaskConfirmationDialog = false
             ),
-            allTasks = emptyList(),
-            timerRunning = false,
             onStartTimerClicked = {},
             onStopTimerClicked = {},
             onTaskSelected = {},
-            showSelectNewTaskConfirmationDialog = false,
             onSelectNewTaskConfirmed = {},
             onDismissSelectNewTaskConfirmationDialog = {}
         )

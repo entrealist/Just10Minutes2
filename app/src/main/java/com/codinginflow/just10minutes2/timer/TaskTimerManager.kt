@@ -6,7 +6,7 @@ import androidx.core.content.ContextCompat
 import com.codinginflow.just10minutes2.common.data.preferences.TimerPreferencesManager
 import com.codinginflow.just10minutes2.common.data.daos.TaskDao
 import com.codinginflow.just10minutes2.common.data.entities.Task
-import com.codinginflow.just10minutes2.common.data.entities.containsDate
+import com.codinginflow.just10minutes2.common.data.entities.containsWeekdayOfDate
 import com.codinginflow.just10minutes2.common.data.preferences.DayCheckPreferencesManager
 import com.codinginflow.just10minutes2.common.di.ApplicationScope
 import dagger.hilt.android.qualifiers.ApplicationContext
@@ -60,7 +60,7 @@ class TaskTimerManager @Inject constructor(
 
                     // stop timer if active day not in task weekdays (e.g. after a Task update)
                     val activeDay = activeDay.first()
-                    if (activeDay != null && !task.weekdays.containsDate(activeDay)) {
+                    if (activeDay != null && !task.weekdays.containsWeekdayOfDate(activeDay)) {
                         Timber.d("activeDay = $activeDay")
                         stopTimer()
                     }

@@ -99,7 +99,7 @@ fun WeekdaySelection.toLocalizedString(context: Context): String {
     }
 }
 
-fun WeekdaySelection.containsDate(date: Calendar): Boolean =
+fun WeekdaySelection.containsWeekdayOfDate(date: Calendar): Boolean =
     date.get(Calendar.DAY_OF_WEEK) == Calendar.MONDAY && mondayActive ||
     date.get(Calendar.DAY_OF_WEEK) == Calendar.TUESDAY && tuesdayActive ||
     date.get(Calendar.DAY_OF_WEEK) == Calendar.WEDNESDAY && wednesdayActive ||

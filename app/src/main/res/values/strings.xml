@@ -3,7 +3,8 @@
     <string name="open_timer">Open timer</string>
     <string name="start_timer">Start timer</string>
     <string name="stop_timer">Stop timer</string>
-    <string name="daily_minutes_goal_placeholder">Daily goal: %d min</string>
+    <string name="daily_goal">Daily goal</string>
+    <string name="minutes_placeholder">%d min</string>
     <string name="minutes_goal_placeholder">Goal: %d min</string>
     <string name="tasks">Tasks</string>
     <string name="select_task">Select task</string>
@@ -13,8 +14,7 @@
     <string name="add_task">Add task</string>
     <string name="active_task_colon">Active task:</string>
     <string name="edit_task">Edit task</string>
-    <string name="minutes_completed_placeholder">Completed: %d min</string>
-    <string name="completed_colon">Completed:</string>
+    <string name="completed">Completed</string>
     <string name="task_completed">Task completed</string>
     <string name="task_completed_exclamation_mark">Task completed!</string>
     <string name="task_name_with_completed_and_total_minutes">%1$s (%2$d\/%3$d min)</string>
@@ -76,7 +76,7 @@
     <string name="details">Details</string>
     <string name="task_statistics">Task statistics</string>
     <string name="date_colon">"Date:"</string>
-    <string name="goal_colon">Goal:</string>
+    <string name="goal">Goal</string>
     <string name="unarchive_task">Unarchive task</string>
     <string name="active_weekdays">Active weekdays</string>
     <string name="monday_abbrev">Mo</string>
@@ -89,4 +89,5 @@
     <string name="active_on">Active on</string>
     <string name="all_weekdays">all weekdays</string>
     <string name="never">never</string>
+    <string name="task_not_active_today">Task not active today</string>
 </resources>

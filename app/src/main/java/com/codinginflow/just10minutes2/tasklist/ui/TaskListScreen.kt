@@ -29,7 +29,7 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import com.codinginflow.just10minutes2.R
 import com.codinginflow.just10minutes2.addedittask.ui.AddEditTaskViewModel
 import com.codinginflow.just10minutes2.common.data.entities.Task
-import com.codinginflow.just10minutes2.common.data.entities.containsDate
+import com.codinginflow.just10minutes2.common.data.entities.containsWeekdayOfDate
 import com.codinginflow.just10minutes2.common.data.entities.toLocalizedString
 import com.codinginflow.just10minutes2.common.ui.composables.CircularProgressIndicatorWithBackground
 import com.codinginflow.just10minutes2.common.ui.theme.Dimens
@@ -224,7 +224,7 @@ private fun TaskList(
         modifier = modifier
     ) {
         items(tasks) { task ->
-            val isActiveToday = activeDay != null && task.weekdays.containsDate(activeDay)
+            val isActiveToday = activeDay != null && task.weekdays.containsWeekdayOfDate(activeDay)
             TaskItem(
                 task = task,
                 isActiveToday = isActiveToday,
