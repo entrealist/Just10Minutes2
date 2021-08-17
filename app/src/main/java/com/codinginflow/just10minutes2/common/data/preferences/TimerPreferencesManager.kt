@@ -34,6 +34,7 @@ class TimerPreferencesManager @Inject constructor(@ApplicationContext context: C
             }
         }
         .map { preferences ->
+            // TODO: 17.08.2021 Set default value for id to 1 before shipping
             val activeTaskId = preferences[PreferencesKeys.ACTIVE_TASK_ID]
             TimerPreferences(activeTaskId)
         }

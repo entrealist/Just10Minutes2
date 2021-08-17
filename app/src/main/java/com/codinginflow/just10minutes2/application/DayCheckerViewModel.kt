@@ -8,6 +8,7 @@ import com.codinginflow.just10minutes2.common.data.entities.TaskStatistic
 import com.codinginflow.just10minutes2.common.data.entities.containsWeekdayOfDate
 import com.codinginflow.just10minutes2.common.data.preferences.DayCheckPreferencesManager
 import com.codinginflow.just10minutes2.common.util.getDateWithoutTime
+import com.codinginflow.just10minutes2.notification.NotificationHelper
 import com.codinginflow.just10minutes2.timer.TaskTimerManager
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.delay
@@ -25,7 +26,8 @@ class DayCheckerViewModel @Inject constructor(
     private val dayCheckPreferencesManager: DayCheckPreferencesManager,
     private val taskTimerManager: TaskTimerManager,
     private val taskDao: TaskDao,
-    private val taskStatisticsDao: TaskStatisticsDao
+    private val taskStatisticsDao: TaskStatisticsDao,
+    private val notificationHelper: NotificationHelper
 ) : ViewModel() {
 
     private val activeDay = dayCheckPreferencesManager.activeDay
@@ -57,15 +59,14 @@ class DayCheckerViewModel @Inject constructor(
         }
     }
 
-    // TODO: 15.08.2021 Add new day begin notification
     private suspend fun startNewDay(previousDay: Date?, newDay: Date) {
-        Timber.d("starting new day")
         taskTimerManager.stopTimer()
         if (previousDay != null && newDay > previousDay) {
             createDailyTaskStatistics(previousDay)
         }
         taskDao.resetMillisCompletedTodayForAllTasks()
         dayCheckPreferencesManager.updateActiveDay(newDay)
+        notificationHelper.showNewDayNotification()
     }
 
     private suspend fun createDailyTaskStatistics(day: Date) {

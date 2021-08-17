@@ -42,6 +42,7 @@ class MainActivity : ComponentActivity() {
             Just10Minutes2Theme {
                 // A surface container using the 'background' color from the theme
                 Surface(color = MaterialTheme.colors.background) {
+                    // TODO: 17.08.2021 Gegen "outerOwner" approach austauschen: https://kotlinlang.slack.com/archives/CJLTWPH7S/p1628769920404700
                     val dayCheckerSharedViewModel: DayCheckerViewModel = hiltViewModel()
                     JTMActivityBody()
                 }

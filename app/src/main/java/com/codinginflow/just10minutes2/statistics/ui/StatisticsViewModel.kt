@@ -5,7 +5,6 @@ import androidx.lifecycle.viewModelScope
 import com.codinginflow.just10minutes2.common.data.daos.TaskStatisticsDao
 import com.codinginflow.just10minutes2.common.data.daos.TaskDao
 import com.codinginflow.just10minutes2.common.data.entities.Task
-import com.codinginflow.just10minutes2.tasklist.ui.TaskListViewModel
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.receiveAsFlow
@@ -21,7 +20,8 @@ class StatisticsViewModel @Inject constructor(
     private val eventChannel = Channel<Event>()
     val events = eventChannel.receiveAsFlow()
 
-    val tasks = taskDao.getAllTasks()
+    val notArchivedTasks = taskDao.getAllNotArchivedTasks()
+    val archivedTasks = taskDao.getAllArchivedTasks()
     val taskStatistics = statisticsDao.getAllTaskStatistics()
 
     fun onTaskDetailsClicked(task: Task) {

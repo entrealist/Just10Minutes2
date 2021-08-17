@@ -33,30 +33,37 @@ class NotificationHelper @Inject constructor(
     private val openActivityPendingIntent: PendingIntent =
         PendingIntent.getActivity(context, 0, intent, pendingIntentFlag)
 
-    var timerServiceNotification = getNewTimerServiceNotification()
-        private set
-
     init {
         createNotificationChannels()
     }
 
-    fun resetTimerServiceNotification() {
-        timerServiceNotification = getNewTimerServiceNotification()
+    fun showNewDayNotification() {
+        val notification = NotificationCompat.Builder(context, NEW_DAY_NOTIFICATION_CHANNEL_ID)
+            .setSmallIcon(R.drawable.ic_sun)
+            .setColor(ContextCompat.getColor(context, R.color.design_default_color_primary))
+            .setContentIntent(openActivityPendingIntent)
+            .setContentTitle(context.getString(R.string.new_day_has_started))
+            .setContentText(context.getString(R.string.new_day_started_message))
+            .setAutoCancel(true)
+        notificationManager.notify(NEW_DAY_NOTIFICATION_ID, notification.build())
     }
 
-    private fun getNewTimerServiceNotification(): NotificationCompat.Builder {
-        return NotificationCompat.Builder(context, TIMER_SERVICE_CHANNEL_ID)
+    fun getEmptyTimerServiceNotification() =
+        NotificationCompat.Builder(context, TIMER_SERVICE_CHANNEL_ID)
             .setSmallIcon(R.drawable.ic_timer)
             .setColor(ContextCompat.getColor(context, R.color.design_default_color_primary))
             .setContentIntent(openActivityPendingIntent)
             .setSilent(true)
-    }
 
     fun updateTimerServiceNotification(task: Task) {
-        timerServiceNotification
+        val notification = NotificationCompat.Builder(context, TIMER_SERVICE_CHANNEL_ID)
+            .setSmallIcon(R.drawable.ic_timer)
+            .setColor(ContextCompat.getColor(context, R.color.design_default_color_primary))
+            .setContentIntent(openActivityPendingIntent)
+            .setSilent(true)
             .setContentTitle(task.name)
             .setContentText(formatTimeText(task.timeLeftTodayInMilliseconds))
-        notificationManager.notify(TIMER_NOTIFICATION_ID, timerServiceNotification.build())
+        notificationManager.notify(TIMER_NOTIFICATION_ID, notification.build())
     }
 
     fun showTaskFinishedNotification(task: Task) {
@@ -89,7 +96,7 @@ class NotificationHelper @Inject constructor(
             val newDayNotificationChannel = NotificationChannel(
                 NEW_DAY_NOTIFICATION_CHANNEL_ID,
                 context.getString(R.string.new_day_notification_channel_name),
-                NotificationManager.IMPORTANCE_HIGH
+                NotificationManager.IMPORTANCE_DEFAULT
             )
             newDayNotificationChannel.description =
                 context.getString(R.string.new_day_notification_channel_description)

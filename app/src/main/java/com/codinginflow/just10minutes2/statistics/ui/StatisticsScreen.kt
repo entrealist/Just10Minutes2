@@ -8,9 +8,7 @@ import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ArrowRight
-import androidx.compose.material.icons.filled.Check
-import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -30,12 +28,15 @@ import kotlinx.coroutines.flow.collectLatest
 import java.text.DateFormat
 import java.util.*
 
+// TODO: 17.08.2021 Implement UiState here to avoid flickering
+
 @Composable
 fun StatisticsScreen(
     viewModel: StatisticsViewModel = hiltViewModel(),
     navigateToTaskStatistics: (taskId: Long) -> Unit,
 ) {
-    val tasks by viewModel.tasks.collectAsState(emptyList())
+    val notArchivedTasks by viewModel.notArchivedTasks.collectAsState(emptyList())
+    val archivedTasks by viewModel.archivedTasks.collectAsState(emptyList())
     val taskStatistics by viewModel.taskStatistics.collectAsState(emptyList())
 
     LaunchedEffect(Unit) {
@@ -48,7 +49,8 @@ fun StatisticsScreen(
     }
 
     StatisticsBody(
-        tasks = tasks,
+        notArchivedTasks = notArchivedTasks,
+        archivedTasks = archivedTasks,
         taskStatistics = taskStatistics,
         onTaskDetailsClicked = viewModel::onTaskDetailsClicked,
     )
@@ -56,7 +58,8 @@ fun StatisticsScreen(
 
 @Composable
 private fun StatisticsBody(
-    tasks: List<Task>,
+    notArchivedTasks: List<Task>,
+    archivedTasks: List<Task>,
     taskStatistics: List<TaskStatistic>,
     onTaskDetailsClicked: (Task) -> Unit,
     modifier: Modifier = Modifier
@@ -70,7 +73,8 @@ private fun StatisticsBody(
         }
     ) { innerPadding ->
         BodyContent(
-            tasks = tasks,
+            notArchivedTasks = notArchivedTasks,
+            archivedTasks = archivedTasks,
             taskStatistics = taskStatistics,
             onTaskDetailsClicked = onTaskDetailsClicked,
             modifier = Modifier.padding(innerPadding)
@@ -80,13 +84,15 @@ private fun StatisticsBody(
 
 @Composable
 private fun BodyContent(
-    tasks: List<Task>,
+    notArchivedTasks: List<Task>,
+    archivedTasks: List<Task>,
     taskStatistics: List<TaskStatistic>,
     onTaskDetailsClicked: (Task) -> Unit,
     modifier: Modifier = Modifier
 ) {
     TaskWithStatisticsList(
-        tasks = tasks,
+        notArchivedTasks = notArchivedTasks,
+        archivedTasks = archivedTasks,
         taskStatistics = taskStatistics,
         onTaskDetailsClicked = onTaskDetailsClicked,
         modifier = modifier
@@ -95,7 +101,8 @@ private fun BodyContent(
 
 @Composable
 private fun TaskWithStatisticsList(
-    tasks: List<Task>,
+    notArchivedTasks: List<Task>,
+    archivedTasks: List<Task>,
     taskStatistics: List<TaskStatistic>,
     onTaskDetailsClicked: (Task) -> Unit,
     modifier: Modifier = Modifier
@@ -104,7 +111,50 @@ private fun TaskWithStatisticsList(
         contentPadding = PaddingValues(bottom = Dimens.ListBottomPadding),
         modifier = modifier
     ) {
-        items(tasks) { task ->
+        item {
+            Row(modifier = Modifier.padding(8.dp)) {
+                Icon(
+                    Icons.Default.List,
+                    contentDescription = stringResource(R.string.active_tasks),
+                    Modifier.align(Alignment.CenterVertically)
+                )
+                Spacer(Modifier.width(8.dp))
+                Text(
+                    text = stringResource(R.string.active_tasks),
+                    style = MaterialTheme.typography.h6,
+                )
+            }
+            Divider()
+        }
+        items(notArchivedTasks) { task ->
+            val statisticsForTask = remember(taskStatistics) {
+                // TODO: 15.08.2021 Put this filtering logic into the ViewModel
+                taskStatistics.filter { it.taskId == task.id }
+            }
+            TaskWithStatisticsItem(
+                task = task,
+                statistics = statisticsForTask,
+                onTaskDetailsClicked = onTaskDetailsClicked
+            )
+            Divider()
+        }
+        item {
+                Spacer(Modifier.height(32.dp))
+            Row(modifier = Modifier.padding(8.dp)) {
+                Icon(
+                    Icons.Default.Inventory2,
+                    contentDescription = stringResource(R.string.archived_tasks),
+                    Modifier.align(Alignment.CenterVertically)
+                )
+                Spacer(Modifier.width(8.dp))
+                Text(
+                    text = stringResource(R.string.archived_tasks),
+                    style = MaterialTheme.typography.h6,
+                )
+            }
+            Divider()
+        }
+        items(archivedTasks) { task ->
             val statisticsForTask = remember(taskStatistics) {
                 // TODO: 15.08.2021 Put this filtering logic into the ViewModel
                 taskStatistics.filter { it.taskId == task.id }
@@ -118,8 +168,6 @@ private fun TaskWithStatisticsList(
         }
     }
 }
-
-// TODO: 16.08.2021 Put archived indicator on items
 
 @Composable
 private fun TaskWithStatisticsItem(
@@ -140,9 +188,8 @@ private fun TaskWithStatisticsItem(
                 style = LocalTextStyle.current.copy(fontWeight = FontWeight.Bold),
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis,
-                modifier = Modifier.weight(1f)
+                modifier = Modifier.weight(1f),
             )
-            // TODO: 15.08.2021 Fix that this doesn't get pushed out of the screen
             if (statistics.isNotEmpty()) {
                 Row {
                     Text(stringResource(R.string.details), color = Color.Gray)
@@ -217,11 +264,15 @@ private fun StatisticItem(
 private fun PreviewStatisticsScreen() {
     Just10Minutes2Theme {
         StatisticsBody(
-            tasks = listOf(
+            notArchivedTasks = listOf(
                 Task("Example task 1 mmmmmmmmmmmmmmmmmmmmmmmmmmm", id = 1),
                 Task("Example task 2", id = 2),
                 Task("Example task 3", id = 3),
                 Task("Example task 4", id = 4),
+            ),
+            archivedTasks = listOf(
+                Task("Example task 5 mmmmmmmmmmmmmmmmmmmmmmmmmmm", id = 1, archived = true),
+                Task("Example task 6", id = 2, archived = true),
             ),
             taskStatistics = listOf(
                 TaskStatistic(1, 1628892000000, 10, 10 * 60_000L),

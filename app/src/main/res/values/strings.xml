@@ -92,4 +92,9 @@
     <string name="all_weekdays">all weekdays</string>
     <string name="never">never</string>
     <string name="task_not_active_today">Task not active today</string>
+    <string name="new_day_has_started">A new day has started</string>
+    <string name="new_day_started_message">All timers are reset. Don\'t forget to do your tasks today!</string>
+    <string name="archived">archived</string>
+    <string name="archived_tasks">Archived tasks</string>
+    <string name="active_tasks">Active tasks</string>
 </resources>

@@ -39,9 +39,7 @@ class TimerService : Service() {
     override fun onCreate() {
         super.onCreate()
 
-        notificationHelper.resetTimerServiceNotification()
-
-        startForeground(TIMER_NOTIFICATION_ID, notificationHelper.timerServiceNotification.build())
+        startForeground(TIMER_NOTIFICATION_ID, notificationHelper.getEmptyTimerServiceNotification().build())
 
         serviceScope.launch {
             taskTimerManager.activeTask.collect { task ->
