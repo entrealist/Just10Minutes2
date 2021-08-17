@@ -97,4 +97,5 @@
     <string name="archived">archived</string>
     <string name="archived_tasks">Archived tasks</string>
     <string name="active_tasks">Active tasks</string>
+    <string name="open_menu">Open menu</string>
 </resources>

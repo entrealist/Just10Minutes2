@@ -40,7 +40,7 @@ class ArchiveViewModel @Inject constructor(
         }
     }
 
-    fun onEditResult(addEditResult: AddEditTaskViewModel.AddEditTaskResult) {
+    fun onEditTaskResult(addEditResult: AddEditTaskViewModel.AddEditTaskResult) {
         viewModelScope.launch {
             when (addEditResult) {
                 is AddEditTaskViewModel.AddEditTaskResult.TaskDeleted ->

@@ -25,7 +25,7 @@ import androidx.navigation.navOptions
 import com.codinginflow.just10minutes2.R
 import com.codinginflow.just10minutes2.addedittask.ui.AddEditTaskScreen
 import com.codinginflow.just10minutes2.addedittask.ui.AddEditTaskViewModel
-import com.codinginflow.just10minutes2.archive.ArchiveScreen
+import com.codinginflow.just10minutes2.archive.ui.ArchiveScreen
 import com.codinginflow.just10minutes2.common.data.entities.Task
 import com.codinginflow.just10minutes2.timer.ui.TimerScreen
 import com.codinginflow.just10minutes2.tasklist.ui.TaskListScreen
@@ -42,7 +42,6 @@ class MainActivity : ComponentActivity() {
             Just10Minutes2Theme {
                 // A surface container using the 'background' color from the theme
                 Surface(color = MaterialTheme.colors.background) {
-                    // TODO: 17.08.2021 Gegen "outerOwner" approach austauschen: https://kotlinlang.slack.com/archives/CJLTWPH7S/p1628769920404700
                     val dayCheckerSharedViewModel: DayCheckerViewModel = hiltViewModel()
                     JTMActivityBody()
                 }
@@ -106,8 +105,22 @@ private fun JTMNavHost(
                     defaultValue = true
                 }
             )
-        ) {
-            TimerScreen()
+        ) { navBackStackEntry ->
+            TimerScreen(
+                editTask = { taskId ->
+                    navController.navigate(
+                        route = AppDestination.AddEditTask.route + "?$ARG_TASK_ID=$taskId"
+                    )
+                },
+                editTaskResult = navBackStackEntry.savedStateHandle.get<AddEditTaskViewModel.AddEditTaskResult>(
+                    KEY_ADD_EDIT_RESULT
+                ),
+                onEditTaskResultProcessed = {
+                    navBackStackEntry.savedStateHandle.remove<AddEditTaskViewModel.AddEditTaskResult>(
+                        KEY_ADD_EDIT_RESULT
+                    )
+                }
+            )
         }
         composable(
             route = BottomNavDestination.TaskList.route,
@@ -125,10 +138,10 @@ private fun JTMNavHost(
                         route = AppDestination.AddEditTask.route + "?$ARG_TASK_ID=$taskId"
                     )
                 },
-                addEditResult = navBackStackEntry.savedStateHandle.get<AddEditTaskViewModel.AddEditTaskResult>(
+                addEditTaskResult = navBackStackEntry.savedStateHandle.get<AddEditTaskViewModel.AddEditTaskResult>(
                     KEY_ADD_EDIT_RESULT
                 ),
-                onAddEditResultProcessed = {
+                onAddEditTaskResultProcessed = {
                     navBackStackEntry.savedStateHandle.remove<AddEditTaskViewModel.AddEditTaskResult>(
                         KEY_ADD_EDIT_RESULT
                     )
@@ -219,10 +232,10 @@ private fun JTMNavHost(
                         route = AppDestination.AddEditTask.route + "?$ARG_TASK_ID=$taskId"
                     )
                 },
-                editResult = navBackStackEntry.savedStateHandle.get<AddEditTaskViewModel.AddEditTaskResult>(
+                editTaskResult = navBackStackEntry.savedStateHandle.get<AddEditTaskViewModel.AddEditTaskResult>(
                     KEY_ADD_EDIT_RESULT
                 ),
-                onEditResultProcessed = {
+                onEditTaskResultProcessed = {
                     navBackStackEntry.savedStateHandle.remove<AddEditTaskViewModel.AddEditTaskResult>(
                         KEY_ADD_EDIT_RESULT
                     )

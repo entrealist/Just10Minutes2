@@ -107,5 +107,5 @@ class TaskTimerManager @Inject constructor(
         context.stopService(serviceIntent)
     }
 
-    // TODO: 12.08.2021 Handle process death
+    // TODO: 12.08.2021 Handle process death. Is that even necessary if the Timer always comes with a foreground services?
 }

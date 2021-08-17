@@ -8,9 +8,7 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ArrowDropDown
-import androidx.compose.material.icons.filled.Check
-import androidx.compose.material.icons.filled.Timer
+import androidx.compose.material.icons.filled.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -25,6 +23,7 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.codinginflow.just10minutes2.R
+import com.codinginflow.just10minutes2.addedittask.ui.AddEditTaskViewModel
 import com.codinginflow.just10minutes2.common.data.entities.Task
 import com.codinginflow.just10minutes2.common.data.entities.WeekdaySelection
 import com.codinginflow.just10minutes2.common.data.entities.toLocalizedString
@@ -36,17 +35,32 @@ import kotlinx.coroutines.flow.collectLatest
 @Composable
 fun TimerScreen(
     viewModel: TimerViewModel = hiltViewModel(),
+    editTask: (taskId: Long) -> Unit,
+    editTaskResult: AddEditTaskViewModel.AddEditTaskResult?,
+    onEditTaskResultProcessed: () -> Unit,
 ) {
     val uiState by viewModel.uiState.collectAsState(null)
 
     val scaffoldState = rememberScaffoldState()
     val context = LocalContext.current
 
+    LaunchedEffect(editTaskResult) {
+        if (editTaskResult != null) {
+            viewModel.onEditResult(editTaskResult)
+            onEditTaskResultProcessed()
+        }
+    }
+
     LaunchedEffect(Unit) {
         viewModel.events.collectLatest { event ->
             when (event) {
                 is TimerViewModel.Event.ShowTimerStoppedMessage ->
                     scaffoldState.snackbarHostState.showSnackbar(context.getString(R.string.timer_stopped))
+                is TimerViewModel.Event.EditTask ->
+                    editTask(event.taskId)
+                is TimerViewModel.Event.ShowAddEditResultMessage -> {
+                    scaffoldState.snackbarHostState.showSnackbar(context.getString(event.msg))
+                }
             }
         }
     }
@@ -58,7 +72,8 @@ fun TimerScreen(
         onTaskSelected = viewModel::onTaskSelected,
         onDismissSelectNewTaskConfirmationDialog = viewModel::onDismissSelectNewTaskConfirmationDialog,
         onSelectNewTaskConfirmed = viewModel::onSelectNewTaskConfirmed,
-        scaffoldState = scaffoldState,
+        onEditTaskClicked = viewModel::onEditTaskClicked,
+        scaffoldState = scaffoldState
     )
 }
 
@@ -70,16 +85,40 @@ private fun TimerBody(
     onTaskSelected: (Task) -> Unit,
     onDismissSelectNewTaskConfirmationDialog: () -> Unit,
     onSelectNewTaskConfirmed: () -> Unit,
+    onEditTaskClicked: () -> Unit,
     modifier: Modifier = Modifier,
     scaffoldState: ScaffoldState = rememberScaffoldState(),
 ) {
-    // TODO: 15.08.2021 Add day reset menu item
+    var menuExpanded by remember { mutableStateOf(false) }
+
     Scaffold(
         modifier = modifier,
         scaffoldState = scaffoldState,
         topBar = {
             TopAppBar(
                 title = { Text(stringResource(R.string.timer)) },
+                actions = {
+                    if (uiState != null) {
+                        IconButton(onClick = { menuExpanded = !menuExpanded }) {
+                            Icon(
+                                Icons.Default.MoreVert,
+                                contentDescription = stringResource(R.string.open_menu)
+                            )
+                        }
+                        DropdownMenu(
+                            expanded = menuExpanded,
+                            onDismissRequest = { menuExpanded = false }
+                        ) {
+                            val editItemEnabled = uiState.taskActiveToday
+                            DropdownMenuItem(
+                                onClick = onEditTaskClicked,
+                                enabled = editItemEnabled
+                            ) {
+                                Text(stringResource(R.string.edit_task))
+                            }
+                        }
+                    }
+                }
             )
         },
     ) {
@@ -154,16 +193,19 @@ private fun BodyContent(
                     if (task == null || !taskActiveToday) {
                         "-"
                     } else {
-                        stringResource(R.string.minutes_placeholder, task.timeCompletedTodayInMinutes)
+                        stringResource(
+                            R.string.minutes_placeholder,
+                            task.timeCompletedTodayInMinutes
+                        )
                     }
             val activeWeekdaysText = stringResource(R.string.active_on) + ": " +
-                    if (task == null ) {
+                    if (task == null) {
                         "-"
                     } else {
                         task.weekdays.toLocalizedString(LocalContext.current)
                     }
             Text(dailyGoalText)
-            Text(completedTodayText )
+            Text(completedTodayText)
             Text(activeWeekdaysText)
             Spacer(Modifier.height(16.dp))
             Box(Modifier.align(Alignment.CenterHorizontally)) {
@@ -198,16 +240,26 @@ private fun BodyContent(
                 }
             }
             Spacer(Modifier.height(16.dp))
-            // TODO: 16.08.2021 Replace for Play/Stop Icon
-            val buttonEnabled = task != null && taskActiveToday && !task.isCompletedToday
-            val buttonOnClick = if (timerRunning) onStopTimerClicked else onStartTimerClicked
-            val buttonTextRes = if (timerRunning) R.string.stop_timer else R.string.start_timer
-            Button(
-                onClick = buttonOnClick,
-                enabled = buttonEnabled,
+            val startStopButtonEnabled = task != null && taskActiveToday && !task.isCompletedToday
+            val startStopButtonOnClick =
+                if (timerRunning) onStopTimerClicked else onStartTimerClicked
+            val startStopButtonIcon =
+                if (timerRunning) Icons.Default.Stop else Icons.Default.PlayArrow
+            val startStopButtonContentDescriptionRes =
+                if (timerRunning) R.string.stop_timer else R.string.start_timer
+            val startStopButtonTint =
+                if (!taskActiveToday) Color.Gray else MaterialTheme.colors.primary
+            IconButton(
+                onClick = startStopButtonOnClick,
+                enabled = startStopButtonEnabled,
                 modifier = Modifier.align(Alignment.CenterHorizontally)
             ) {
-                Text(stringResource(buttonTextRes))
+                Icon(
+                    imageVector = startStopButtonIcon,
+                    contentDescription = stringResource(startStopButtonContentDescriptionRes),
+                    tint = startStopButtonTint,
+                    modifier = Modifier.fillMaxSize()
+                )
             }
         }
     }
@@ -368,7 +420,8 @@ private fun PreviewTimerScreenNoTask() {
             onStopTimerClicked = {},
             onTaskSelected = {},
             onSelectNewTaskConfirmed = {},
-            onDismissSelectNewTaskConfirmationDialog = {}
+            onDismissSelectNewTaskConfirmationDialog = {},
+            onEditTaskClicked = {}
         )
     }
 }
@@ -402,7 +455,8 @@ private fun PreviewTimerScreenCompleted() {
             onStopTimerClicked = {},
             onTaskSelected = {},
             onSelectNewTaskConfirmed = {},
-            onDismissSelectNewTaskConfirmationDialog = {}
+            onDismissSelectNewTaskConfirmationDialog = {},
+            onEditTaskClicked = {}
         )
     }
 }

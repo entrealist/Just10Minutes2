@@ -42,8 +42,8 @@ fun TaskListScreen(
     viewModel: TaskListViewModel = hiltViewModel(),
     addNewTask: () -> Unit,
     editTask: (taskId: Long) -> Unit,
-    addEditResult: AddEditTaskViewModel.AddEditTaskResult?,
-    onAddEditResultProcessed: () -> Unit,
+    addEditTaskResult: AddEditTaskViewModel.AddEditTaskResult?,
+    onAddEditTaskResultProcessed: () -> Unit,
     navigateToTaskStatistics: (taskId: Long) -> Unit,
     navigateToArchive: () -> Unit,
     navigateToTimer: () -> Unit
@@ -60,10 +60,10 @@ fun TaskListScreen(
     val showStartTimerForNewTaskConfirmationDialog
             by viewModel.showStartTimerForNewTaskConfirmationDialog.observeAsState(false)
 
-    LaunchedEffect(addEditResult) {
-        if (addEditResult != null) {
-            viewModel.onAddEditResult(addEditResult)
-            onAddEditResultProcessed()
+    LaunchedEffect(addEditTaskResult) {
+        if (addEditTaskResult != null) {
+            viewModel.onAddEditResult(addEditTaskResult)
+            onAddEditTaskResultProcessed()
         }
     }
 

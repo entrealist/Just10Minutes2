@@ -1,11 +1,16 @@
 package com.codinginflow.just10minutes2.timer.ui
 
+import androidx.annotation.StringRes
 import androidx.lifecycle.*
+import com.codinginflow.just10minutes2.R
+import com.codinginflow.just10minutes2.addedittask.ui.AddEditTaskViewModel
+import com.codinginflow.just10minutes2.archive.ui.ArchiveViewModel
 import com.codinginflow.just10minutes2.common.data.preferences.TimerPreferencesManager
 import com.codinginflow.just10minutes2.common.data.daos.TaskDao
 import com.codinginflow.just10minutes2.common.data.entities.Task
 import com.codinginflow.just10minutes2.common.data.entities.containsWeekdayOfDate
 import com.codinginflow.just10minutes2.common.data.preferences.DayCheckPreferencesManager
+import com.codinginflow.just10minutes2.tasklist.ui.TaskListViewModel
 import com.codinginflow.just10minutes2.timer.TaskTimerManager
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.channels.Channel
@@ -106,11 +111,38 @@ class TimerViewModel @Inject constructor(
         }
     }
 
+    fun onEditTaskClicked() {
+        viewModelScope.launch {
+            val activeTask = activeTask.first()
+            activeTask?.let {
+                eventChannel.send(Event.EditTask(activeTask.id))
+            }
+        }
+    }
+
+    fun onEditResult(addEditResult: AddEditTaskViewModel.AddEditTaskResult) {
+        viewModelScope.launch {
+            when (addEditResult) {
+                is AddEditTaskViewModel.AddEditTaskResult.TaskCreated ->
+                    eventChannel.send(Event.ShowAddEditResultMessage(R.string.task_created))
+                is AddEditTaskViewModel.AddEditTaskResult.TaskUpdated ->
+                    eventChannel.send(Event.ShowAddEditResultMessage(R.string.task_updated))
+                is AddEditTaskViewModel.AddEditTaskResult.TaskDeleted ->
+                    eventChannel.send(Event.ShowAddEditResultMessage(R.string.task_deleted))
+                is AddEditTaskViewModel.AddEditTaskResult.TaskArchived ->
+                    eventChannel.send(Event.ShowAddEditResultMessage(R.string.task_archived))
+                else -> {}
+            }
+        }
+    }
+
     fun onStartTimerClicked() = taskTimerManager.startTimer()
 
     fun onStopTimerClicked() = taskTimerManager.stopTimer()
 
     sealed class Event {
         object ShowTimerStoppedMessage : Event()
+        data class EditTask(val taskId: Long) : Event()
+        data class ShowAddEditResultMessage(@StringRes val msg: Int) : Event()
     }
 }

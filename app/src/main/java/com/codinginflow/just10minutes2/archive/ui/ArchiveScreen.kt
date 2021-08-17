@@ -1,4 +1,4 @@
-package com.codinginflow.just10minutes2.archive
+package com.codinginflow.just10minutes2.archive.ui
 
 import android.content.res.Configuration
 import androidx.compose.animation.animateContentSize
@@ -12,7 +12,6 @@ import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.runtime.*
-import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -26,7 +25,6 @@ import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.codinginflow.just10minutes2.R
 import com.codinginflow.just10minutes2.addedittask.ui.AddEditTaskViewModel
-import com.codinginflow.just10minutes2.archive.ui.ArchiveViewModel
 import com.codinginflow.just10minutes2.common.data.entities.Task
 import com.codinginflow.just10minutes2.common.ui.theme.Dimens
 import com.codinginflow.just10minutes2.common.ui.theme.Just10Minutes2Theme
@@ -37,8 +35,8 @@ fun ArchiveScreen(
     viewModel: ArchiveViewModel = hiltViewModel(),
     navigateToTaskStatistics: (taskId: Long) -> Unit,
     editTask: (taskId: Long) -> Unit,
-    editResult: AddEditTaskViewModel.AddEditTaskResult?,
-    onEditResultProcessed: () -> Unit,
+    editTaskResult: AddEditTaskViewModel.AddEditTaskResult?,
+    onEditTaskResultProcessed: () -> Unit,
     navigateUp: () -> Unit,
 ) {
     val archivedTasks by viewModel.archivedTasks.collectAsState(emptyList())
@@ -47,10 +45,10 @@ fun ArchiveScreen(
     val scaffoldState = rememberScaffoldState()
     val context = LocalContext.current
 
-    LaunchedEffect(editResult) {
-        if (editResult != null) {
-            viewModel.onEditResult(editResult)
-            onEditResultProcessed()
+    LaunchedEffect(editTaskResult) {
+        if (editTaskResult != null) {
+            viewModel.onEditTaskResult(editTaskResult)
+            onEditTaskResultProcessed()
         }
     }
 
