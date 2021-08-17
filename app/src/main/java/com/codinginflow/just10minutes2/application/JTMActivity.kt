@@ -93,7 +93,7 @@ private fun JTMNavHost(
     navController: NavHostController,
     modifier: Modifier = Modifier
 ) {
-    val addEditResultSharedViewModel: AddEditResultViewModel = hiltViewModel()
+    val addEditTaskResultSharedViewModel: AddEditTaskResultViewModel = hiltViewModel()
 
     NavHost(
         navController = navController,
@@ -114,7 +114,7 @@ private fun JTMNavHost(
                         route = AppDestination.AddEditTask.route + "?$ARG_TASK_ID=$taskId"
                     )
                 },
-                addEditResultViewModel = addEditResultSharedViewModel
+                addEditTaskResultViewModel = addEditTaskResultSharedViewModel
             )
         }
         composable(
@@ -149,7 +149,7 @@ private fun JTMNavHost(
                         navOptions = createNavOptionsForBottomNavigation(navController)
                     )
                 },
-                addEditResultViewModel = addEditResultSharedViewModel
+                addEditTaskResultViewModel = addEditTaskResultSharedViewModel
             )
         }
         composable(
@@ -181,7 +181,7 @@ private fun JTMNavHost(
                     navController.popBackStack()
                 },
                 navigateBackWithResult = { result ->
-                    addEditResultSharedViewModel.onAddEditTaskResult(result)
+                    addEditTaskResultSharedViewModel.onAddEditTaskResult(result)
                     navController.popBackStack()
                 })
         }
@@ -217,7 +217,7 @@ private fun JTMNavHost(
                         route = AppDestination.AddEditTask.route + "?$ARG_TASK_ID=$taskId"
                     )
                 },
-                addEditResultViewModel = addEditResultSharedViewModel
+                addEditTaskResultViewModel = addEditTaskResultSharedViewModel
             )
         }
     }

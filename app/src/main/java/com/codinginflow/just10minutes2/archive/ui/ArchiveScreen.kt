@@ -24,8 +24,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.codinginflow.just10minutes2.R
-import com.codinginflow.just10minutes2.addedittask.ui.AddEditTaskViewModel
-import com.codinginflow.just10minutes2.application.AddEditResultViewModel
+import com.codinginflow.just10minutes2.application.AddEditTaskResultViewModel
 import com.codinginflow.just10minutes2.common.data.entities.Task
 import com.codinginflow.just10minutes2.common.ui.theme.Dimens
 import com.codinginflow.just10minutes2.common.ui.theme.Just10Minutes2Theme
@@ -34,7 +33,7 @@ import kotlinx.coroutines.flow.collectLatest
 @Composable
 fun ArchiveScreen(
     viewModel: ArchiveViewModel = hiltViewModel(),
-    addEditResultViewModel: AddEditResultViewModel,
+    addEditTaskResultViewModel: AddEditTaskResultViewModel,
     navigateToTaskStatistics: (taskId: Long) -> Unit,
     editTask: (taskId: Long) -> Unit,
     navigateUp: () -> Unit,
@@ -61,7 +60,7 @@ fun ArchiveScreen(
     }
 
     LaunchedEffect(Unit) {
-        addEditResultViewModel.resultMessage.collectLatest { resultMessageRes ->
+        addEditTaskResultViewModel.resultMessage.collectLatest { resultMessageRes ->
             scaffoldState.snackbarHostState.showSnackbar(context.getString(resultMessageRes))
         }
     }

@@ -27,8 +27,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.codinginflow.just10minutes2.R
-import com.codinginflow.just10minutes2.addedittask.ui.AddEditTaskViewModel
-import com.codinginflow.just10minutes2.application.AddEditResultViewModel
+import com.codinginflow.just10minutes2.application.AddEditTaskResultViewModel
 import com.codinginflow.just10minutes2.common.data.entities.Task
 import com.codinginflow.just10minutes2.common.data.entities.containsWeekdayOfDate
 import com.codinginflow.just10minutes2.common.data.entities.toLocalizedString
@@ -41,7 +40,7 @@ import java.util.*
 @Composable
 fun TaskListScreen(
     viewModel: TaskListViewModel = hiltViewModel(),
-    addEditResultViewModel: AddEditResultViewModel,
+    addEditTaskResultViewModel: AddEditTaskResultViewModel,
     addNewTask: () -> Unit,
     editTask: (taskId: Long) -> Unit,
     navigateToTaskStatistics: (taskId: Long) -> Unit,
@@ -78,7 +77,7 @@ fun TaskListScreen(
     }
 
     LaunchedEffect(Unit) {
-        addEditResultViewModel.resultMessage.collectLatest { resultMessageRes ->
+        addEditTaskResultViewModel.resultMessage.collectLatest { resultMessageRes ->
             scaffoldState.snackbarHostState.showSnackbar(context.getString(resultMessageRes))
         }
     }
@@ -264,8 +263,6 @@ private fun TaskItem(
             .animateContentSize()
             .padding(8.dp)
     ) {
-        // TODO: 16.08.2021 Change the appearance on inactive days
-
         Column {
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Column(
@@ -309,51 +306,47 @@ private fun TaskItem(
                         )
                     }
                 }
-                Box(
-                    contentAlignment = Alignment.Center,
-                    modifier = Modifier
-                        .weight(0.15f)
-                        .padding(8.dp)
-                ) {
-                    if (isActiveToday) {
+                if (isActiveToday) {
+                    val startStopTimerOnClick = if (timerRunning) {
+                        { onStopTimerClicked() }
+                    } else {
+                        { onStartTimerClicked(task) }
+                    }
+                    val startStopTimerOnClickEnabled = !task.isCompletedToday
+                    Box(
+                        contentAlignment = Alignment.Center,
+                        modifier = Modifier
+                            .weight(0.15f)
+                            .padding(8.dp)
+                            .clip(CircleShape)
+                            .clickable(
+                                enabled = startStopTimerOnClickEnabled,
+                                onClick = startStopTimerOnClick
+                            )
+
+                    ) {
                         val progress =
                             task.timeCompletedTodayInMilliseconds.toFloat() / task.dailyGoalInMilliseconds.toFloat()
-                        CircularProgressIndicatorWithBackground(
-                            progress = progress,
-                        )
-                        when {
-                            task.isCompletedToday -> {
-                                Icon(
-                                    Icons.Default.Check,
-                                    contentDescription = stringResource(R.string.task_completed),
-                                    tint = MaterialTheme.colors.primary
-                                )
-                            }
-                            timerRunning -> {
-                                Icon(
-                                    Icons.Default.Stop,
-                                    contentDescription = stringResource(R.string.timer_running),
-                                    tint = MaterialTheme.colors.primary,
-                                    modifier = Modifier
-                                        .clip(CircleShape)
-                                        .clickable { onStopTimerClicked() }
-                                )
-                            }
-                            else -> {
-                                // TODO: 16.08.2021 Click target too small -> move to whole progress circle
-                                Icon(
-                                    Icons.Default.PlayArrow,
-                                    contentDescription = stringResource(R.string.start_timer),
-                                    tint = MaterialTheme.colors.primary,
-                                    modifier = Modifier
-                                        .clip(CircleShape)
-                                        .clickable { onStartTimerClicked(task) }
-                                )
-                            }
+                        CircularProgressIndicatorWithBackground(progress)
+                        val progressBarIcon = when {
+                            task.isCompletedToday -> Icons.Default.Check
+                            timerRunning -> Icons.Default.Stop
+                            else -> Icons.Default.PlayArrow
                         }
+                        val progressBarTextRes = when {
+                            task.isCompletedToday -> R.string.task_completed
+                            timerRunning -> R.string.timer_running
+                            else -> R.string.start_timer
+                        }
+                        Icon(
+                            progressBarIcon,
+                            contentDescription = stringResource(progressBarTextRes),
+                            tint = MaterialTheme.colors.primary
+                        )
                     }
                 }
             }
+
             if (expanded) {
                 Spacer(Modifier.height(8.dp))
                 Row {

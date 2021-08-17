@@ -98,4 +98,7 @@
     <string name="archived_tasks">Archived tasks</string>
     <string name="active_tasks">Active tasks</string>
     <string name="open_menu">Open menu</string>
+    <string name="no_tasks_found_message">No tasks found</string>
+    <string name="archive_task_completed">Task archived</string>
+    <string name="unarchive_task_completed">Task unarchived</string>
 </resources>

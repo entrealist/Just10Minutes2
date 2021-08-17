@@ -26,7 +26,7 @@ class AddEditTaskViewModel @Inject constructor(
     private val eventChannel = Channel<Event>()
     val events = eventChannel.receiveAsFlow()
 
-    val taskId = savedState.get<Long>(ARG_TASK_ID) ?: Task.NO_ID
+    private val taskId = savedState.get<Long>(ARG_TASK_ID) ?: Task.NO_ID
     private var task: Task? = null
 
     val isEditMode = taskId != Task.NO_ID
@@ -191,11 +191,12 @@ class AddEditTaskViewModel @Inject constructor(
     }
 
     fun onArchiveTaskConfirmed() {
+        showArchiveTaskConfirmationDialogLiveData.value = false
         viewModelScope.launch {
             task?.let { task ->
                 taskTimerManager.stopTimerIfTaskIsActive(task)
                 taskDao.setArchivedState(task.id, true)
-                eventChannel.send(Event.NavigateBackWithResult(AddEditTaskResult.TaskArchived))
+                eventChannel.send(Event.ShowArchiveTaskCompletedMessage)
             }
         }
     }
@@ -212,7 +213,7 @@ class AddEditTaskViewModel @Inject constructor(
         viewModelScope.launch {
             task?.let { task ->
                 taskDao.setArchivedState(task.id, false)
-                eventChannel.send(Event.NavigateBackWithResult(AddEditTaskResult.TaskUnarchived))
+                eventChannel.send(Event.ShowUnarchiveTaskCompletedMessage)
             }
         }
     }
@@ -248,6 +249,8 @@ class AddEditTaskViewModel @Inject constructor(
 
     sealed class Event {
         object ShowResetDayCompletedMessage : Event()
+        object ShowArchiveTaskCompletedMessage : Event()
+        object ShowUnarchiveTaskCompletedMessage : Event()
         data class NavigateBackWithResult(val result: AddEditTaskResult) : Event()
         object NavigateUp : Event()
     }
@@ -261,11 +264,5 @@ class AddEditTaskViewModel @Inject constructor(
 
         @Parcelize
         object TaskDeleted : AddEditTaskResult()
-
-        @Parcelize
-        object TaskArchived : AddEditTaskResult()
-
-        @Parcelize
-        object TaskUnarchived : AddEditTaskResult()
     }
 }

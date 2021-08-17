@@ -23,8 +23,7 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.codinginflow.just10minutes2.R
-import com.codinginflow.just10minutes2.addedittask.ui.AddEditTaskViewModel
-import com.codinginflow.just10minutes2.application.AddEditResultViewModel
+import com.codinginflow.just10minutes2.application.AddEditTaskResultViewModel
 import com.codinginflow.just10minutes2.common.data.entities.Task
 import com.codinginflow.just10minutes2.common.data.entities.WeekdaySelection
 import com.codinginflow.just10minutes2.common.data.entities.toLocalizedString
@@ -37,7 +36,7 @@ import kotlinx.coroutines.flow.collectLatest
 fun TimerScreen(
     viewModel: TimerViewModel = hiltViewModel(),
     editTask: (taskId: Long) -> Unit,
-    addEditResultViewModel: AddEditResultViewModel
+    addEditTaskResultViewModel: AddEditTaskResultViewModel
 ) {
     val uiState by viewModel.uiState.collectAsState(null)
 
@@ -56,7 +55,7 @@ fun TimerScreen(
     }
 
     LaunchedEffect(Unit) {
-        addEditResultViewModel.resultMessage.collectLatest { resultMessageRes ->
+        addEditTaskResultViewModel.resultMessage.collectLatest { resultMessageRes ->
             scaffoldState.snackbarHostState.showSnackbar(context.getString(resultMessageRes))
         }
     }
@@ -94,7 +93,7 @@ private fun TimerBody(
             TopAppBar(
                 title = { Text(stringResource(R.string.timer)) },
                 actions = {
-                    if (uiState != null) {
+                    Box {
                         IconButton(onClick = { menuExpanded = !menuExpanded }) {
                             Icon(
                                 Icons.Default.MoreVert,
@@ -105,7 +104,7 @@ private fun TimerBody(
                             expanded = menuExpanded,
                             onDismissRequest = { menuExpanded = false }
                         ) {
-                            val editItemEnabled = uiState.taskActiveToday
+                            val editItemEnabled = uiState?.activeTask != null
                             DropdownMenuItem(
                                 onClick = onEditTaskClicked,
                                 enabled = editItemEnabled
@@ -205,9 +204,8 @@ private fun BodyContent(
             Text(activeWeekdaysText)
             Spacer(Modifier.height(16.dp))
             Box(Modifier.align(Alignment.CenterHorizontally)) {
-                TaskTimer(
-                    timeLeftInMillis = task?.timeLeftTodayInMilliseconds ?: 0,
-                    timeGoalInMillis = task?.dailyGoalInMilliseconds ?: 0,
+                TaskTimeIndicator(
+                    task = task,
                     taskActiveToday = taskActiveToday,
                     running = timerRunning
                 )
@@ -301,31 +299,33 @@ private fun DropdownMenuWithSelector(
             onDismissRequest = { expanded = false },
             modifier = Modifier.width(250.dp)
         ) {
-            allTasks.forEach { task ->
-                if (task != selectedTask) {
-                    DropdownMenuItem(onClick = {
-                        onTaskSelected(task)
-                        expanded = false
-                    }) {
-                        val textColor =
-                            if (task.isCompletedToday) MaterialTheme.colors.primary else LocalContentColor.current
-                        Text(
-                            stringResource(
-                                R.string.task_name_with_completed_and_total_minutes,
-                                task.name,
-                                task.timeCompletedTodayInMinutes,
-                                task.dailyGoalInMinutes
-                            ),
-                            color = textColor
+            val allTasksWithoutCurrent = allTasks.filter { it != selectedTask }
+            if (allTasksWithoutCurrent.isEmpty()) {
+                Text(stringResource(R.string.no_tasks_found_message), Modifier.padding(8.dp))
+            }
+            allTasksWithoutCurrent.forEach { task ->
+                DropdownMenuItem(onClick = {
+                    onTaskSelected(task)
+                    expanded = false
+                }) {
+                    val textColor =
+                        if (task.isCompletedToday) MaterialTheme.colors.primary else LocalContentColor.current
+                    Text(
+                        stringResource(
+                            R.string.task_name_with_completed_and_total_minutes,
+                            task.name,
+                            task.timeCompletedTodayInMinutes,
+                            task.dailyGoalInMinutes
+                        ),
+                        color = textColor
+                    )
+                    Spacer(Modifier.width(ButtonDefaults.IconSpacing))
+                    if (task.isCompletedToday) {
+                        Icon(
+                            Icons.Default.Check,
+                            contentDescription = stringResource(R.string.task_completed),
+                            tint = MaterialTheme.colors.primary,
                         )
-                        Spacer(Modifier.width(ButtonDefaults.IconSpacing))
-                        if (task.isCompletedToday) {
-                            Icon(
-                                Icons.Default.Check,
-                                contentDescription = stringResource(R.string.task_completed),
-                                tint = MaterialTheme.colors.primary,
-                            )
-                        }
                     }
                 }
             }
@@ -334,14 +334,15 @@ private fun DropdownMenuWithSelector(
 }
 
 @Composable
-private fun TaskTimer(
-    timeLeftInMillis: Long,
-    timeGoalInMillis: Long,
+private fun TaskTimeIndicator(
+    task: Task?,
     taskActiveToday: Boolean,
     running: Boolean,
     modifier: Modifier = Modifier,
     strokeWidth: Dp = 10.dp
 ) {
+    val timeLeftInMillis = task?.timeLeftTodayInMilliseconds ?: 0
+    val timeGoalInMillis = task?.dailyGoalInMilliseconds ?: 0
     val progress = 1 - (timeLeftInMillis.toFloat() / timeGoalInMillis.toFloat())
     val completed = timeLeftInMillis <= 0
 
@@ -359,7 +360,7 @@ private fun TaskTimer(
             modifier = Modifier.sizeIn(minWidth = 230.dp, minHeight = 230.dp)
         )
         when {
-            !taskActiveToday -> {
+            !taskActiveToday && task != null -> {
                 Text(
                     text = stringResource(R.string.task_not_active_today),
                     style = MaterialTheme.typography.h6.copy(fontWeight = FontWeight.Bold),

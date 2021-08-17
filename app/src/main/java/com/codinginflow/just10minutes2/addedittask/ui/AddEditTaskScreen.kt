@@ -66,6 +66,10 @@ fun AddEditTaskScreen(
                 is AddEditTaskViewModel.Event.NavigateUp -> navigateUp()
                 is AddEditTaskViewModel.Event.ShowResetDayCompletedMessage ->
                     scaffoldState.snackbarHostState.showSnackbar(context.getString(R.string.task_day_reset_completed))
+                AddEditTaskViewModel.Event.ShowArchiveTaskCompletedMessage ->
+                    scaffoldState.snackbarHostState.showSnackbar(context.getString(R.string.archive_task_completed))
+                AddEditTaskViewModel.Event.ShowUnarchiveTaskCompletedMessage ->
+                    scaffoldState.snackbarHostState.showSnackbar(context.getString(R.string.unarchive_task_completed))
             }
         }
     }

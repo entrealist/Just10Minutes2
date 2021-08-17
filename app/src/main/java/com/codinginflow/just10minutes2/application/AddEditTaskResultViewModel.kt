@@ -11,7 +11,7 @@ import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 @HiltViewModel
-class AddEditResultViewModel @Inject constructor() : ViewModel() {
+class AddEditTaskResultViewModel @Inject constructor() : ViewModel() {
 
     private val resultMessageChannel = Channel<Int>()
     val resultMessage = resultMessageChannel.receiveAsFlow()
@@ -25,10 +25,6 @@ class AddEditResultViewModel @Inject constructor() : ViewModel() {
                     resultMessageChannel.send(R.string.task_updated)
                 AddEditTaskViewModel.AddEditTaskResult.TaskDeleted ->
                     resultMessageChannel.send(R.string.task_deleted)
-                AddEditTaskViewModel.AddEditTaskResult.TaskArchived ->
-                    resultMessageChannel.send(R.string.task_archived)
-                AddEditTaskViewModel.AddEditTaskResult.TaskUnarchived ->
-                    resultMessageChannel.send(R.string.task_unarchived)
             }
         }
     }
