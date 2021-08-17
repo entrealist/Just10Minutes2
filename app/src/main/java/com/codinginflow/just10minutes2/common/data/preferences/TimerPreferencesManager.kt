@@ -12,11 +12,10 @@ import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.map
 import timber.log.Timber
 import java.io.IOException
-import java.util.*
 import javax.inject.Inject
 import javax.inject.Singleton
 
-data class TimerPreferences(val activeTaskId: Long?)
+data class TimerPreferences(val selectedTaskId: Long?)
 
 @Singleton
 class TimerPreferencesManager @Inject constructor(@ApplicationContext context: Context) {
@@ -35,17 +34,17 @@ class TimerPreferencesManager @Inject constructor(@ApplicationContext context: C
         }
         .map { preferences ->
             // TODO: 17.08.2021 Set default value for id to 1 before shipping
-            val activeTaskId = preferences[PreferencesKeys.ACTIVE_TASK_ID]
-            TimerPreferences(activeTaskId)
+            val selectedTaskId = preferences[PreferencesKeys.SELECTED_TASK_ID]
+            TimerPreferences(selectedTaskId)
         }
 
-    suspend fun updateActiveTaskId(id: Long) {
+    suspend fun updateSelectedTaskId(id: Long) {
         dataStore.edit { preferences ->
-            preferences[PreferencesKeys.ACTIVE_TASK_ID] = id
+            preferences[PreferencesKeys.SELECTED_TASK_ID] = id
         }
     }
 
     private object PreferencesKeys {
-        val ACTIVE_TASK_ID = longPreferencesKey("active_task_id")
+        val SELECTED_TASK_ID = longPreferencesKey("selected_task_id")
     }
 }

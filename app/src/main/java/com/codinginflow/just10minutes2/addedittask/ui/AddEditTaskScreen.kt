@@ -41,7 +41,7 @@ fun AddEditTaskScreen(
     val minutesGoalInputErrorMessage by viewModel.minutesGoalInputErrorMessage.observeAsState()
 
     val isEditMode = viewModel.isEditMode
-    val isArchivedTask by viewModel.isArchivedTask.observeAsState(null)
+    val isArchivedTask by viewModel.isArchivedTask.collectAsState(null)
 
     val showDeleteTaskConfirmationDialog by
     viewModel.showDeleteTaskConfirmationDialog.observeAsState(false)
@@ -309,17 +309,31 @@ private fun BodyContent(
                     isError = minutesGoalInputIsError
                 )
                 if (minutesGoalInputIsError) {
-                    val errorMessage = minutesGoalInputErrorMessage?.let { stringResource(it) } ?: ""
+                    val errorMessage =
+                        minutesGoalInputErrorMessage?.let { stringResource(it) } ?: ""
                     Text(errorMessage, color = MaterialTheme.colors.error)
                 }
-                Spacer(Modifier.height(8.dp))
                 if (weekdaysSelectionInput != null) {
+                    Spacer(Modifier.height(8.dp))
                     Text(stringResource(R.string.active_weekdays) + ":")
                     Spacer(Modifier.height(8.dp))
                     WeekDaySelectorRow(
                         weekdaySelection = weekdaysSelectionInput,
                         onWeekdaySelectionChanged = onWeekdaySelectionChanged
                     )
+                }
+            }
+            if (isArchivedTask == true) {
+                Spacer(Modifier.height(8.dp))
+                Row {
+                    Icon(
+                        Icons.Default.Inventory2,
+                        contentDescription = stringResource(R.string.archived_tasks),
+                        tint = Color.Gray,
+                        modifier = Modifier.align(Alignment.CenterVertically)
+                    )
+                    Spacer(Modifier.width(8.dp))
+                    Text(stringResource(R.string.task_is_archived), color = Color.Gray)
                 }
             }
         }

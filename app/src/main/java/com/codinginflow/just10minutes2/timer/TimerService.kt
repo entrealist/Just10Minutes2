@@ -1,22 +1,11 @@
 package com.codinginflow.just10minutes2.timer
 
-import android.app.NotificationChannel
-import android.app.NotificationManager
-import android.app.PendingIntent
 import android.app.Service
 import android.content.Intent
-import android.os.Build
 import android.os.IBinder
-import androidx.core.app.NotificationCompat
-import androidx.core.app.NotificationManagerCompat
-import androidx.core.content.ContextCompat
-import com.codinginflow.just10minutes2.application.MainActivity
-import com.codinginflow.just10minutes2.R
 import com.codinginflow.just10minutes2.common.data.entities.Task
-import com.codinginflow.just10minutes2.common.util.formatTimeText
 import com.codinginflow.just10minutes2.notification.NotificationHelper
 import com.codinginflow.just10minutes2.notification.NotificationHelper.Companion.TIMER_NOTIFICATION_ID
-import com.codinginflow.just10minutes2.notification.NotificationHelper.Companion.TIMER_SERVICE_CHANNEL_ID
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.SupervisorJob
@@ -42,7 +31,7 @@ class TimerService : Service() {
         startForeground(TIMER_NOTIFICATION_ID, notificationHelper.getEmptyTimerServiceNotification().build())
 
         serviceScope.launch {
-            taskTimerManager.activeTask.collect { task ->
+            taskTimerManager.selectedTask.collect { task ->
                 if (task != null) {
                     notificationHelper.updateTimerServiceNotification(task)
                 }

@@ -1,11 +1,9 @@
 package com.codinginflow.just10minutes2.tasklist.ui
 
-import androidx.annotation.StringRes
 import androidx.lifecycle.*
-import com.codinginflow.just10minutes2.R
-import com.codinginflow.just10minutes2.addedittask.ui.AddEditTaskViewModel
 import com.codinginflow.just10minutes2.common.data.daos.TaskDao
 import com.codinginflow.just10minutes2.common.data.entities.Task
+import com.codinginflow.just10minutes2.common.data.entities.containsWeekdayOfDate
 import com.codinginflow.just10minutes2.common.data.preferences.DayCheckPreferencesManager
 import com.codinginflow.just10minutes2.common.data.preferences.TimerPreferencesManager
 import com.codinginflow.just10minutes2.timer.TaskTimerManager
@@ -13,7 +11,6 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.first
-import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.launch
 import java.util.*
@@ -33,11 +30,23 @@ class TaskListViewModel @Inject constructor(
 
     val tasks = taskDao.getAllNotArchivedTasks()
 
-    private val activeTask = taskTimerManager.activeTask
+    private val selectedTask = taskTimerManager.selectedTask
 
     private val timerRunning = taskTimerManager.timerRunning
 
-    val activeDay = dayCheckPreferencesManager.activeDay
+    private val activeDay = dayCheckPreferencesManager.activeDay
+
+    val taskIdsActiveToday = combine(tasks, activeDay) { tasks, activeDay ->
+        if (activeDay != null) {
+            val activeTasks = mutableListOf<Long>()
+            tasks.forEach { task ->
+                if (task.weekdays.containsWeekdayOfDate(activeDay)) {
+                    activeTasks.add(task.id)
+                }
+            }
+            activeTasks
+        } else emptyList()
+    }
 
     private var pendingNewTask = savedStateHandle.get<Task>("pendingNewTask")
         set(value) {
@@ -45,7 +54,7 @@ class TaskListViewModel @Inject constructor(
             savedStateHandle.set("pendingNewTask", value)
         }
 
-    val runningTask = combine(activeTask, timerRunning) { task, running ->
+    val runningTask = combine(selectedTask, timerRunning) { task, running ->
         if (running && task != null) {
             task.id
         } else {
@@ -84,10 +93,10 @@ class TaskListViewModel @Inject constructor(
 
     fun onStartTimerClicked(task: Task) {
         viewModelScope.launch {
-            val activeTask = activeTask.first()
+            val selectedTask = selectedTask.first()
             val timerRunning = timerRunning.first()
 
-            if (task == activeTask && timerRunning) return@launch
+            if (task == selectedTask && timerRunning) return@launch
 
             if (!timerRunning) {
                 startTimerForNewTask(task)
@@ -114,7 +123,7 @@ class TaskListViewModel @Inject constructor(
     private fun startTimerForNewTask(task: Task) {
         taskTimerManager.stopTimer()
         viewModelScope.launch {
-            timerPreferencesManager.updateActiveTaskId(task.id)
+            timerPreferencesManager.updateSelectedTaskId(task.id)
             taskTimerManager.startTimer()
             eventChannel.send(Event.NavigateToTimer)
         }

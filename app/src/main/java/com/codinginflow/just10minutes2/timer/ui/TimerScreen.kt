@@ -104,7 +104,7 @@ private fun TimerBody(
                             expanded = menuExpanded,
                             onDismissRequest = { menuExpanded = false }
                         ) {
-                            val editItemEnabled = uiState?.activeTask != null
+                            val editItemEnabled = uiState?.selectedTask != null
                             DropdownMenuItem(
                                 onClick = onEditTaskClicked,
                                 enabled = editItemEnabled
@@ -119,7 +119,7 @@ private fun TimerBody(
     ) {
         if (uiState != null) {
             BodyContent(
-                task = uiState.activeTask,
+                task = uiState.selectedTask,
                 allTasks = uiState.allTasks,
                 timerRunning = uiState.timerRunning,
                 taskActiveToday = uiState.taskActiveToday,
@@ -407,7 +407,7 @@ private fun PreviewTimerScreenNoTask() {
     Just10Minutes2Theme {
         TimerBody(
             uiState = TimerUiState(
-                activeTask = null,
+                selectedTask = null,
                 taskActiveToday = true,
                 allTasks = emptyList(),
                 timerRunning = false,
@@ -437,7 +437,7 @@ private fun PreviewTimerScreenCompleted() {
     Just10Minutes2Theme {
         TimerBody(
             uiState = TimerUiState(
-                activeTask = Task(
+                selectedTask = Task(
                     "Example task",
                     WeekdaySelection(allDays = true),
                     10,

@@ -101,4 +101,5 @@
     <string name="no_tasks_found_message">No tasks found</string>
     <string name="archive_task_completed">Task archived</string>
     <string name="unarchive_task_completed">Task unarchived</string>
+    <string name="task_is_archived">This task is archived</string>
 </resources>

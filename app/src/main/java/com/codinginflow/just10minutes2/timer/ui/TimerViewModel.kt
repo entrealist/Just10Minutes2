@@ -1,16 +1,11 @@
 package com.codinginflow.just10minutes2.timer.ui
 
-import androidx.annotation.StringRes
 import androidx.lifecycle.*
-import com.codinginflow.just10minutes2.R
-import com.codinginflow.just10minutes2.addedittask.ui.AddEditTaskViewModel
-import com.codinginflow.just10minutes2.archive.ui.ArchiveViewModel
 import com.codinginflow.just10minutes2.common.data.preferences.TimerPreferencesManager
 import com.codinginflow.just10minutes2.common.data.daos.TaskDao
 import com.codinginflow.just10minutes2.common.data.entities.Task
 import com.codinginflow.just10minutes2.common.data.entities.containsWeekdayOfDate
 import com.codinginflow.just10minutes2.common.data.preferences.DayCheckPreferencesManager
-import com.codinginflow.just10minutes2.tasklist.ui.TaskListViewModel
 import com.codinginflow.just10minutes2.timer.TaskTimerManager
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.channels.Channel
@@ -21,7 +16,7 @@ import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 data class TimerUiState(
-    val activeTask: Task?,
+    val selectedTask: Task?,
     val taskActiveToday: Boolean,
     val allTasks: List<Task>,
     val timerRunning: Boolean,
@@ -40,7 +35,7 @@ class TimerViewModel @Inject constructor(
     private val eventChannel = Channel<Event>()
     val events = eventChannel.receiveAsFlow()
 
-    private val activeTask = taskTimerManager.activeTask
+    private val selectedTask = taskTimerManager.selectedTask
     private val activeDay = dayCheckPreferencesManager.activeDay
     private val allTasks = taskDao.getAllNotArchivedTasks()
     private val timerRunning = taskTimerManager.timerRunning
@@ -49,15 +44,15 @@ class TimerViewModel @Inject constructor(
         savedStateHandle.getLiveData<Boolean>("showSelectNewTaskConfirmationDialog", false)
 
     val uiState = combine(
-        activeTask,
+        selectedTask,
         activeDay,
         allTasks,
         timerRunning,
         showSelectNewTaskConfirmationDialog.asFlow()
-    ) { activeTask, activeDay, allTasks, timerRunning, showSelectNewTaskConfirmationDialog ->
+    ) { selectedTask, activeDay, allTasks, timerRunning, showSelectNewTaskConfirmationDialog ->
         TimerUiState(
-            activeTask = activeTask,
-            taskActiveToday = activeTask != null && activeDay != null && activeTask.weekdays.containsWeekdayOfDate(
+            selectedTask = selectedTask,
+            taskActiveToday = selectedTask != null && activeDay != null && selectedTask.weekdays.containsWeekdayOfDate(
                 activeDay
             ),
             allTasks = allTasks,
@@ -75,12 +70,12 @@ class TimerViewModel @Inject constructor(
 
     fun onTaskSelected(newTask: Task) {
         viewModelScope.launch {
-            val activeTask = activeTask.first()
-            if (activeTask == newTask) return@launch
+            val selectedTask = selectedTask.first()
+            if (selectedTask == newTask) return@launch
 
             val timerRunning = timerRunning.first()
             if (!timerRunning) {
-                changeActiveTask(newTask)
+                changeSelectedTaskTask(newTask)
             } else {
                 pendingNewTask = newTask
                 showSelectNewTaskConfirmationDialog.value = true
@@ -91,7 +86,7 @@ class TimerViewModel @Inject constructor(
     fun onSelectNewTaskConfirmed() {
         showSelectNewTaskConfirmationDialog.value = false
         pendingNewTask?.let {
-            changeActiveTask(it)
+            changeSelectedTaskTask(it)
             pendingNewTask = null
             viewModelScope.launch {
                 eventChannel.send(Event.ShowTimerStoppedMessage)
@@ -104,18 +99,18 @@ class TimerViewModel @Inject constructor(
         pendingNewTask = null
     }
 
-    private fun changeActiveTask(task: Task) {
+    private fun changeSelectedTaskTask(task: Task) {
         taskTimerManager.stopTimer()
         viewModelScope.launch {
-            timerPreferencesManager.updateActiveTaskId(task.id)
+            timerPreferencesManager.updateSelectedTaskId(task.id)
         }
     }
 
     fun onEditTaskClicked() {
         viewModelScope.launch {
-            val activeTask = activeTask.first()
-            activeTask?.let {
-                eventChannel.send(Event.EditTask(activeTask.id))
+            val selectedTask = selectedTask.first()
+            selectedTask?.let {
+                eventChannel.send(Event.EditTask(selectedTask.id))
             }
         }
     }

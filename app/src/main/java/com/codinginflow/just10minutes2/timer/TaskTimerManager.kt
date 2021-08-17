@@ -32,8 +32,8 @@ class TaskTimerManager @Inject constructor(
 ) {
     private val timerPreferencesFlow = timerPreferencesManager.timerPreferencesFlow
 
-    val activeTask = timerPreferencesFlow.flatMapLatest { timerPreferences ->
-        timerPreferences.activeTaskId?.let { taskId ->
+    val selectedTask = timerPreferencesFlow.flatMapLatest { timerPreferences ->
+        timerPreferences.selectedTaskId?.let { taskId ->
             taskDao.getNotArchivedTaskById(taskId)
         } ?: flowOf(null)
     }
@@ -50,7 +50,7 @@ class TaskTimerManager @Inject constructor(
 
     init {
         applicationScope.launch {
-            activeTask.collect { task ->
+            selectedTask.collect { task ->
                 if (task != null) {
                     // Task has just finished
                     if (task.isCompletedToday && timerRunning.first()) {
@@ -72,13 +72,13 @@ class TaskTimerManager @Inject constructor(
     fun startTimer() {
         timerJob?.cancel()
         timerJob = applicationScope.launch {
-            val activeTask = activeTask.first()
-            if (activeTask != null) {
+            val selectedTask = selectedTask.first()
+            if (selectedTask != null) {
                 startTimerService()
                 timerRunningFlow.value = true
                 while (true) {
                     delay(TICK_DELAY)
-                    taskDao.increaseMillisCompletedToday(activeTask.id, TICK_DELAY)
+                    taskDao.increaseMillisCompletedToday(selectedTask.id, TICK_DELAY)
                 }
             }
         }
@@ -90,9 +90,9 @@ class TaskTimerManager @Inject constructor(
         timerRunningFlow.value = false
     }
 
-    suspend fun stopTimerIfTaskIsActive(task: Task) {
-        val activeTask = activeTask.first()
-        if (activeTask?.id == task.id) {
+    suspend fun stopTimerIfTaskIsSelected(task: Task) {
+        val selectedTask = selectedTask.first()
+        if (selectedTask?.id == task.id) {
             stopTimer()
         }
     }

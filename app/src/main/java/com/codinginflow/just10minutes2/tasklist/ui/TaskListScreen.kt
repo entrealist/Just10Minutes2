@@ -48,9 +48,8 @@ fun TaskListScreen(
     navigateToTimer: () -> Unit
 ) {
     val tasks by viewModel.tasks.collectAsState(emptyList())
+    val taskIdsActiveToday by viewModel.taskIdsActiveToday.collectAsState(emptyList())
     val runningTaskId by viewModel.runningTask.collectAsState(null)
-
-    val activeDay by viewModel.activeDay.collectAsState(null)
 
     val lazyListState = rememberLazyListState()
     val scaffoldState = rememberScaffoldState()
@@ -84,8 +83,8 @@ fun TaskListScreen(
 
     TaskListBody(
         tasks = tasks,
+        taskIdsActiveToday = taskIdsActiveToday,
         runningTaskId = runningTaskId,
-        activeDay = activeDay,
         onAddNewTaskClicked = viewModel::onAddNewTaskClicked,
         onEditTaskClicked = viewModel::onEditTaskClicked,
         onOpenTaskStatisticsClicked = viewModel::onOpenTaskStatisticsClicked,
@@ -103,8 +102,8 @@ fun TaskListScreen(
 @Composable
 private fun TaskListBody(
     tasks: List<Task>,
+    taskIdsActiveToday: List<Long>,
     runningTaskId: Long?,
-    activeDay: Calendar?,
     onAddNewTaskClicked: () -> Unit,
     onEditTaskClicked: (Task) -> Unit,
     onOpenTaskStatisticsClicked: (Task) -> Unit,
@@ -142,8 +141,8 @@ private fun TaskListBody(
     ) { innerPadding ->
         BodyContent(
             tasks = tasks,
+            taskIdsActiveToday = taskIdsActiveToday,
             runningTaskId = runningTaskId,
-            activeDay = activeDay,
             onEditTaskClicked = onEditTaskClicked,
             onOpenTaskStatisticsClicked = onOpenTaskStatisticsClicked,
             onStartTimerClicked = onStartTimerClicked,
@@ -175,8 +174,8 @@ private fun TaskListBody(
 @Composable
 private fun BodyContent(
     tasks: List<Task>,
+    taskIdsActiveToday: List<Long>,
     runningTaskId: Long?,
-    activeDay: Calendar?,
     onEditTaskClicked: (Task) -> Unit,
     onOpenTaskStatisticsClicked: (Task) -> Unit,
     onStartTimerClicked: (Task) -> Unit,
@@ -186,22 +185,22 @@ private fun BodyContent(
 ) {
     TaskList(
         tasks = tasks,
+        taskIdsActiveToday = taskIdsActiveToday,
         runningTaskId = runningTaskId,
-        activeDay = activeDay,
         onEditTaskClicked = onEditTaskClicked,
         onOpenTaskStatisticsClicked = onOpenTaskStatisticsClicked,
         onStartTimerClicked = onStartTimerClicked,
         onStopTimerClicked = onStopTimerClicked,
         lazyListState = lazyListState,
-        modifier = modifier
+        modifier = modifier,
     )
 }
 
 @Composable
 private fun TaskList(
     tasks: List<Task>,
+    taskIdsActiveToday: List<Long>,
     runningTaskId: Long?,
-    activeDay: Calendar?,
     onEditTaskClicked: (Task) -> Unit,
     onOpenTaskStatisticsClicked: (Task) -> Unit,
     onStartTimerClicked: (Task) -> Unit,
@@ -220,7 +219,7 @@ private fun TaskList(
         modifier = modifier
     ) {
         items(tasks) { task ->
-            val isActiveToday = activeDay != null && task.weekdays.containsWeekdayOfDate(activeDay)
+            val isActiveToday = taskIdsActiveToday.contains(task.id)
             TaskItem(
                 task = task,
                 isActiveToday = isActiveToday,
@@ -395,12 +394,11 @@ private fun PreviewTaskListScreen() {
     Just10Minutes2Theme {
         TaskListBody(
             tasks = listOf(
-                Task("Example Task 1", timeCompletedTodayInMilliseconds = (0 * 60 * 1000).toLong()),
-                Task("Example Task 2", timeCompletedTodayInMilliseconds = (3 * 60 * 1000).toLong()),
-                Task("Example Task 3", timeCompletedTodayInMilliseconds = (8 * 60 * 1000).toLong()),
+                Task("Example Task 1", timeCompletedTodayInMilliseconds = (0 * 60 * 1000).toLong(),id = 1),
+                Task("Example Task 2", timeCompletedTodayInMilliseconds = (3 * 60 * 1000).toLong(),id = 2),
+                Task("Example Task 3", timeCompletedTodayInMilliseconds = (8 * 60 * 1000).toLong(),id = 3),
             ),
             runningTaskId = 1,
-            activeDay = Calendar.getInstance(),
             onAddNewTaskClicked = {},
             onEditTaskClicked = {},
             onOpenTaskStatisticsClicked = {},
@@ -411,7 +409,8 @@ private fun PreviewTaskListScreen() {
             onDismissStartTimerForNewTaskConfirmationDialog = {},
             onStartTimerForNewTaskConfirmed = {},
             lazyListState = rememberLazyListState(),
-            scaffoldState = rememberScaffoldState()
+            scaffoldState = rememberScaffoldState(),
+            taskIdsActiveToday = listOf(1,3)
         )
     }
 }

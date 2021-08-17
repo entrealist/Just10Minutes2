@@ -11,6 +11,7 @@ import com.codinginflow.just10minutes2.timer.TaskTimerManager
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.launch
 import kotlinx.parcelize.Parcelize
@@ -27,11 +28,12 @@ class AddEditTaskViewModel @Inject constructor(
     val events = eventChannel.receiveAsFlow()
 
     private val taskId = savedState.get<Long>(ARG_TASK_ID) ?: Task.NO_ID
-    private var task: Task? = null
+
+    private val task = taskDao.getTaskById(taskId)
 
     val isEditMode = taskId != Task.NO_ID
-    private val isArchivedTaskLivedata = MutableLiveData<Boolean?>(null)
-    val isArchivedTask: LiveData<Boolean?> = isArchivedTaskLivedata
+
+    val isArchivedTask = task.map { it != null && it.archived }
 
     private val taskNameInputLiveData = savedState.getLiveData<String>("taskTitleInput")
     val taskNameInput: LiveData<String> = taskNameInputLiveData
@@ -71,31 +73,30 @@ class AddEditTaskViewModel @Inject constructor(
         showUnarchiveTaskConfirmationDialogLiveData
 
     init {
-        if (taskId != Task.NO_ID) {
-            viewModelScope.launch {
-                task = taskDao.getTaskById(taskId).first()
-                isArchivedTaskLivedata.value = task?.archived == true
-                populateInputFieldsFromTask()
+        viewModelScope.launch {
+            val task = taskDao.getTaskById(taskId).first()
+            if (task != null) {
+                populateInputFieldsFromTaskIfEmpty(task)
+            } else {
+                weekdaysSelectionInputLiveData.value = WeekdaySelection(allDays = true)
             }
-        } else {
-            weekdaysSelectionInputLiveData.value = WeekdaySelection(allDays = true)
         }
     }
 
-    private fun populateInputFieldsFromTask() {
+    private fun populateInputFieldsFromTaskIfEmpty(task: Task) {
         val titleInput = taskNameInputLiveData.value
         if (titleInput == null) {
-            taskNameInputLiveData.value = task?.name
+            taskNameInputLiveData.value = task.name
         }
         val minutesGoalInput = minutesGoalInputLiveData.value
         if (minutesGoalInput == null) {
             minutesGoalInputLiveData.value =
-                task?.dailyGoalInMinutes?.toString()
+                task.dailyGoalInMinutes.toString()
         }
         val weekdaysInput = weekdaysSelectionInputLiveData.value
         if (weekdaysInput == null) {
             weekdaysSelectionInputLiveData.value =
-                task?.weekdays
+                task.weekdays
         }
     }
 
@@ -122,24 +123,27 @@ class AddEditTaskViewModel @Inject constructor(
         taskNameInputErrorMessageLiveData.value = null
         minutesGoalInputErrorMessageLiveData.value = null
 
+
         if (!taskNameInput.isNullOrEmpty() && minutesGoalInput != null && minutesGoalInput > 0 && weekdaysSelectionInput != null) {
-            if (taskId == Task.NO_ID) {
-                val newTask = Task(
-                    name = taskNameInput,
-                    dailyGoalInMinutes = minutesGoalInput,
-                    weekdays = weekdaysSelectionInput
-                )
-                createTask(newTask)
-            } else {
-                val task = task
-                if (task != null) {
-                    val updatedTask =
-                        task.copy(
-                            name = taskNameInput,
-                            dailyGoalInMinutes = minutesGoalInput,
-                            weekdays = weekdaysSelectionInput
-                        )
-                    updateTask(updatedTask)
+            viewModelScope.launch {
+                if (taskId == Task.NO_ID) {
+                    val newTask = Task(
+                        name = taskNameInput,
+                        dailyGoalInMinutes = minutesGoalInput,
+                        weekdays = weekdaysSelectionInput
+                    )
+                    createTask(newTask)
+                } else {
+                    val task = task.first()
+                    if (task != null) {
+                        val updatedTask =
+                            task.copy(
+                                name = taskNameInput,
+                                dailyGoalInMinutes = minutesGoalInput,
+                                weekdays = weekdaysSelectionInput
+                            )
+                        updateTask(updatedTask)
+                    }
                 }
             }
         } else {
@@ -152,20 +156,17 @@ class AddEditTaskViewModel @Inject constructor(
                 minutesGoalInputErrorMessageLiveData.value = R.string.minutes_goal_zero_error
             }
         }
+
     }
 
-    private fun createTask(task: Task) {
-        viewModelScope.launch {
-            taskDao.insert(task)
-            eventChannel.send(Event.NavigateBackWithResult(AddEditTaskResult.TaskCreated))
-        }
+    private suspend fun createTask(task: Task) {
+        taskDao.insert(task)
+        eventChannel.send(Event.NavigateBackWithResult(AddEditTaskResult.TaskCreated))
     }
 
-    private fun updateTask(task: Task) {
-        viewModelScope.launch {
-            taskDao.update(task)
-            eventChannel.send(Event.NavigateBackWithResult(AddEditTaskResult.TaskUpdated))
-        }
+    private suspend fun updateTask(task: Task) {
+        taskDao.update(task)
+        eventChannel.send(Event.NavigateBackWithResult(AddEditTaskResult.TaskUpdated))
     }
 
     fun onDeleteTaskClicked() {
@@ -174,8 +175,8 @@ class AddEditTaskViewModel @Inject constructor(
 
     fun onDeleteTaskConfirmed() {
         viewModelScope.launch {
-            task?.let { task ->
-                taskTimerManager.stopTimerIfTaskIsActive(task)
+            task.first()?.let { task ->
+                taskTimerManager.stopTimerIfTaskIsSelected(task)
                 taskDao.deleteTask(task)
                 eventChannel.send(Event.NavigateBackWithResult(AddEditTaskResult.TaskDeleted))
             }
@@ -193,8 +194,8 @@ class AddEditTaskViewModel @Inject constructor(
     fun onArchiveTaskConfirmed() {
         showArchiveTaskConfirmationDialogLiveData.value = false
         viewModelScope.launch {
-            task?.let { task ->
-                taskTimerManager.stopTimerIfTaskIsActive(task)
+            task.first()?.let { task ->
+                taskTimerManager.stopTimerIfTaskIsSelected(task)
                 taskDao.setArchivedState(task.id, true)
                 eventChannel.send(Event.ShowArchiveTaskCompletedMessage)
             }
@@ -210,8 +211,9 @@ class AddEditTaskViewModel @Inject constructor(
     }
 
     fun onUnarchiveTaskConfirmed() {
+        showUnarchiveTaskConfirmationDialogLiveData.value = false
         viewModelScope.launch {
-            task?.let { task ->
+            task.first()?.let { task ->
                 taskDao.setArchivedState(task.id, false)
                 eventChannel.send(Event.ShowUnarchiveTaskCompletedMessage)
             }
@@ -229,8 +231,8 @@ class AddEditTaskViewModel @Inject constructor(
     fun onResetDayConfirmed() {
         showResetDayConfirmationDialogLiveData.value = false
         viewModelScope.launch {
-            task?.let { task ->
-                taskTimerManager.stopTimerIfTaskIsActive(task)
+            task.first()?.let { task ->
+                taskTimerManager.stopTimerIfTaskIsSelected(task)
                 taskDao.resetMillisCompletedTodayForTask(task.id)
                 eventChannel.send(Event.ShowResetDayCompletedMessage)
             }
