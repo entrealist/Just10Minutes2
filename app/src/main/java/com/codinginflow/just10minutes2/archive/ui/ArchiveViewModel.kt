@@ -40,18 +40,6 @@ class ArchiveViewModel @Inject constructor(
         }
     }
 
-    fun onEditTaskResult(addEditResult: AddEditTaskViewModel.AddEditTaskResult) {
-        viewModelScope.launch {
-            when (addEditResult) {
-                is AddEditTaskViewModel.AddEditTaskResult.TaskDeleted ->
-                    eventChannel.send(Event.ShowAddEditResultMessage(R.string.task_deleted))
-                is AddEditTaskViewModel.AddEditTaskResult.TaskUnarchived ->
-                    eventChannel.send(Event.ShowAddEditResultMessage(R.string.task_unarchived))
-                else -> {}
-            }
-        }
-    }
-
     fun onOpenTaskStatisticsClicked(task: Task) {
         viewModelScope.launch {
             eventChannel.send(Event.OpenTaskStatistics(task.id))
@@ -66,7 +54,6 @@ class ArchiveViewModel @Inject constructor(
 
     sealed class Event {
         data class EditTask(val taskId: Long) : Event()
-        data class ShowAddEditResultMessage(@StringRes val msg: Int) : Event()
         data class OpenTaskStatistics(val taskId: Long) : Event()
         object NavigateUp : Event()
         object ShowUnarchivedConfirmationMessage : Event()

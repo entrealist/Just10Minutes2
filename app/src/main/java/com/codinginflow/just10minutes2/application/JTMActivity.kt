@@ -24,7 +24,6 @@ import androidx.navigation.compose.*
 import androidx.navigation.navOptions
 import com.codinginflow.just10minutes2.R
 import com.codinginflow.just10minutes2.addedittask.ui.AddEditTaskScreen
-import com.codinginflow.just10minutes2.addedittask.ui.AddEditTaskViewModel
 import com.codinginflow.just10minutes2.archive.ui.ArchiveScreen
 import com.codinginflow.just10minutes2.common.data.entities.Task
 import com.codinginflow.just10minutes2.timer.ui.TimerScreen
@@ -53,6 +52,7 @@ class MainActivity : ComponentActivity() {
 @Composable
 private fun JTMActivityBody() {
     val navController = rememberNavController()
+
     Scaffold(
         bottomBar = {
             val navBackStackEntry by navController.currentBackStackEntryAsState()
@@ -93,6 +93,8 @@ private fun JTMNavHost(
     navController: NavHostController,
     modifier: Modifier = Modifier
 ) {
+    val addEditResultSharedViewModel: AddEditResultViewModel = hiltViewModel()
+
     NavHost(
         navController = navController,
         startDestination = bottomNavDestinations[0].route,
@@ -105,21 +107,14 @@ private fun JTMNavHost(
                     defaultValue = true
                 }
             )
-        ) { navBackStackEntry ->
+        ) {
             TimerScreen(
                 editTask = { taskId ->
                     navController.navigate(
                         route = AppDestination.AddEditTask.route + "?$ARG_TASK_ID=$taskId"
                     )
                 },
-                editTaskResult = navBackStackEntry.savedStateHandle.get<AddEditTaskViewModel.AddEditTaskResult>(
-                    KEY_ADD_EDIT_RESULT
-                ),
-                onEditTaskResultProcessed = {
-                    navBackStackEntry.savedStateHandle.remove<AddEditTaskViewModel.AddEditTaskResult>(
-                        KEY_ADD_EDIT_RESULT
-                    )
-                }
+                addEditResultViewModel = addEditResultSharedViewModel
             )
         }
         composable(
@@ -138,14 +133,6 @@ private fun JTMNavHost(
                         route = AppDestination.AddEditTask.route + "?$ARG_TASK_ID=$taskId"
                     )
                 },
-                addEditTaskResult = navBackStackEntry.savedStateHandle.get<AddEditTaskViewModel.AddEditTaskResult>(
-                    KEY_ADD_EDIT_RESULT
-                ),
-                onAddEditTaskResultProcessed = {
-                    navBackStackEntry.savedStateHandle.remove<AddEditTaskViewModel.AddEditTaskResult>(
-                        KEY_ADD_EDIT_RESULT
-                    )
-                },
                 navigateToTaskStatistics = { taskId ->
                     navController.navigate(
                         route = AppDestination.TaskStatistics.route + "?$ARG_TASK_ID=$taskId",
@@ -161,7 +148,8 @@ private fun JTMNavHost(
                         route = BottomNavDestination.Timer.route,
                         navOptions = createNavOptionsForBottomNavigation(navController)
                     )
-                }
+                },
+                addEditResultViewModel = addEditResultSharedViewModel
             )
         }
         composable(
@@ -193,10 +181,7 @@ private fun JTMNavHost(
                     navController.popBackStack()
                 },
                 navigateBackWithResult = { result ->
-                    navController.previousBackStackEntry?.savedStateHandle?.set(
-                        KEY_ADD_EDIT_RESULT,
-                        result
-                    )
+                    addEditResultSharedViewModel.onAddEditTaskResult(result)
                     navController.popBackStack()
                 })
         }
@@ -217,7 +202,7 @@ private fun JTMNavHost(
         }
         composable(
             route = AppDestination.Archive.route,
-        ) { navBackStackEntry ->
+        ) {
             ArchiveScreen(
                 navigateUp = {
                     navController.popBackStack()
@@ -232,14 +217,7 @@ private fun JTMNavHost(
                         route = AppDestination.AddEditTask.route + "?$ARG_TASK_ID=$taskId"
                     )
                 },
-                editTaskResult = navBackStackEntry.savedStateHandle.get<AddEditTaskViewModel.AddEditTaskResult>(
-                    KEY_ADD_EDIT_RESULT
-                ),
-                onEditTaskResultProcessed = {
-                    navBackStackEntry.savedStateHandle.remove<AddEditTaskViewModel.AddEditTaskResult>(
-                        KEY_ADD_EDIT_RESULT
-                    )
-                }
+                addEditResultViewModel = addEditResultSharedViewModel
             )
         }
     }
@@ -282,5 +260,3 @@ private fun createNavOptionsForBottomNavigation(navController: NavHostController
 
 const val ARG_TASK_ID = "taskId"
 const val ARG_SHOW_BOTTOM_NAV = "showBottomNav"
-
-const val KEY_ADD_EDIT_RESULT = "KEY_ADD_EDIT_RESULT"

@@ -28,6 +28,7 @@ import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.codinginflow.just10minutes2.R
 import com.codinginflow.just10minutes2.addedittask.ui.AddEditTaskViewModel
+import com.codinginflow.just10minutes2.application.AddEditResultViewModel
 import com.codinginflow.just10minutes2.common.data.entities.Task
 import com.codinginflow.just10minutes2.common.data.entities.containsWeekdayOfDate
 import com.codinginflow.just10minutes2.common.data.entities.toLocalizedString
@@ -40,10 +41,9 @@ import java.util.*
 @Composable
 fun TaskListScreen(
     viewModel: TaskListViewModel = hiltViewModel(),
+    addEditResultViewModel: AddEditResultViewModel,
     addNewTask: () -> Unit,
     editTask: (taskId: Long) -> Unit,
-    addEditTaskResult: AddEditTaskViewModel.AddEditTaskResult?,
-    onAddEditTaskResultProcessed: () -> Unit,
     navigateToTaskStatistics: (taskId: Long) -> Unit,
     navigateToArchive: () -> Unit,
     navigateToTimer: () -> Unit
@@ -60,13 +60,6 @@ fun TaskListScreen(
     val showStartTimerForNewTaskConfirmationDialog
             by viewModel.showStartTimerForNewTaskConfirmationDialog.observeAsState(false)
 
-    LaunchedEffect(addEditTaskResult) {
-        if (addEditTaskResult != null) {
-            viewModel.onAddEditResult(addEditTaskResult)
-            onAddEditTaskResultProcessed()
-        }
-    }
-
     LaunchedEffect(Unit) {
         viewModel.events.collectLatest { event ->
             when (event) {
@@ -74,8 +67,6 @@ fun TaskListScreen(
                     addNewTask()
                 is TaskListViewModel.Event.EditTask ->
                     editTask(event.taskId)
-                is TaskListViewModel.Event.ShowAddEditResultMessage ->
-                    scaffoldState.snackbarHostState.showSnackbar(context.getString(event.msg))
                 is TaskListViewModel.Event.OpenTaskStatistics ->
                     navigateToTaskStatistics(event.taskId)
                 is TaskListViewModel.Event.NavigateToArchive ->
@@ -83,6 +74,12 @@ fun TaskListScreen(
                 TaskListViewModel.Event.NavigateToTimer ->
                     navigateToTimer()
             }
+        }
+    }
+
+    LaunchedEffect(Unit) {
+        addEditResultViewModel.resultMessage.collectLatest { resultMessageRes ->
+            scaffoldState.snackbarHostState.showSnackbar(context.getString(resultMessageRes))
         }
     }
 

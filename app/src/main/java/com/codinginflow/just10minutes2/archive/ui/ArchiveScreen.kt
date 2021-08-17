@@ -25,6 +25,7 @@ import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.codinginflow.just10minutes2.R
 import com.codinginflow.just10minutes2.addedittask.ui.AddEditTaskViewModel
+import com.codinginflow.just10minutes2.application.AddEditResultViewModel
 import com.codinginflow.just10minutes2.common.data.entities.Task
 import com.codinginflow.just10minutes2.common.ui.theme.Dimens
 import com.codinginflow.just10minutes2.common.ui.theme.Just10Minutes2Theme
@@ -33,10 +34,9 @@ import kotlinx.coroutines.flow.collectLatest
 @Composable
 fun ArchiveScreen(
     viewModel: ArchiveViewModel = hiltViewModel(),
+    addEditResultViewModel: AddEditResultViewModel,
     navigateToTaskStatistics: (taskId: Long) -> Unit,
     editTask: (taskId: Long) -> Unit,
-    editTaskResult: AddEditTaskViewModel.AddEditTaskResult?,
-    onEditTaskResultProcessed: () -> Unit,
     navigateUp: () -> Unit,
 ) {
     val archivedTasks by viewModel.archivedTasks.collectAsState(emptyList())
@@ -44,13 +44,6 @@ fun ArchiveScreen(
     val lazyListState = rememberLazyListState()
     val scaffoldState = rememberScaffoldState()
     val context = LocalContext.current
-
-    LaunchedEffect(editTaskResult) {
-        if (editTaskResult != null) {
-            viewModel.onEditTaskResult(editTaskResult)
-            onEditTaskResultProcessed()
-        }
-    }
 
     LaunchedEffect(Unit) {
         viewModel.events.collectLatest { event ->
@@ -63,9 +56,13 @@ fun ArchiveScreen(
                     navigateToTaskStatistics(event.taskId)
                 is ArchiveViewModel.Event.EditTask ->
                     editTask(event.taskId)
-                is ArchiveViewModel.Event.ShowAddEditResultMessage ->
-                    scaffoldState.snackbarHostState.showSnackbar(context.getString(event.msg))
             }
+        }
+    }
+
+    LaunchedEffect(Unit) {
+        addEditResultViewModel.resultMessage.collectLatest { resultMessageRes ->
+            scaffoldState.snackbarHostState.showSnackbar(context.getString(resultMessageRes))
         }
     }
 

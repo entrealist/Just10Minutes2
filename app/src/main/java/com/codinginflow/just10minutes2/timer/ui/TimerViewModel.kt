@@ -120,21 +120,6 @@ class TimerViewModel @Inject constructor(
         }
     }
 
-    fun onEditResult(addEditResult: AddEditTaskViewModel.AddEditTaskResult) {
-        viewModelScope.launch {
-            when (addEditResult) {
-                is AddEditTaskViewModel.AddEditTaskResult.TaskCreated ->
-                    eventChannel.send(Event.ShowAddEditResultMessage(R.string.task_created))
-                is AddEditTaskViewModel.AddEditTaskResult.TaskUpdated ->
-                    eventChannel.send(Event.ShowAddEditResultMessage(R.string.task_updated))
-                is AddEditTaskViewModel.AddEditTaskResult.TaskDeleted ->
-                    eventChannel.send(Event.ShowAddEditResultMessage(R.string.task_deleted))
-                is AddEditTaskViewModel.AddEditTaskResult.TaskArchived ->
-                    eventChannel.send(Event.ShowAddEditResultMessage(R.string.task_archived))
-                else -> {}
-            }
-        }
-    }
 
     fun onStartTimerClicked() = taskTimerManager.startTimer()
 
@@ -143,6 +128,5 @@ class TimerViewModel @Inject constructor(
     sealed class Event {
         object ShowTimerStoppedMessage : Event()
         data class EditTask(val taskId: Long) : Event()
-        data class ShowAddEditResultMessage(@StringRes val msg: Int) : Event()
     }
 }

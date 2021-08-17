@@ -70,22 +70,6 @@ class TaskListViewModel @Inject constructor(
         }
     }
 
-    fun onAddEditResult(addEditResult: AddEditTaskViewModel.AddEditTaskResult) {
-        viewModelScope.launch {
-            when (addEditResult) {
-                is AddEditTaskViewModel.AddEditTaskResult.TaskCreated ->
-                    eventChannel.send(Event.ShowAddEditResultMessage(R.string.task_created))
-                is AddEditTaskViewModel.AddEditTaskResult.TaskUpdated ->
-                    eventChannel.send(Event.ShowAddEditResultMessage(R.string.task_updated))
-                is AddEditTaskViewModel.AddEditTaskResult.TaskDeleted ->
-                    eventChannel.send(Event.ShowAddEditResultMessage(R.string.task_deleted))
-                is AddEditTaskViewModel.AddEditTaskResult.TaskArchived ->
-                    eventChannel.send(Event.ShowAddEditResultMessage(R.string.task_archived))
-                else -> {}
-            }
-        }
-    }
-
     fun onOpenTaskStatisticsClicked(task: Task) {
         viewModelScope.launch {
             eventChannel.send(Event.OpenTaskStatistics(task.id))
@@ -143,7 +127,6 @@ class TaskListViewModel @Inject constructor(
     sealed class Event {
         object AddNewTask : Event()
         data class EditTask(val taskId: Long) : Event()
-        data class ShowAddEditResultMessage(@StringRes val msg: Int) : Event()
         data class OpenTaskStatistics(val taskId: Long) : Event()
         object NavigateToArchive : Event()
         object NavigateToTimer : Event()
